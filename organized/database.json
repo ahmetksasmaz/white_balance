@@ -1,0 +1,15 @@
+{
+    "data_1": {
+        "input": "",
+        "ground_truth": "",
+        "labels": "",
+        "algorithms":{
+            "algorithm1": [
+                {
+                    "name": "metric1",
+                    "value": 0.0
+                }
+            ]
+        }
+    }
+}
