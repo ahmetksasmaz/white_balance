@@ -1,10 +1,9 @@
 import cv2 as cv
 import numpy as np
 
-# Load single image as YUV image
 # Note: The image is in PNG format with 16-bit depth, so we need to
 # read it with cv.IMREAD_UNCHANGED to preserve the depth.
-image = cv.imread('images/SimpleCube++/train/PNG/00_0002.png', cv.IMREAD_UNCHANGED)
+image = cv.imread('00_0002.png', cv.IMREAD_UNCHANGED)
 
 # Image is 432,648,3, uint16
 # 14-bit quantization
@@ -28,7 +27,7 @@ def apply_white_balance(image, target_color_coordinate = None):
             return image_corrected
         target_color = image[target_color_coordinate[1], target_color_coordinate[0], :]
         print("Target color (at coordinate {}): {}".format(target_color_coordinate, target_color))
-        color_gain = 1.0 / target_color
+        color_gain = target_color[1] / target_color # base to green channel
 
         # Apply color gain
         image_corrected = image * color_gain

@@ -18,7 +18,7 @@ image = np.clip((image - black_level) / (saturation_level - black_level) , 0, 1)
 gamma = 2.2
 image = np.power(image, 1.0 / gamma)
 
-def apply_white_balance(image):
+def apply_gw(image):
     image_corrected = image.copy()
 
     target_color = np.mean(image, axis=(0, 1))
@@ -34,8 +34,34 @@ def apply_white_balance(image):
     # Convert back to uint8
     image_corrected = (image_corrected * 255).astype(np.uint8)
 
+    cv.putText(image_corrected, "Gray World", (10, 30), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+
     return image_corrected
 
-cv.imshow('image', apply_white_balance(image))
+def apply_wp(image):
+    image_corrected = image.copy()
+
+    target_color = np.max(image, axis=(0, 1))
+    print("Target color (mean): {}".format(target_color))
+
+    color_gain = target_color[1] / target_color # base to green channel "gmax / rmax"
+    print("Color gain: {}".format(color_gain))
+
+    # Apply color gain
+    image_corrected = image * color_gain
+    # Clip values to [0, 1]
+    image_corrected = np.clip(image_corrected, 0, 1)
+    # Convert back to uint8
+    image_corrected = (image_corrected * 255).astype(np.uint8)
+
+    cv.putText(image_corrected, "White Patch", (10, 30), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+
+    return image_corrected
+
+display_image = np.zeros((image.shape[0], image.shape[1] * 2, 3), dtype=np.uint8)
+display_image[:, :image.shape[1], :] = apply_gw(image)
+display_image[:, image.shape[1]:, :] = apply_wp(image)
+
+cv.imshow('image', display_image)
 cv.waitKey(0)
 cv.destroyAllWindows()
