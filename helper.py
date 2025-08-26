@@ -23,7 +23,7 @@ def log_chrominance(image):
 
 def prepare_display(image, correct_gamma=False):
     if correct_gamma:
-        display_image = gamma_correction(image.copy())
+        display_image = gamma_correction(image)
     else:
         display_image = image.copy()
     display_image *= 255.0
@@ -51,17 +51,17 @@ def lab_to_xyz(illuminant):
     x = a / 500 + y
     z = y - b / 200
 
-    x = 95.047 * (x ** 3) if x > 0.206893 else (x - 16/116) / 7.787
-    y = 100.000 * (y ** 3) if y > 0.206893 else (y - 16/116) / 7.787
-    z = 108.883 * (z ** 3) if z > 0.206893 else (z - 16/116) / 7.787
+    x = 0.95047 * (x ** 3) if x > 0.206893 else (x - 16/116) / 7.787
+    y = 1.00000 * (y ** 3) if y > 0.206893 else (y - 16/116) / 7.787
+    z = 1.08883 * (z ** 3) if z > 0.206893 else (z - 16/116) / 7.787
 
     return np.array([x, y, z])
 
 def xyz_to_lab(illuminant):
     x, y, z = illuminant
-    x = x / 95.047
-    y = y / 100.000
-    z = z / 108.883
+    x = x / 0.95047
+    y = y / 1.00000
+    z = z / 1.08883
 
     x = x ** (1/3) if x > 0.008856 else (x * 7.787 + 16/116)
     y = y ** (1/3) if y > 0.008856 else (y * 7.787 + 16/116)

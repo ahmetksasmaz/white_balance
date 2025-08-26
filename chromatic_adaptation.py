@@ -1,6 +1,7 @@
 import cv2 as cv
 import numpy as np
 from helper import *
+np.seterr(all='ignore')
 
 class CAT:
     def __init__(self, adaptation_matrix_name = "bradford"):
@@ -19,32 +20,36 @@ class CAT:
 
 class WhitePoint:
     def __init__(self, illuminant, color_space = "SRGB"):
-        self.illuminant = illuminant
-        self.color_space = color_space.upper()
+        color_space = color_space.upper()
+        if color_space == "SRGB":
+            self.srgb_color = illuminant
+            self.xyz_color = srgb_to_xyz(illuminant)
+            self.lab_color = srgb_to_lab(illuminant)
+        elif color_space == "XYZ":
+            self.xyz_color = illuminant
+            self.srgb_color = xyz_to_srgb(illuminant)
+            self.lab_color = xyz_to_lab(illuminant)
+        elif color_space == "LAB":
+            self.srgb_color = lab_to_srgb(illuminant)
+            self.lab_color = illuminant
+            self.xyz_color = lab_to_xyz(illuminant)
+
+    def adjust_luminance(self, luminance):
+        self.lab_color[0] = luminance
+        self.xyz_color = lab_to_xyz(self.lab_color)
+        self.srgb_color = lab_to_srgb(self.lab_color)
+
+    def luminance(self):
+        return self.lab_color[0]
 
     def srgb(self):
-        if self.color_space == "SRGB":
-            return self.illuminant
-        elif self.color_space == "XYZ":
-            return xyz_to_srgb(self.illuminant)
-        elif self.color_space == "LAB":
-            return lab_to_srgb(self.illuminant)
+        return self.srgb_color
 
     def xyz(self):
-        if self.color_space == "XYZ":
-            return self.illuminant
-        elif self.color_space == "SRGB":
-            return srgb_to_xyz(self.illuminant)
-        elif self.color_space == "LAB":
-            return lab_to_xyz(self.illuminant)
+        return self.xyz_color
 
     def lab(self):
-        if self.color_space == "LAB":
-            return self.illuminant
-        elif self.color_space == "SRGB":
-            return srgb_to_lab(self.illuminant)
-        elif self.color_space == "XYZ":
-            return xyz_to_lab(self.illuminant)
+        return self.lab_color
 
 A_WHITE_POINT = WhitePoint(np.array([1.09850,1.00000,0.35585]), "xyz")
 B_WHITE_POINT = WhitePoint(np.array([0.99072,1.00000,0.85223]), "xyz")
@@ -64,48 +69,37 @@ SHARP_CAT = CAT("sharp")
 CAT2000_CAT = CAT("cat2000")
 CAT02_CAT = CAT("cat02")
 
-def adapt_single_pixel(pixel: tuple, source_illumination: WhitePoint, target_illumination : WhitePoint = D65_WHITE_POINT, cat : CAT = BRADFORD_CAT):
+def chromatic_adaptation(image:cv.Mat, source_illumination:WhitePoint, target_illumination:WhitePoint = D65_WHITE_POINT, cat:CAT = BRADFORD_CAT):
+    adapted_image = image.copy()
+
     source_xyz = source_illumination.xyz()
     target_xyz = target_illumination.xyz()
-    pixel_xyz = None
-    if source_illumination.color_space == "SRGB":
-        pixel_xyz = srgb_to_xyz(pixel)
-    elif source_illumination.color_space == "XYZ":
-        pixel_xyz = pixel
-    elif source_illumination.color_space == "LAB":
-        pixel_xyz = lab_to_xyz(pixel)
 
     source_lms = cat.M @ np.array(source_xyz)
     target_lms = cat.M @ np.array(target_xyz)
-    pixel_lms = cat.M @ np.array(pixel_xyz)
 
     gain = target_lms / source_lms
-    adapted_pixel_lms = pixel_lms * gain
-    adapted_pixel_xyz = np.linalg.inv(cat.M) @ adapted_pixel_lms
-    if source_illumination.color_space == "SRGB":
-        adapted_pixel = xyz_to_srgb(adapted_pixel_xyz)
-    elif source_illumination.color_space == "XYZ":
-        adapted_pixel = adapted_pixel_xyz
-    elif source_illumination.color_space == "LAB":
-        adapted_pixel = xyz_to_lab(adapted_pixel_xyz)
 
-    return adapted_pixel
+    M_srgb_to_xyz = np.array([[0.4124564,0.3575761,0.1804375],[0.2126729,0.7151522,0.0721750],[0.0193339,0.1191920,0.9503041]])
 
-def chromatic_adaptation(image:cv.Mat, source_illumination:WhitePoint, target_illumination:WhitePoint = D65_WHITE_POINT, cat:CAT = BRADFORD_CAT):
-    adapted_image = image.copy()
-    for i in range(image.shape[0]):
-        for j in range(image.shape[1]):
-            pixel = image[i, j]
-            adapted_pixel = adapt_single_pixel(pixel, source_illumination, target_illumination, cat)
-            adapted_image[i, j] = adapted_pixel
+    flat_adapted_image = adapted_image.reshape(-1, 3)
+    flat_adapted_image = (M_srgb_to_xyz @ flat_adapted_image.T).T
+    flat_adapted_image = (cat.M @ flat_adapted_image.T).T
+    flat_adapted_image = flat_adapted_image * gain
+    flat_adapted_image = (np.linalg.inv(cat.M) @ flat_adapted_image.T).T
+    flat_adapted_image = (np.linalg.inv(M_srgb_to_xyz) @ flat_adapted_image.T).T
+
+    adapted_image = flat_adapted_image.reshape(adapted_image.shape)
+    adapted_image = np.clip(adapted_image, 0, 1)
+
     return adapted_image
 
-def chromatic_adaptation(image:cv.Mat, source_illumination_map: list[list[WhitePoint]], target_illumination:WhitePoint = D65_WHITE_POINT, cat:CAT = BRADFORD_CAT):
-    adapted_image = image.copy()
-    for i in range(image.shape[0]):
-        for j in range(image.shape[1]):
-            source_illumination = source_illumination_map[i][j]
-            pixel = image[i, j]
-            adapted_pixel = adapt_single_pixel(pixel, source_illumination, target_illumination, cat)
-            adapted_image[i, j] = adapted_pixel
-    return adapted_image
+# def chromatic_adaptation_map(image:cv.Mat, source_illumination_map: list[list[WhitePoint]], target_illumination:WhitePoint = D65_WHITE_POINT, cat:CAT = BRADFORD_CAT):
+#     adapted_image = image.copy()
+#     for i in range(image.shape[0]):
+#         for j in range(image.shape[1]):
+#             source_illumination = source_illumination_map[i][j]
+#             pixel = image[i, j]
+#             adapted_pixel = adapt_single_pixel(pixel, source_illumination, target_illumination, cat)
+#             adapted_image[i, j] = adapted_pixel
+#     return adapted_image
