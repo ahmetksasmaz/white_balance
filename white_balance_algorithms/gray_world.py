@@ -1,6 +1,6 @@
 import numpy as np
 import cv2 as cv
-from white_balance_algorithm import WhiteBalanceAlgorithm
+from .white_balance_algorithm import WhiteBalanceAlgorithm
 from chromatic_adaptation import WhitePoint
 
 class GrayWorld(WhiteBalanceAlgorithm):

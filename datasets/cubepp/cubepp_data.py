@@ -27,6 +27,9 @@ class CubePPData:
 
         self.image = np.clip((self.image - BLACK_LEVEL) / (SATURATION_LEVEL - BLACK_LEVEL), 0, 1)
 
+    def get_image_name(self):
+        return self.image_path.lower().split("/")[-1].split(".")[0]
+
     def get_image(self):
         return self.image
     

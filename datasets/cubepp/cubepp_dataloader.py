@@ -14,7 +14,10 @@ class CubePPDataLoader:
                 image_name = line[:first_comma_index]
                 self.gt_lines[image_name] = line[first_comma_index+1:]
 
-    def get(self, index):
+    def __len__(self):
+        return len(self.image_names)
+
+    def __getitem__(self, index):
         if 0 <= index < len(self.image_names):
             image_path = self.image_names[index]
             image_name = image_path.split("/")[-1].split(".")[0]
