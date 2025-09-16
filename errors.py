@@ -1,6 +1,9 @@
 import numpy as np
 import cv2 as cv
 from helper import *
+import concurrent.futures
+import os
+from multiprocessing import shared_memory
 
 def recovery_angular_error(gt_illuminant, pred_illuminant):
     gt_illuminant = gt_illuminant / np.linalg.norm(gt_illuminant)
@@ -99,16 +102,52 @@ def recovery_ciede2000(gt_illuminant, pred_illuminant):
 def reproduction_ciede2000(white_patch):
     return recovery_ciede2000(np.array([1.0, 1.0, 1.0]), white_patch)
 
+def _worker_error_map(shm_name, shape, dtype, gt_image, adapted_image, start_row, end_row):
+    shm = shared_memory.SharedMemory(name=shm_name)
+    error_map = np.ndarray(shape, dtype=dtype, buffer=shm.buf)
+    width = shape[1]
+    for h in range(start_row, end_row):
+        for w in range(width):
+            error_map[h, w] = recovery_ciede2000(gt_image[h, w], adapted_image[h, w])
+    shm.close()
+
 def create_error_heatmap(adapted_image, gt_image):
     height, width, _ = adapted_image.shape
     error_map = np.zeros((height, width), dtype=np.float32)
 
-    for height_idx in range(height):
-        for width_idx in range(width):
-            error_map[height_idx, width_idx] = recovery_ciede2000(gt_image[height_idx, width_idx], adapted_image[height_idx, width_idx])
+    # Use multithreading to speed up the process
+    # Create shared memory for error_map
+    shm = shared_memory.SharedMemory(create=True, size=error_map.nbytes)
+    shm_error_map = np.ndarray(error_map.shape, dtype=error_map.dtype, buffer=shm.buf)
+
+    num_threads = os.cpu_count() or 4
+    rows_per_thread = height // num_threads
+    futures = []
+    with concurrent.futures.ProcessPoolExecutor(max_workers=num_threads) as executor:
+        for i in range(num_threads):
+            start_row = i * rows_per_thread
+            end_row = (i + 1) * rows_per_thread if i != num_threads - 1 else height
+            # Slices of gt_image and adapted_image are pickled, so pass full arrays
+            futures.append(executor.submit(
+                _worker_error_map,
+                shm.name,
+                error_map.shape,
+                error_map.dtype,
+                gt_image,
+                adapted_image,
+                start_row,
+                end_row
+            ))
+        concurrent.futures.wait(futures)
+
+    error_map = np.nan_to_num(shm_error_map, nan=0.0, posinf=0.0, neginf=0.0)
+    shm.close()
+    shm.unlink()
+    # Multi threading end
+
     max_error = np.max(error_map)
     mean_error = np.mean(error_map)
-    error_map = np.nan_to_num(error_map, nan=0.0, posinf=0.0, neginf=0.0)
+
     heatmap = cv.applyColorMap(((np.clip(error_map, 0.0, max_error) / max_error) * 255).astype(np.uint8), cv.COLORMAP_JET)
     # Draw colormap on top right corner
     colormap_height = height // 3
