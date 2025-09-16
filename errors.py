@@ -98,3 +98,53 @@ def recovery_ciede2000(gt_illuminant, pred_illuminant):
 
 def reproduction_ciede2000(white_patch):
     return recovery_ciede2000(np.array([1.0, 1.0, 1.0]), white_patch)
+
+def create_error_heatmap(adapted_image, gt_image):
+    height, width, _ = adapted_image.shape
+    error_map = np.zeros((height, width), dtype=np.float32)
+
+    for height_idx in range(height):
+        for width_idx in range(width):
+            error_map[height_idx, width_idx] = recovery_ciede2000(gt_image[height_idx, width_idx], adapted_image[height_idx, width_idx])
+    max_error = np.max(error_map)
+    mean_error = np.mean(error_map)
+    error_map = np.nan_to_num(error_map, nan=0.0, posinf=0.0, neginf=0.0)
+    heatmap = cv.applyColorMap(((np.clip(error_map, 0.0, max_error) / max_error) * 255).astype(np.uint8), cv.COLORMAP_JET)
+    # Draw colormap on top right corner
+    colormap_height = height // 3
+    colormap_width = width // 50
+    colormap = np.linspace(max_error, 0, colormap_height).astype(np.float32)
+    colormap_img = cv.applyColorMap(((colormap / max_error) * 255).astype(np.uint8), cv.COLORMAP_JET)
+    colormap_img = colormap_img.reshape((colormap_height, 1, 3))
+    colormap_img = np.repeat(colormap_img, colormap_width, axis=1)
+
+    # Draw black line for mean_error ratio
+    line_pos = int((1 - min(mean_error / max_error, 1.0)) * colormap_height)
+    cv.line(colormap_img, (0, line_pos), (colormap_width - 1, line_pos), (0, 0, 0), 10)
+
+    # Write max_error value with parenthesis
+    font = cv.FONT_HERSHEY_SIMPLEX
+    font_scale = 2.0
+    thickness = 2
+    text = f"({max_error:.2f})"
+    text_size, _ = cv.getTextSize(text, font, font_scale, thickness)
+    text_x = heatmap.shape[1] - colormap_width - text_size[0] - 5
+    text_y = text_size[1] + 10
+    # Draw square for text background
+    cv.rectangle(heatmap, (heatmap.shape[1] - colormap_width - text_size[0] - 10, 0), (heatmap.shape[1] - colormap_width, text_size[1] + 30), (0, 0, 0), -1)
+    cv.putText(heatmap, text, (text_x, text_y), font, font_scale, (255, 255, 255), thickness, cv.LINE_AA)
+
+    # Write mean_error value with brackets
+    text = f"[{mean_error:.2f}]"
+    text_size, _ = cv.getTextSize(text, font, font_scale, thickness)
+    text_x = heatmap.shape[1] - colormap_width - text_size[0] - 5
+    text_y = line_pos + 20
+    # Draw square for text background
+    cv.rectangle(heatmap, (heatmap.shape[1] - colormap_width - text_size[0] - 10, line_pos - text_size[1] - 5), (heatmap.shape[1] - colormap_width, line_pos + text_size[1] + 5), (0, 0, 0), -1)
+    cv.putText(heatmap, text, (text_x, text_y), font, font_scale, (255, 255, 255), thickness, cv.LINE_AA)
+
+    # Overlay colormap on top right corner
+    heatmap[:colormap_height, -colormap_width:] = colormap_img
+
+    heatmap = heatmap.astype(np.float32) / 255.0
+    return heatmap
