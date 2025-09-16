@@ -9,6 +9,7 @@ from datasets.cubepp.cubepp_dataloader import CubePPDataLoader
 from datasets.cubepp.cubepp_data import CubePPData
 from datasets.cubepp.cubepp_process import cubepp_process
 from white_balance_algorithms.gray_world import GrayWorld
+from white_balance_algorithms.max_rgb import MaxRGB
 from helper import *
 import tqdm
 
@@ -30,6 +31,8 @@ def main(dataset_names, algorithm_names, output_directory, export_types, skip_pr
                 algorithm = None
                 if algorithm_name == "gray_world":
                     algorithm = GrayWorld()
+                elif algorithm_name == "max_rgb":
+                    algorithm = MaxRGB()
                 print(f"Processing dataset {dataset_name} with algorithm {algorithm_name}")
                 for i in tqdm.tqdm(range(len(dataloader))):
                     data = dataloader[i]
@@ -67,7 +70,7 @@ def main(dataset_names, algorithm_names, output_directory, export_types, skip_pr
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="White Balance Algorithm Tester")
     parser.add_argument("--datasets", type=str, required=False, default="all", help="List of the name of the datasets to run [cubepp], type 'all' for all")
-    parser.add_argument("--algorithms", type=str, required=False, default="all", help="List of the algorithms to run [gray_world], type 'all' for all")
+    parser.add_argument("--algorithms", type=str, required=False, default="all", help="List of the algorithms to run [gray_world, max_rgb], type 'all' for all")
     parser.add_argument("--output", type=str, required=True, default="output", help="Path to the output directory")
     parser.add_argument("--export", type=str, required=False, default="none", help="List of export images [none, algorithm, gt, merged, merged_resized], type 'all' for all")
     parser.add_argument("--skip", action="store_true", help="Skip already processed images with that algorithm (scans the output directory for formatted filenames)")

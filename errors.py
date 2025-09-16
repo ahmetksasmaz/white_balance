@@ -12,10 +12,13 @@ def reproduction_angular_error(white_patch):
     return recovery_angular_error(np.array([1.0, 1.0, 1.0]), white_patch)
 
 def recovery_square_error(gt_illuminant, pred_illuminant):
-    return np.sum((gt_illuminant - pred_illuminant) ** 2)
+    gt_illuminant_quantized = np.round(gt_illuminant * 255)
+    pred_illuminant_quantized = np.round(pred_illuminant * 255)
+    return np.sum((gt_illuminant_quantized - pred_illuminant_quantized) ** 2)
 
 def reproduction_square_error(white_patch):
-    return recovery_square_error(np.array([1.0, 1.0, 1.0]), white_patch)
+    white_patch_quantized = np.round(white_patch * 255)
+    return recovery_square_error(np.array([255, 255, 255]), white_patch_quantized)
 
 def recovery_ciede2000(gt_illuminant, pred_illuminant):
     # Convert to LAB
