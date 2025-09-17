@@ -1,0 +1,24 @@
+[submodule "white_balance_algorithms/external/gcc"]
+	path = white_balance_algorithms/external/gcc
+	url = https://github.com/chenwei891213/GCC-official.git
+[submodule "white_balance_algorithms/external/revisiting_miwb"]
+	path = white_balance_algorithms/external/revisiting_miwb
+	url = https://github.com/davidserra9/revisitingMIWB.git
+[submodule "white_balance_algorithms/external/deepwb"]
+	path = white_balance_algorithms/external/deepwb
+	url = https://github.com/mahmoudnafifi/Deep_White_Balance.git
+[submodule "white_balance_algorithms/external/time_aware_awb"]
+	path = white_balance_algorithms/external/time_aware_awb
+	url = https://github.com/mahmoudnafifi/time-aware-awb.git
+[submodule "white_balance_algorithms/external/mixed_ill_wb"]
+	path = white_balance_algorithms/external/mixed_ill_wb
+	url = https://github.com/mahmoudnafifi/mixedillWB.git
+[submodule "white_balance_algorithms/external/hv_dual_former"]
+	path = white_balance_algorithms/external/hv_dual_former
+	url = https://github.com/ytpeng-aimlab/HVDualformer.git
+[submodule "white_balance_algorithms/external/ide"]
+	path = white_balance_algorithms/external/ide
+	url = https://github.com/createcolor/IDE.git
+[submodule "white_balance_algorithms/external/style_awb"]
+	path = white_balance_algorithms/external/style_awb
+	url = https://github.com/birdortyedi/lighting-as-style-awb-correction.git
