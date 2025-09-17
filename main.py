@@ -27,8 +27,6 @@ def main(dataset_names, algorithm_names, output_directory, export_types, skip_pr
             if dataset_name == "cubepp":
                 dataloader = CubePPDataLoader()
             for algorithm_name in algorithm_names:
-                if algorithm_name not in VALID_DATASET_ALGORITHMS[dataset_name]:
-                    continue
                 algorithm = None
                 if algorithm_name == "gray_world":
                     algorithm = GrayWorld()
@@ -117,6 +115,9 @@ if __name__ == "__main__":
         if export not in VALID_EXPORTS:
             print(f"Invalid export: {export}")
             sys.exit(1)
+    if dataset_names == [] or algorithm_names == []:
+        print("No datasets or algorithms to process")
+        sys.exit(1)
 
     # Try to create output directory, if it fails exit
     try:
