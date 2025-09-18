@@ -108,7 +108,7 @@ def _worker_error_map(shm_name, shape, dtype, gt_image, adapted_image, start_row
     width = shape[1]
     for h in range(start_row, end_row):
         for w in range(width):
-            error_map[h, w] = recovery_ciede2000(gt_image[h, w], adapted_image[h, w])
+                error_map[h, w] = recovery_ciede2000(gt_image[h, w], adapted_image[h, w])
     shm.close()
 
 def create_error_heatmap(adapted_image, gt_image):
@@ -186,4 +186,4 @@ def create_error_heatmap(adapted_image, gt_image):
     heatmap[:colormap_height, -colormap_width:] = colormap_img
 
     heatmap = heatmap.astype(np.float32) / 255.0
-    return heatmap
+    return heatmap, mean_error

@@ -7,7 +7,9 @@ class MaxRGB(WhiteBalanceAlgorithm):
     def __init__(self):
         pass
 
-    def _estimate_global_illuminant_internal(self, image):
+    def _apply_internal(self, image):
         illuminant = np.max(image, axis=(0, 1))
+        gain = np.array([1.0, 1.0, 1.0]) / illuminant
+        image = image * gain
         white_point = WhitePoint(illuminant, "SRGB")
-        return white_point
+        return image, {"white_point": white_point}

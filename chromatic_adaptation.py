@@ -93,13 +93,3 @@ def chromatic_adaptation(image:cv.Mat, source_illumination:WhitePoint, target_il
     adapted_image = np.clip(adapted_image, 0, 1)
 
     return adapted_image
-
-# def chromatic_adaptation_map(image:cv.Mat, source_illumination_map: list[list[WhitePoint]], target_illumination:WhitePoint = D65_WHITE_POINT, cat:CAT = BRADFORD_CAT):
-#     adapted_image = image.copy()
-#     for i in range(image.shape[0]):
-#         for j in range(image.shape[1]):
-#             source_illumination = source_illumination_map[i][j]
-#             pixel = image[i, j]
-#             adapted_pixel = adapt_single_pixel(pixel, source_illumination, target_illumination, cat)
-#             adapted_image[i, j] = adapted_pixel
-#     return adapted_image

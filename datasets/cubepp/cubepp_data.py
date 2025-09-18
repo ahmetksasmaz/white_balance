@@ -1,14 +1,18 @@
 import cv2 as cv
 import numpy as np
 from .configuration import BLACK_LEVEL, SATURATION_LEVEL
+from chromatic_adaptation import *
 
 class CubePPData:
     def __init__(self, image_path : str, gt_info : str):
         self.image_path = image_path
         self.gt_info = gt_info
+        self.image = None
+        self.gt_image = None
 
         self.__parse_gt_info()
         self.__load_image()
+        self.__construct_gt_image()
 
     def __parse_gt_info(self):
         # Parse the ground truth information
@@ -27,11 +31,24 @@ class CubePPData:
 
         self.image = np.clip((self.image - BLACK_LEVEL) / (SATURATION_LEVEL - BLACK_LEVEL), 0, 1)
 
+    def __construct_gt_image(self):
+        if self.mean_rgb[0] is not None:
+            mean_rgb = np.array(self.mean_rgb[::-1]) # RGB to BGR order
+            normalized_gt = mean_rgb / np.linalg.norm(mean_rgb)
+            ground_truth_illuminant = WhitePoint(normalized_gt, "SRGB")
+            gt_target_illuminant = D65_WHITE_POINT
+            gt_target_illuminant.adjust_luminance(ground_truth_illuminant.luminance())
+
+            self.gt_image = chromatic_adaptation(self.image, ground_truth_illuminant, gt_target_illuminant)
+
     def get_image_name(self):
         return self.image_path.lower().split("/")[-1].split(".")[0]
 
     def get_image(self):
         return self.image
+    
+    def get_gt_image(self):
+        return self.gt_image
     
     def get_info(self):
         return {
