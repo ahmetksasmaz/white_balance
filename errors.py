@@ -157,29 +157,31 @@ def create_error_heatmap(adapted_image, gt_image):
     colormap_img = colormap_img.reshape((colormap_height, 1, 3))
     colormap_img = np.repeat(colormap_img, colormap_width, axis=1)
 
+    five_multiple = 10 if height > 2000 else 5 if height > 1000 else 2
     # Draw black line for mean_error ratio
     line_pos = int((1 - min(mean_error / max_error, 1.0)) * colormap_height)
-    cv.line(colormap_img, (0, line_pos), (colormap_width - 1, line_pos), (0, 0, 0), 10)
+    cv.line(colormap_img, (0, line_pos), (colormap_width - 1, line_pos), (0, 0, 0), five_multiple * 2)
+
 
     # Write max_error value with parenthesis
     font = cv.FONT_HERSHEY_SIMPLEX
-    font_scale = 2.0
-    thickness = 2
+    font_scale = 2.0 * float(height) / 1800.0
+    thickness = 3 if height > 2000 else 2 if height > 1000 else 1
     text = f"({max_error:.2f})"
     text_size, _ = cv.getTextSize(text, font, font_scale, thickness)
-    text_x = heatmap.shape[1] - colormap_width - text_size[0] - 5
-    text_y = text_size[1] + 10
+    text_x = heatmap.shape[1] - colormap_width - text_size[0] - five_multiple
+    text_y = text_size[1] + five_multiple * 2
     # Draw square for text background
-    cv.rectangle(heatmap, (heatmap.shape[1] - colormap_width - text_size[0] - 10, 0), (heatmap.shape[1] - colormap_width, text_size[1] + 30), (0, 0, 0), -1)
+    cv.rectangle(heatmap, (heatmap.shape[1] - colormap_width - text_size[0] - five_multiple * 2, 0), (heatmap.shape[1] - colormap_width, text_size[1] + five_multiple * 6), (0, 0, 0), -1)
     cv.putText(heatmap, text, (text_x, text_y), font, font_scale, (255, 255, 255), thickness, cv.LINE_AA)
 
     # Write mean_error value with brackets
     text = f"[{mean_error:.2f}]"
     text_size, _ = cv.getTextSize(text, font, font_scale, thickness)
-    text_x = heatmap.shape[1] - colormap_width - text_size[0] - 5
-    text_y = line_pos + 20
+    text_x = heatmap.shape[1] - colormap_width - text_size[0] - five_multiple
+    text_y = line_pos + five_multiple * 4
     # Draw square for text background
-    cv.rectangle(heatmap, (heatmap.shape[1] - colormap_width - text_size[0] - 10, line_pos - text_size[1] - 5), (heatmap.shape[1] - colormap_width, line_pos + text_size[1] + 5), (0, 0, 0), -1)
+    cv.rectangle(heatmap, (heatmap.shape[1] - colormap_width - text_size[0] - five_multiple * 2, line_pos - text_size[1] - five_multiple), (heatmap.shape[1] - colormap_width, line_pos + text_size[1] + five_multiple), (0, 0, 0), -1)
     cv.putText(heatmap, text, (text_x, text_y), font, font_scale, (255, 255, 255), thickness, cv.LINE_AA)
 
     # Overlay colormap on top right corner

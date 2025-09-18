@@ -13,8 +13,8 @@ from helper import *
 from errors import create_error_heatmap
 import tqdm
 
-def main(dataset_names, algorithm_names, output_directory, export_types, skip_processed, evaluate_only, export_resized):
-    evaluator = Evaluator(os.path.join(output_directory, "results.csv"), os.path.join(output_directory, "evaluation.csv"), export_period=100)
+def main(dataset_names, algorithm_names, output_directory, export_types, skip_processed, evaluate_only, export_resized, process_resized):
+    evaluator = Evaluator(os.path.join(output_directory, "results.csv"), os.path.join(output_directory, "evaluation.csv"), export_period=1)
 
     if not evaluate_only:
         # Load database
@@ -31,7 +31,7 @@ def main(dataset_names, algorithm_names, output_directory, export_types, skip_pr
         for dataset_name in dataset_names:
             dataloader = None
             if dataset_name == "cubepp":
-                dataloader = CubePPDataLoader()
+                dataloader = CubePPDataLoader(process_resized)
             print(f"Processing dataset {dataset_name}")
             for i in tqdm.tqdm(range(len(dataloader))):
                 data = dataloader[i]
@@ -49,23 +49,27 @@ def main(dataset_names, algorithm_names, output_directory, export_types, skip_pr
                     evaluator.update_processed(dataset_name, data.get_image_name(), algorithm_name, {"de2000": mean_error})
                     postfix = "full"
                     if export_resized:
-                        adapted_image = cv.resize(adapted_image, (new_w, 512))
-                        gt_image = cv.resize(gt_image, (new_w, 512))
-                        heatmap_image = cv.resize(heatmap_image, (new_w, 512))
+                        write_adapted_image = cv.resize(adapted_image, (new_w, 512))
+                        write_gt_image = cv.resize(gt_image, (new_w, 512))
+                        write_heatmap_image = cv.resize(heatmap_image, (new_w, 512))
                         postfix = "resized"
+                    else:
+                        write_adapted_image = adapted_image
+                        write_gt_image = gt_image
+                        write_heatmap_image = heatmap_image
                     if "algorithm" in export_types:
                         export_path = os.path.join(output_directory, "exports", f"{data.get_image_name()}_{dataset_name}_{algorithm_name}_algorithm_{postfix}.png")
-                        adapted_image_display = prepare_display(adapted_image, correct_gamma=True)
-                        cv.imwrite(export_path, adapted_image_display)
+                        write_adapted_image_display = prepare_display(write_adapted_image, correct_gamma=True)
+                        cv.imwrite(export_path, write_adapted_image_display)
                     if "gt" in export_types:
                         export_path = os.path.join(output_directory, "exports", f"{data.get_image_name()}_{dataset_name}_gt_{postfix}.png")
                         if not os.path.exists(export_path):
-                            gt_image_display = prepare_display(gt_image, correct_gamma=True)
-                            cv.imwrite(export_path, gt_image_display)
+                            write_gt_image_display = prepare_display(write_gt_image, correct_gamma=True)
+                            cv.imwrite(export_path, write_gt_image_display)
                     if "heatmap" in export_types:
                         export_path = os.path.join(output_directory, "exports", f"{data.get_image_name()}_{dataset_name}_{algorithm_name}_heatmap_{postfix}.png")
-                        heatmap_image_display = prepare_display(heatmap_image, correct_gamma=False)
-                        cv.imwrite(export_path, heatmap_image_display)
+                        write_heatmap_image_display = prepare_display(write_heatmap_image, correct_gamma=False)
+                        cv.imwrite(export_path, write_heatmap_image_display)
     evaluator.evaluate()
     
 
@@ -76,6 +80,7 @@ if __name__ == "__main__":
     parser.add_argument("--output", type=str, required=True, default="output", help="Path to the output directory")
     parser.add_argument("--export", type=str, required=False, default="none", help="List of export images [none, algorithm, gt, heatmap], type 'all' for all")
     parser.add_argument("--export_resized", action="store_true", help="Export resized images (height 512px)")
+    parser.add_argument("--process_resized", action="store_true", help="Process resized images (height 512px), automatically enables export_resized")
     parser.add_argument("--skip", action="store_true", help="Skip already processed images with that algorithm (scans the output directory for formatted filenames)")
     parser.add_argument("--evaluate_only", action="store_true", help="Only evaluate the results already processed")
     args = parser.parse_args()
@@ -85,8 +90,12 @@ if __name__ == "__main__":
     output_directory = args.output
     export_types = args.export.split(",")
     export_resized = args.export_resized
+    process_resized = args.process_resized
     skip_processed = args.skip
     evaluate_only = args.evaluate_only
+
+    if process_resized:
+        export_resized = True
 
     if "all" in dataset_names:
         dataset_names = VALID_DATASETS
@@ -149,4 +158,4 @@ if __name__ == "__main__":
             print(f"Failed to create exports directory: {e}")
             sys.exit(1)
 
-    main(dataset_names, algorithm_names, output_directory, export_types, skip_processed, evaluate_only, export_resized)
+    main(dataset_names, algorithm_names, output_directory, export_types, skip_processed, evaluate_only, export_resized, process_resized)

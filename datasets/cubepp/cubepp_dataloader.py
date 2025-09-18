@@ -3,7 +3,8 @@ from .cubepp_data import CubePPData
 import glob
 
 class CubePPDataLoader:
-    def __init__(self):
+    def __init__(self, load_resized=False):
+        self.load_resized = load_resized
         self.image_names = sorted(glob.glob(INPUT_IMAGE_DIRECTORY+"/*."+IMAGE_EXTENSION))
         self.gt_lines = {}
         with open(ROOT_DIRECTORY+"/gt.csv", "r") as f:
@@ -22,6 +23,6 @@ class CubePPDataLoader:
             image_path = self.image_names[index]
             image_name = image_path.split("/")[-1].split(".")[0]
             gt_line = self.gt_lines[image_name]
-            return CubePPData(image_path, gt_line)
+            return CubePPData(image_path, gt_line, load_resized=self.load_resized)
         else:
             raise IndexError("Image index out of range")

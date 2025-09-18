@@ -4,11 +4,12 @@ from .configuration import BLACK_LEVEL, SATURATION_LEVEL
 from chromatic_adaptation import *
 
 class CubePPData:
-    def __init__(self, image_path : str, gt_info : str):
+    def __init__(self, image_path : str, gt_info : str, load_resized=False):
         self.image_path = image_path
         self.gt_info = gt_info
         self.image = None
         self.gt_image = None
+        self.load_resized = load_resized
 
         self.__parse_gt_info()
         self.__load_image()
@@ -31,6 +32,11 @@ class CubePPData:
 
         self.image = np.clip((self.image - BLACK_LEVEL) / (SATURATION_LEVEL - BLACK_LEVEL), 0, 1)
 
+        if self.load_resized:
+            orig_h, orig_w = self.image.shape[:2]
+            new_w = int(orig_w * (512 / orig_h))
+            self.image = cv.resize(self.image, (new_w, 512))
+
     def __construct_gt_image(self):
         if self.mean_rgb[0] is not None:
             mean_rgb = np.array(self.mean_rgb[::-1]) # RGB to BGR order
@@ -40,6 +46,11 @@ class CubePPData:
             gt_target_illuminant.adjust_luminance(ground_truth_illuminant.luminance())
 
             self.gt_image = chromatic_adaptation(self.image, ground_truth_illuminant, gt_target_illuminant)
+
+            if self.load_resized:
+                orig_h, orig_w = self.gt_image.shape[:2]
+                new_w = int(orig_w * (512 / orig_h))
+                self.gt_image = cv.resize(self.gt_image, (new_w, 512))
 
     def get_image_name(self):
         return self.image_path.lower().split("/")[-1].split(".")[0]

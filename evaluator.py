@@ -62,10 +62,10 @@ class Evaluator:
         # Compute mean and standart deviation
         for dataset in VALID_DATASETS:
             if dataset not in self.evaluation:
-                self.evaluation[dataset] = {}
+                continue
             for algorithm in VALID_ALGORITHMS:
                 if algorithm not in self.evaluation[dataset]:
-                    self.evaluation[dataset][algorithm] = {}
+                    continue
                 for error_type in VALID_ERROR_METRICS:
                     values = self.evaluation[dataset][algorithm][error_type]
                     mean = sum(values) / len(values) if values else 0.0
@@ -74,18 +74,18 @@ class Evaluator:
         evaluation_file.close()
 
     def has_processed(self, dataset_name, image_name, algorithm):
-        if dataset_name in self.results:
-            if image_name in self.results[dataset_name]:
-                if algorithm in self.results[dataset_name][image_name]:
+        if dataset_name in self.results.keys():
+            if image_name in self.results[dataset_name].keys():
+                if algorithm in self.results[dataset_name][image_name].keys():
                     return True
         return False
 
     def update_processed(self, dataset_name, image_name, algorithm, errors):
-        if dataset_name not in self.results:
+        if dataset_name not in self.results.keys():
             self.results[dataset_name] = {}
-        if image_name not in self.results[dataset_name]:
+        if image_name not in self.results[dataset_name].keys():
             self.results[dataset_name][image_name] = {}
-        if algorithm not in self.results[dataset_name][image_name]:
+        if algorithm not in self.results[dataset_name][image_name].keys():
             self.results[dataset_name][image_name][algorithm] = {}
         for error in errors:
             value = errors[error]
