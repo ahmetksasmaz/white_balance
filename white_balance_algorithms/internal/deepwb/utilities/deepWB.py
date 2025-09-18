@@ -10,7 +10,7 @@ __credits__ = ["Mahmoud Afifi"]
 import numpy as np
 import torch
 from torchvision import transforms
-import utilities.utils as utls
+from . import utils as utls
 import cv2 as cv
 
 

@@ -9,7 +9,7 @@ class MaxRGB(WhiteBalanceAlgorithm):
 
     def _apply_internal(self, image):
         illuminant = np.max(image, axis=(0, 1))
-        gain = np.array([1.0, 1.0, 1.0]) / illuminant
+        gain = np.array([max(illuminant), max(illuminant), max(illuminant)]) / illuminant
         image = image * gain
         white_point = WhitePoint(illuminant, "SRGB")
         return image, {"white_point": white_point}

@@ -20,25 +20,26 @@ def main(dataset_names, algorithm_names, output_directory, export_types, skip_pr
         # Load database
         # Run every image for every algorithm
         # For every image-algorithm pair, compute every metric, export every type
+        algorithms = []
+        for algorithm_name in algorithm_names:
+            if algorithm_name == "gray_world":
+                algorithms.append((GrayWorld(), algorithm_name))
+            elif algorithm_name == "max_rgb":
+                algorithms.append((MaxRGB(), algorithm_name))
+            elif algorithm_name == "deep_wb":
+                algorithms.append((DeepWB(model_path="white_balance_algorithms/internal/deepwb/models/net_awb.pth", max_dim=656), algorithm_name))
         for dataset_name in dataset_names:
             dataloader = None
             if dataset_name == "cubepp":
                 dataloader = CubePPDataLoader()
-            for algorithm_name in algorithm_names:
-                algorithm = None
-                if algorithm_name == "gray_world":
-                    algorithm = GrayWorld()
-                elif algorithm_name == "max_rgb":
-                    algorithm = MaxRGB()
-                elif algorithm_name == "deep_wb":
-                    algorithm = DeepWB(model_path="/white_balance_algorithms/internal/deepwb/models/net_awb.pth", max_dim=656)
-                print(f"Processing dataset {dataset_name} with algorithm {algorithm_name}")
-                for i in tqdm.tqdm(range(len(dataloader))):
-                    data = dataloader[i]
-                    orig_image = data.get_image()
-                    gt_image = data.get_gt_image()
-                    if gt_image is None:
-                        continue
+            print(f"Processing dataset {dataset_name}")
+            for i in tqdm.tqdm(range(len(dataloader))):
+                data = dataloader[i]
+                orig_image = data.get_image()
+                gt_image = data.get_gt_image()
+                if gt_image is None:
+                    continue
+                for algorithm, algorithm_name in algorithms:
                     if skip_processed and evaluator.has_processed(dataset_name, data.get_image_name(), algorithm_name):
                         continue
                     adapted_image, metadata = algorithm.apply(orig_image)
@@ -48,7 +49,6 @@ def main(dataset_names, algorithm_names, output_directory, export_types, skip_pr
                     evaluator.update_processed(dataset_name, data.get_image_name(), algorithm_name, {"de2000": mean_error})
                     postfix = "full"
                     if export_resized:
-                        orig_image = cv.resize(orig_image, (new_w, 512))
                         adapted_image = cv.resize(adapted_image, (new_w, 512))
                         gt_image = cv.resize(gt_image, (new_w, 512))
                         heatmap_image = cv.resize(heatmap_image, (new_w, 512))

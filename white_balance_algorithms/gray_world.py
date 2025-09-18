@@ -9,7 +9,7 @@ class GrayWorld(WhiteBalanceAlgorithm):
 
     def _apply_internal(self, image):
         illuminant = np.mean(image, axis=(0, 1))
-        gain = np.array([0.5, 0.5, 0.5]) / illuminant
+        gain = np.array([illuminant[1], illuminant[1], illuminant[1]]) / illuminant
         image = image * gain
         white_point = WhitePoint(illuminant, "SRGB")
         return image, {"white_point": white_point}

@@ -1,7 +1,6 @@
 import torch
-from PIL import Image
-from utilities.deepWB import deep_wb
-from arch import deep_wb_single_task
+from .utilities.deepWB import deep_wb
+from .arch import deep_wb_single_task
 import numpy as np
 import cv2 as cv
 
@@ -20,8 +19,7 @@ class DeepWBSingleInference:
         out_awb = deep_wb(img, task="awb", net_awb=self.net_awb, device="cpu", s=self.max_dim)
         return out_awb
     def infer(self, image):
-        rgb_image = image[...,::-1]
-        out_awb = deep_wb(rgb_image, task="awb", net_awb=self.net_awb, device="cpu", s=self.max_dim)
+        out_awb = deep_wb(image, task="awb", net_awb=self.net_awb, device="cpu", s=self.max_dim)
         return out_awb
 
 if __name__ == "__main__":
