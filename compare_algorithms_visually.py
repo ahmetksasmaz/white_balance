@@ -5,6 +5,7 @@ import os
 import argparse
 from configuration import *
 from datasets.cubepp.cubepp_dataloader import CubePPDataLoader
+from datasets.lsmi.lsmi_dataloader import LSMIDataLoader
 from helper import *
 import tqdm
 
@@ -19,6 +20,8 @@ def main(dataset_names, algorithm_names, output_directory, export_resized, skip_
         dataloader = None
         if dataset_name == "cubepp":
             dataloader = CubePPDataLoader()
+        elif dataset_name == "lsmi":
+            dataloader = LSMIDataLoader()
         for i in tqdm.tqdm(range(len(dataloader))):
             data = dataloader[i]
             export_path = os.path.join(output_directory, "exports", "comparisons", f"{data.get_image_name()}_{dataset_name}_comparison_{postfix}.png")
@@ -55,7 +58,7 @@ def main(dataset_names, algorithm_names, output_directory, export_resized, skip_
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="White Balance Algorithm Result Visual Comparison")
-    parser.add_argument("--datasets", type=str, required=False, default="all", help="List of the name of the datasets to run [cubepp], type 'all' for all")
+    parser.add_argument("--datasets", type=str, required=False, default="all", help="List of the name of the datasets to run [cubepp, lsmi], type 'all' for all")
     parser.add_argument("--algorithms", type=str, required=False, default="all", help="List of the algorithms to run [gray_world, max_rgb], type 'all' for all")
     parser.add_argument("--output", type=str, required=True, default="output", help="Path to the output directory")
     parser.add_argument("--export_resized", action="store_true", help="Export resized images (height 512px)")
