@@ -6,6 +6,7 @@ import argparse
 from evaluator import *
 from configuration import *
 from datasets.cubepp.cubepp_dataloader import CubePPDataLoader
+from datasets.lsmi.lsmi_dataloader import LSMIDataLoader
 from white_balance_algorithms.gray_world import GrayWorld
 from white_balance_algorithms.max_rgb import MaxRGB
 from white_balance_algorithms.deep_wb import DeepWB
@@ -32,6 +33,8 @@ def main(dataset_names, algorithm_names, output_directory, export_types, skip_pr
             dataloader = None
             if dataset_name == "cubepp":
                 dataloader = CubePPDataLoader(process_resized)
+            elif dataset_name == "lsmi":
+                dataloader = LSMIDataLoader(process_resized)
             print(f"Processing dataset {dataset_name}")
             for i in tqdm.tqdm(range(len(dataloader))):
                 data = dataloader[i]
@@ -75,7 +78,7 @@ def main(dataset_names, algorithm_names, output_directory, export_types, skip_pr
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="White Balance Algorithm Tester")
-    parser.add_argument("--datasets", type=str, required=False, default="all", help="List of the name of the datasets to run [cubepp], type 'all' for all")
+    parser.add_argument("--datasets", type=str, required=False, default="all", help="List of the name of the datasets to run [cubepp, lsmi], type 'all' for all")
     parser.add_argument("--algorithms", type=str, required=False, default="all", help="List of the algorithms to run [gray_world, max_rgb, deep_wb], type 'all' for all")
     parser.add_argument("--output", type=str, required=True, default="output", help="Path to the output directory")
     parser.add_argument("--export", type=str, required=False, default="none", help="List of export images [none, algorithm, gt, heatmap], type 'all' for all")

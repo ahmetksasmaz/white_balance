@@ -82,7 +82,7 @@ class LSMIData:
         self.gt_image = np.clip(self.gt_image, 0.0, 1.0)
     
     def get_image_name(self):
-        return self.image_path.lower().split("/")[-1].split(".")[0]
+        return self.camera_model + "_" + self.image_path.lower().split("/")[-1].split(".")[0]
 
     def get_image(self):
         return self.image
