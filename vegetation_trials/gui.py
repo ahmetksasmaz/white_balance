@@ -205,60 +205,60 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     images_list = []
 
-    # print("Loading Cube++ Images...")
-    # # Load Cube++ Images
-    # numbers = [4, 11, 13, 16, 22, 28, 37, 44, 49, 57]
-    # input_filenames = [f"images/00_{num:04d}.png" for num in numbers]
-    # gt_filenames = [f"images/00_{num:04d}_gt.png" for num in numbers]
-    # mask_filenames = [f"images/00_{num:04d}_gt.jpg" for num in numbers]
+    print("Loading Cube++ Images...")
+    #  Load Cube++ Images
+    numbers = [4, 11, 13, 16, 22, 28, 37, 44, 49, 57]
+    input_filenames = [f"images/00_{num:04d}.png" for num in numbers]
+    gt_filenames = [f"images/00_{num:04d}_gt.png" for num in numbers]
+    mask_filenames = [f"images/00_{num:04d}_gt.jpg" for num in numbers]
 
-    # for i in range(len(input_filenames)):
-    #     print(f"Loading image {i + 1}/{len(input_filenames)}...")
-    #     input_image = cv.imread(input_filenames[i]).astype(np.float32) / 255.0
-    #     gt_image = cv.imread(gt_filenames[i]).astype(np.float32) / 255.0
-    #     mask_image = cv.imread(mask_filenames[i], cv.IMREAD_GRAYSCALE).astype(np.float32) / 255.0
-    #     mask_image = (mask_image > 0.5).astype(np.float32)  # Binary mask
-    #     mask_image = cv.merge([mask_image, mask_image, mask_image])  # Convert to 3-channel
-    #     masked_input = input_image * mask_image
-    #     masked_gt = gt_image * mask_image
-    #     inverse_mask = 1.0 - mask_image
-    #     inverse_masked_input = input_image * inverse_mask
-    #     inverse_masked_gt = gt_image * inverse_mask
+    for i in range(len(input_filenames)):
+        print(f"Loading image {i + 1}/{len(input_filenames)}...")
+        input_image = cv.imread(input_filenames[i]).astype(np.float32) / 255.0
+        gt_image = cv.imread(gt_filenames[i]).astype(np.float32) / 255.0
+        mask_image = cv.imread(mask_filenames[i], cv.IMREAD_GRAYSCALE).astype(np.float32) / 255.0
+        mask_image = (mask_image > 0.5).astype(np.float32)  # Binary mask
+        mask_image = cv.merge([mask_image, mask_image, mask_image])  # Convert to 3-channel
+        masked_input = input_image * mask_image
+        masked_gt = gt_image * mask_image
+        inverse_mask = 1.0 - mask_image
+        inverse_masked_input = input_image * inverse_mask
+        inverse_masked_gt = gt_image * inverse_mask
 
-    #     input_hist, _ = draw_log_chroma_from_image(input_image)
-    #     gt_hist, _ = draw_log_chroma_from_image(gt_image)
-    #     masked_input_hist, _ = draw_log_chroma_from_image(masked_input)
-    #     inverse_masked_input_hist, _ = draw_log_chroma_from_image(inverse_masked_input)
-    #     masked_gt_hist, _ = draw_log_chroma_from_image(masked_gt)
-    #     inverse_masked_gt_hist, _ = draw_log_chroma_from_image(inverse_masked_gt)
+        input_hist, _ = draw_log_chroma_from_image(input_image)
+        gt_hist, _ = draw_log_chroma_from_image(gt_image)
+        masked_input_hist, _ = draw_log_chroma_from_image(masked_input)
+        inverse_masked_input_hist, _ = draw_log_chroma_from_image(inverse_masked_input)
+        masked_gt_hist, _ = draw_log_chroma_from_image(masked_gt)
+        inverse_masked_gt_hist, _ = draw_log_chroma_from_image(inverse_masked_gt)
 
-    #     rgb_input_hist, _ = draw_rgb_chroma_from_image(input_image)
-    #     rgb_gt_hist, _ = draw_rgb_chroma_from_image(gt_image)
-    #     rgb_masked_input_hist, _ = draw_rgb_chroma_from_image(masked_input)
-    #     rgb_inverse_masked_input_hist, _ = draw_rgb_chroma_from_image(inverse_masked_input)
-    #     rgb_masked_gt_hist, _ = draw_rgb_chroma_from_image(masked_gt)
-    #     rgb_inverse_masked_gt_hist, _ = draw_rgb_chroma_from_image(inverse_masked_gt)
+        rgb_input_hist, _ = draw_rgb_chroma_from_image(input_image)
+        rgb_gt_hist, _ = draw_rgb_chroma_from_image(gt_image)
+        rgb_masked_input_hist, _ = draw_rgb_chroma_from_image(masked_input)
+        rgb_inverse_masked_input_hist, _ = draw_rgb_chroma_from_image(inverse_masked_input)
+        rgb_masked_gt_hist, _ = draw_rgb_chroma_from_image(masked_gt)
+        rgb_inverse_masked_gt_hist, _ = draw_rgb_chroma_from_image(inverse_masked_gt)
 
-    #     images_list.append([
-    #         [(input_image * 255).astype(np.uint8),
-    #         (gt_image * 255).astype(np.uint8),
-    #         (masked_input * 255).astype(np.uint8),
-    #         (inverse_masked_input * 255).astype(np.uint8),
-    #         (masked_gt * 255).astype(np.uint8),
-    #         (inverse_masked_gt * 255).astype(np.uint8),],
-    #         [input_hist,
-    #         gt_hist,
-    #         masked_input_hist,
-    #         inverse_masked_input_hist,
-    #         masked_gt_hist,
-    #         inverse_masked_gt_hist],
-    #         [rgb_input_hist,
-    #         rgb_gt_hist,
-    #         rgb_masked_input_hist,
-    #         rgb_inverse_masked_input_hist,
-    #         rgb_masked_gt_hist,
-    #         rgb_inverse_masked_gt_hist]
-    #     ])
+        images_list.append([
+            [(input_image * 255).astype(np.uint8),
+            (gt_image * 255).astype(np.uint8),
+            (masked_input * 255).astype(np.uint8),
+            (inverse_masked_input * 255).astype(np.uint8),
+            (masked_gt * 255).astype(np.uint8),
+            (inverse_masked_gt * 255).astype(np.uint8),],
+            [input_hist,
+            gt_hist,
+            masked_input_hist,
+            inverse_masked_input_hist,
+            masked_gt_hist,
+            inverse_masked_gt_hist],
+            [rgb_input_hist,
+            rgb_gt_hist,
+            rgb_masked_input_hist,
+            rgb_inverse_masked_input_hist,
+            rgb_masked_gt_hist,
+            rgb_inverse_masked_gt_hist]
+        ])
     
     # Load LSMI Images
     numbers = range(201) # 0 to 200
@@ -281,23 +281,81 @@ if __name__ == "__main__":
         images_list.append([
             [(input_image * 255).astype(np.uint8),
             (gt_image * 255).astype(np.uint8),
-            np.zeros_like((HISTOGRAM_BINS,HISTOGRAM_BINS,3), dtype=np.uint8),
-            np.zeros_like((HISTOGRAM_BINS,HISTOGRAM_BINS,3), dtype=np.uint8),
-            np.zeros_like((HISTOGRAM_BINS,HISTOGRAM_BINS,3), dtype=np.uint8),
-            np.zeros_like((HISTOGRAM_BINS,HISTOGRAM_BINS,3), dtype=np.uint8),],
+            np.zeros((HISTOGRAM_BINS,HISTOGRAM_BINS,3), dtype=np.uint8),
+            np.zeros((HISTOGRAM_BINS,HISTOGRAM_BINS,3), dtype=np.uint8),
+            np.zeros((HISTOGRAM_BINS,HISTOGRAM_BINS,3), dtype=np.uint8),
+            np.zeros((HISTOGRAM_BINS,HISTOGRAM_BINS,3), dtype=np.uint8),],
             [input_hist,
             gt_hist,
-            np.zeros_like((HISTOGRAM_BINS,HISTOGRAM_BINS,3), dtype=np.uint8),
-            np.zeros_like((HISTOGRAM_BINS,HISTOGRAM_BINS,3), dtype=np.uint8),
-            np.zeros_like((HISTOGRAM_BINS,HISTOGRAM_BINS,3), dtype=np.uint8),
-            np.zeros_like((HISTOGRAM_BINS,HISTOGRAM_BINS,3), dtype=np.uint8)],
+            np.zeros((HISTOGRAM_BINS,HISTOGRAM_BINS,3), dtype=np.uint8),
+            np.zeros((HISTOGRAM_BINS,HISTOGRAM_BINS,3), dtype=np.uint8),
+            np.zeros((HISTOGRAM_BINS,HISTOGRAM_BINS,3), dtype=np.uint8),
+            np.zeros((HISTOGRAM_BINS,HISTOGRAM_BINS,3), dtype=np.uint8)],
             [rgb_input_hist,
             rgb_gt_hist,
-            np.zeros_like((HISTOGRAM_BINS,HISTOGRAM_BINS,3), dtype=np.uint8),
-            np.zeros_like((HISTOGRAM_BINS,HISTOGRAM_BINS,3), dtype=np.uint8),
-            np.zeros_like((HISTOGRAM_BINS,HISTOGRAM_BINS,3), dtype=np.uint8),
-            np.zeros_like((HISTOGRAM_BINS,HISTOGRAM_BINS,3), dtype=np.uint8)]
+            np.zeros((HISTOGRAM_BINS,HISTOGRAM_BINS,3), dtype=np.uint8),
+            np.zeros((HISTOGRAM_BINS,HISTOGRAM_BINS,3), dtype=np.uint8),
+            np.zeros((HISTOGRAM_BINS,HISTOGRAM_BINS,3), dtype=np.uint8),
+            np.zeros((HISTOGRAM_BINS,HISTOGRAM_BINS,3), dtype=np.uint8)]
         ])
+
+    print(f"Loaded {len(images_list)} images.")
+
+    # print("Exporting debug images...")
+    # # Exporting images_list for debugging
+    # for idx, images in enumerate(images_list):
+    #     input_image = images[0][0].astype(np.float32) / 255.0
+    #     illuminant = np.mean(input_image, axis=(0, 1))
+    #     gain = np.array([illuminant[1], illuminant[1], illuminant[1]]) / illuminant
+    #     adjusted_image = input_image * gain
+    #     adjusted_image = (np.clip(adjusted_image, 0, 1)*255).astype(np.uint8)
+    #     adjusted_hist, _ = draw_log_chroma_from_image(adjusted_image)
+    #     adjusted_rgb_hist, _ = draw_rgb_chroma_from_image(adjusted_image)
+    #     # cv.imwrite(f"debug_outputs/{idx:03d}_input.png", images[0][0])
+    #     # cv.imwrite(f"debug_outputs/{idx:03d}_gt.png", images[0][1])
+    #     # cv.imwrite(f"debug_outputs/{idx:03d}_masked_input.png", images[0][2])
+    #     # cv.imwrite(f"debug_outputs/{idx:03d}_inverse_masked_input.png", images[0][3])
+    #     # cv.imwrite(f"debug_outputs/{idx:03d}_masked_gt.png", images[0][4])
+    #     # cv.imwrite(f"debug_outputs/{idx:03d}_inverse_masked_gt.png", images[0][5])
+    #     # cv.imwrite(f"debug_outputs/{idx:03d}_input_hist.png", images[1][0])
+    #     # cv.imwrite(f"debug_outputs/{idx:03d}_gt_hist.png", images[1][1])
+    #     # cv.imwrite(f"debug_outputs/{idx:03d}_masked_input_hist.png", images[1][2])
+    #     # cv.imwrite(f"debug_outputs/{idx:03d}_inverse_masked_input_hist.png", images[1][3])
+    #     # cv.imwrite(f"debug_outputs/{idx:03d}_masked_gt_hist.png", images[1][4])
+    #     # cv.imwrite(f"debug_outputs/{idx:03d}_inverse_masked_gt_hist.png", images[1][5])
+    #     # cv.imwrite(f"debug_outputs/{idx:03d}_input_rgb_hist.png", images[2][0])
+    #     # cv.imwrite(f"debug_outputs/{idx:03d}_gt_rgb_hist.png", images[2][1])
+    #     # cv.imwrite(f"debug_outputs/{idx:03d}_masked_input_rgb_hist.png", images[2][2])
+    #     # cv.imwrite(f"debug_outputs/{idx:03d}_inverse_masked_input_rgb_hist.png", images[2][3])
+    #     # cv.imwrite(f"debug_outputs/{idx:03d}_masked_gt_rgb_hist.png", images[2][4])
+    #     # cv.imwrite(f"debug_outputs/{idx:03d}_inverse_masked_gt_rgb_hist.png", images[2][5])
+    #     # cv.imwrite(f"debug_outputs/{idx:03d}_adjusted_input.png", adjusted_image)
+    #     # cv.imwrite(f"debug_outputs/{idx:03d}_adjusted_input_hist.png", adjusted_hist)
+    #     # cv.imwrite(f"debug_outputs/{idx:03d}_adjusted_input_rgb_hist.png", adjusted_rgb_hist)
+
+    #     # Merge all images into one for easier viewing
+    #     # Resize first row images to HISTOGRAM_BINS x HISTOGRAM_BINS
+    #     adjusted_image = cv.resize(adjusted_image, (HISTOGRAM_BINS, HISTOGRAM_BINS))
+    #     images[0][0] = cv.resize(images[0][0], (HISTOGRAM_BINS, HISTOGRAM_BINS))
+    #     images[0][1] = cv.resize(images[0][1], (HISTOGRAM_BINS, HISTOGRAM_BINS))
+    #     images[0][2] = cv.resize(images[0][2], (HISTOGRAM_BINS, HISTOGRAM_BINS))
+    #     images[0][3] = cv.resize(images[0][3], (HISTOGRAM_BINS, HISTOGRAM_BINS))
+    #     images[0][4] = cv.resize(images[0][4], (HISTOGRAM_BINS, HISTOGRAM_BINS))
+    #     images[0][5] = cv.resize(images[0][5], (HISTOGRAM_BINS, HISTOGRAM_BINS))
+
+    #     top_row = np.hstack([
+    #         adjusted_image, images[0][0], images[0][1], images[0][2], images[0][3],
+    #         images[0][4], images[0][5]])
+    #     middle_row = np.hstack([
+    #         adjusted_hist, images[1][0], images[1][1], images[1][2], images[1][3],
+    #         images[1][4], images[1][5]])
+    #     bottom_row = np.hstack([
+    #         adjusted_rgb_hist, images[2][0], images[2][1], images[2][2], images[2][3],
+    #         images[2][4], images[2][5]])
+    #     combined = np.vstack([top_row, middle_row, bottom_row])
+    #     cv.imwrite(f"debug_outputs/{idx:03d}_combined.png", combined)
+    # print("Debug images exported, exiting...")
+    # exit()
 
     print("Starting GUI...")
     window = MainWindow(images_list)
