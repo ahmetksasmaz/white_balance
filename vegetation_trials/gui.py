@@ -42,24 +42,27 @@ class GridViewer(QWidget):
             layout.addWidget(label, 0, col+1)
 
         # Fill cells with images
-        for row in range(2):
+        for row in range(3):
             for col in range(len(COLUMN_HEADERS)):
                 if col == 0:
                     continue
                 img = images[row][col-1]
                 img_label = QLabel()
                 img_label.setAlignment(Qt.AlignCenter)
-                img_label.setPixmap(cvimg_to_qpixmap(img).scaled(256, 256, Qt.KeepAspectRatio))
+                img_label.setPixmap(cvimg_to_qpixmap(img).scaled(HISTOGRAM_BINS, HISTOGRAM_BINS, Qt.KeepAspectRatio))
                 layout.addWidget(img_label, row + 1, col+1)
         self.setLayout(layout)
 
-        self.set_input_image(images[0][0])
-        self.set_histogram_image(images[1][0])
+        self.set_illumination(1/self.gain[0], 1/self.gain[1], 1/self.gain[2])
+
+        # self.set_input_image(images[0][0])
+        # self.set_histogram_image(images[1][0])
+        # self.set_rgb_histogram_image(images[2][0])
 
     def set_input_image(self, img):
         img_label = QLabel()
         img_label.setAlignment(Qt.AlignCenter)
-        img_label.setPixmap(cvimg_to_qpixmap(img).scaled(256, 256, Qt.KeepAspectRatio))
+        img_label.setPixmap(cvimg_to_qpixmap(img).scaled(HISTOGRAM_BINS, HISTOGRAM_BINS, Qt.KeepAspectRatio))
         if self.layout().itemAtPosition(0, 0):
             widget = self.layout().itemAtPosition(0, 0).widget()
             if widget:
@@ -69,13 +72,23 @@ class GridViewer(QWidget):
     def set_histogram_image(self, img):
         img_label = QLabel()
         img_label.setAlignment(Qt.AlignCenter)
-        img_label.setPixmap(cvimg_to_qpixmap(img).scaled(256, 256, Qt.KeepAspectRatio))
+        img_label.setPixmap(cvimg_to_qpixmap(img).scaled(HISTOGRAM_BINS, HISTOGRAM_BINS, Qt.KeepAspectRatio))
         if self.layout().itemAtPosition(0, 0):
             widget = self.layout().itemAtPosition(0, 0).widget()
             if widget:
                 self.layout().removeWidget(widget)
                 widget.deleteLater()
         self.layout().addWidget(img_label, 2, 1)
+    def set_rgb_histogram_image(self, img):
+        img_label = QLabel()
+        img_label.setAlignment(Qt.AlignCenter)
+        img_label.setPixmap(cvimg_to_qpixmap(img).scaled(HISTOGRAM_BINS, HISTOGRAM_BINS, Qt.KeepAspectRatio))
+        if self.layout().itemAtPosition(0, 0):
+            widget = self.layout().itemAtPosition(0, 0).widget()
+            if widget:
+                self.layout().removeWidget(widget)
+                widget.deleteLater()
+        self.layout().addWidget(img_label, 3, 1)
     def set_illumination(self, b, g, r):
         illuminant = np.array([b, g, r], dtype=np.float32)
         gain = np.array([illuminant[1], illuminant[1], illuminant[1]]) / illuminant
@@ -84,7 +97,9 @@ class GridViewer(QWidget):
         self.set_input_image((adjusted_image * 255).astype(np.uint8))
 
         adjusted_hist, _ = draw_log_chroma_from_image(adjusted_image)
-        self.set_histogram_image(adjusted_hist) 
+        adjusted_rgb_hist, _ = draw_rgb_chroma_from_image(adjusted_image)
+        self.set_histogram_image(adjusted_hist)
+        self.set_rgb_histogram_image(adjusted_rgb_hist)
 
 
 class ControlPanel(QWidget):
@@ -188,46 +203,103 @@ class MainWindow(QWidget):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    numbers = [4, 11, 13, 16, 22, 28, 37, 44, 49, 57]
-    input_filenames = [f"images/00_{num:04d}.png" for num in numbers]
-    gt_filenames = [f"images/00_{num:04d}_gt.png" for num in numbers]
-    mask_filenames = [f"images/00_{num:04d}_gt.jpg" for num in numbers]
-
     images_list = []
+
+    # print("Loading Cube++ Images...")
+    # # Load Cube++ Images
+    # numbers = [4, 11, 13, 16, 22, 28, 37, 44, 49, 57]
+    # input_filenames = [f"images/00_{num:04d}.png" for num in numbers]
+    # gt_filenames = [f"images/00_{num:04d}_gt.png" for num in numbers]
+    # mask_filenames = [f"images/00_{num:04d}_gt.jpg" for num in numbers]
+
+    # for i in range(len(input_filenames)):
+    #     print(f"Loading image {i + 1}/{len(input_filenames)}...")
+    #     input_image = cv.imread(input_filenames[i]).astype(np.float32) / 255.0
+    #     gt_image = cv.imread(gt_filenames[i]).astype(np.float32) / 255.0
+    #     mask_image = cv.imread(mask_filenames[i], cv.IMREAD_GRAYSCALE).astype(np.float32) / 255.0
+    #     mask_image = (mask_image > 0.5).astype(np.float32)  # Binary mask
+    #     mask_image = cv.merge([mask_image, mask_image, mask_image])  # Convert to 3-channel
+    #     masked_input = input_image * mask_image
+    #     masked_gt = gt_image * mask_image
+    #     inverse_mask = 1.0 - mask_image
+    #     inverse_masked_input = input_image * inverse_mask
+    #     inverse_masked_gt = gt_image * inverse_mask
+
+    #     input_hist, _ = draw_log_chroma_from_image(input_image)
+    #     gt_hist, _ = draw_log_chroma_from_image(gt_image)
+    #     masked_input_hist, _ = draw_log_chroma_from_image(masked_input)
+    #     inverse_masked_input_hist, _ = draw_log_chroma_from_image(inverse_masked_input)
+    #     masked_gt_hist, _ = draw_log_chroma_from_image(masked_gt)
+    #     inverse_masked_gt_hist, _ = draw_log_chroma_from_image(inverse_masked_gt)
+
+    #     rgb_input_hist, _ = draw_rgb_chroma_from_image(input_image)
+    #     rgb_gt_hist, _ = draw_rgb_chroma_from_image(gt_image)
+    #     rgb_masked_input_hist, _ = draw_rgb_chroma_from_image(masked_input)
+    #     rgb_inverse_masked_input_hist, _ = draw_rgb_chroma_from_image(inverse_masked_input)
+    #     rgb_masked_gt_hist, _ = draw_rgb_chroma_from_image(masked_gt)
+    #     rgb_inverse_masked_gt_hist, _ = draw_rgb_chroma_from_image(inverse_masked_gt)
+
+    #     images_list.append([
+    #         [(input_image * 255).astype(np.uint8),
+    #         (gt_image * 255).astype(np.uint8),
+    #         (masked_input * 255).astype(np.uint8),
+    #         (inverse_masked_input * 255).astype(np.uint8),
+    #         (masked_gt * 255).astype(np.uint8),
+    #         (inverse_masked_gt * 255).astype(np.uint8),],
+    #         [input_hist,
+    #         gt_hist,
+    #         masked_input_hist,
+    #         inverse_masked_input_hist,
+    #         masked_gt_hist,
+    #         inverse_masked_gt_hist],
+    #         [rgb_input_hist,
+    #         rgb_gt_hist,
+    #         rgb_masked_input_hist,
+    #         rgb_inverse_masked_input_hist,
+    #         rgb_masked_gt_hist,
+    #         rgb_inverse_masked_gt_hist]
+    #     ])
+    
+    # Load LSMI Images
+    numbers = range(201) # 0 to 200
+    input_filenames = [f"images/galaxy_Place{num}.png" for num in numbers]
+    gt_filenames = [f"images/galaxy_Place{num}_gt.png" for num in numbers]
+
+    print("Loading LSMI Images...")
+
     for i in range(len(input_filenames)):
+        print(f"Loading image {i + 1}/{len(input_filenames)}...")
         input_image = cv.imread(input_filenames[i]).astype(np.float32) / 255.0
         gt_image = cv.imread(gt_filenames[i]).astype(np.float32) / 255.0
-        mask_image = cv.imread(mask_filenames[i], cv.IMREAD_GRAYSCALE).astype(np.float32) / 255.0
-        mask_image = (mask_image > 0.5).astype(np.float32)  # Binary mask
-        mask_image = cv.merge([mask_image, mask_image, mask_image])  # Convert to 3-channel
-        masked_input = input_image * mask_image
-        masked_gt = gt_image * mask_image
-        inverse_mask = 1.0 - mask_image
-        inverse_masked_input = input_image * inverse_mask
-        inverse_masked_gt = gt_image * inverse_mask
 
         input_hist, _ = draw_log_chroma_from_image(input_image)
         gt_hist, _ = draw_log_chroma_from_image(gt_image)
-        masked_input_hist, _ = draw_log_chroma_from_image(masked_input)
-        inverse_masked_input_hist, _ = draw_log_chroma_from_image(inverse_masked_input)
-        masked_gt_hist, _ = draw_log_chroma_from_image(masked_gt)
-        inverse_masked_gt_hist, _ = draw_log_chroma_from_image(inverse_masked_gt)
+
+        rgb_input_hist, _ = draw_rgb_chroma_from_image(input_image)
+        rgb_gt_hist, _ = draw_rgb_chroma_from_image(gt_image)
 
         images_list.append([
             [(input_image * 255).astype(np.uint8),
             (gt_image * 255).astype(np.uint8),
-            (masked_input * 255).astype(np.uint8),
-            (inverse_masked_input * 255).astype(np.uint8),
-            (masked_gt * 255).astype(np.uint8),
-            (inverse_masked_gt * 255).astype(np.uint8),],
+            np.zeros_like((HISTOGRAM_BINS,HISTOGRAM_BINS,3), dtype=np.uint8),
+            np.zeros_like((HISTOGRAM_BINS,HISTOGRAM_BINS,3), dtype=np.uint8),
+            np.zeros_like((HISTOGRAM_BINS,HISTOGRAM_BINS,3), dtype=np.uint8),
+            np.zeros_like((HISTOGRAM_BINS,HISTOGRAM_BINS,3), dtype=np.uint8),],
             [input_hist,
             gt_hist,
-            masked_input_hist,
-            inverse_masked_input_hist,
-            masked_gt_hist,
-            inverse_masked_gt_hist]
+            np.zeros_like((HISTOGRAM_BINS,HISTOGRAM_BINS,3), dtype=np.uint8),
+            np.zeros_like((HISTOGRAM_BINS,HISTOGRAM_BINS,3), dtype=np.uint8),
+            np.zeros_like((HISTOGRAM_BINS,HISTOGRAM_BINS,3), dtype=np.uint8),
+            np.zeros_like((HISTOGRAM_BINS,HISTOGRAM_BINS,3), dtype=np.uint8)],
+            [rgb_input_hist,
+            rgb_gt_hist,
+            np.zeros_like((HISTOGRAM_BINS,HISTOGRAM_BINS,3), dtype=np.uint8),
+            np.zeros_like((HISTOGRAM_BINS,HISTOGRAM_BINS,3), dtype=np.uint8),
+            np.zeros_like((HISTOGRAM_BINS,HISTOGRAM_BINS,3), dtype=np.uint8),
+            np.zeros_like((HISTOGRAM_BINS,HISTOGRAM_BINS,3), dtype=np.uint8)]
         ])
-    
+
+    print("Starting GUI...")
     window = MainWindow(images_list)
     window.show()
     sys.exit(app.exec_())
