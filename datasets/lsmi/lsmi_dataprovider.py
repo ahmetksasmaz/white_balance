@@ -32,7 +32,7 @@ class LSMIDataProvider(DataProvider):
 
         # Load image
         image_path = os.path.join(directory, image_name)
-        image = cv.imread(image_path)
+        image = self._load_image(image_path)
         if image is None:
             raise ValueError(f"Image not found at {image_path}")
 
@@ -64,3 +64,9 @@ class LSMIDataProvider(DataProvider):
         data.set_exposure_values(exposure_values["exposure_time"], exposure_values["iso"], exposure_values["aperture"])
 
         return data
+
+    def _load_image(self, image_path):
+        image = cv.imread(image_path)
+        if image is None:
+            raise ValueError(f"Image not found at {image_path}")
+        return image
