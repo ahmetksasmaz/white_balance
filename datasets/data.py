@@ -14,6 +14,7 @@ class Data:
             "iso": None,
             "aperture": None
         }
+        self.multi_illuminant = False
 
     def set_image_name(self, image_name):
         self.image_name = image_name
@@ -27,6 +28,7 @@ class Data:
     
     def set_illuminant_map(self, illuminant_map):
         self.illuminant_map = illuminant_map
+        self.multi_illuminant = True
     
     def set_scene_data(self, scene_data):
         self.scene_data = scene_data
@@ -67,3 +69,6 @@ class Data:
     
     def get_exposure_values(self):
         return self.exposure_values
+
+    def is_multi_illuminant(self):
+        return self.multi_illuminant

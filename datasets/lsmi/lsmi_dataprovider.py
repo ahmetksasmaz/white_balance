@@ -9,8 +9,7 @@ import json
 
 class LSMIDataProvider(DataProvider):
     def __init__(self, override_dimensions=(-1, -1)):
-        super().__init__()
-        self.override_dimensions = override_dimensions
+        super().__init__(override_dimensions)
         self.data_names = []
         self.metadatas = []
 
