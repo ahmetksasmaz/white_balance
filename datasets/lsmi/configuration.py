@@ -1,4 +1,4 @@
-ROOT_DIRECTORY = "/Volumes/Datasets/LSMI/data"
+ROOT_DIRECTORY = "/Users/ahmetksasmaz/Library/CloudStorage/GoogleDrive-ahmetksasmaz@gmail.com/My Drive/ceng/MS Thesis/Datasets/LSMI/data"
 IMAGE_EXTENSION = "tiff"
 COEFF_EXTENSION = "npy"
 METADATA_FILENAME = "meta.json"
@@ -17,3 +17,9 @@ SONY_IMAGE_DIRECTORY = ROOT_DIRECTORY+"/sony"
 SONY_BLACK_LEVEL = 128
 SONY_SATURATION_LEVEL = 4095
 SONY_BLACK_LEVEL_RAW = 512
+
+IMAGE_NUMBERS = {
+    "galaxy": 1124,
+    "nikon": 954,
+    "sony": 1316
+}
