@@ -1,13 +1,24 @@
 import cv2 as cv
 import numpy as np
-from error import ErrorMetrics
 
-class SingleIlluminantErrorMetrics(ErrorMetrics):
+class SingleIlluminantErrorMetrics:
     def __init__(self, ground_truth_illuminant):
         super().__init__()
         self.ground_truth_illuminant = ground_truth_illuminant
         self.ground_truth_vector = self._chromaticity_to_rgb(ground_truth_illuminant)
     
+    def errors(self, estimated_illuminant):
+        angular = self._angular_error(estimated_illuminant, self.ground_truth_illuminant)
+        # square = self._square_error(estimated_illuminant, self.ground_truth_illuminant)
+        # absolute = self._absolute_error(estimated_illuminant, self.ground_truth_illuminant)
+        # ciede2000 = self._ciede2000_error(estimated_illuminant, self.ground_truth_illuminant)
+        return {
+            "angular_error": angular,
+            "square_error": "To Be Fixed", #square,
+            "absolute_error": "To Be Fixed", #absolute,
+            "ciede2000_error": "To Be Fixed", #ciede2000
+        }
+
     def _chromaticity_to_rgb(self, chromaticity):
         r_g, b_g = chromaticity
         g = 1.0
@@ -23,7 +34,7 @@ class SingleIlluminantErrorMetrics(ErrorMetrics):
         b_norm = b / total
         return np.array([r_norm, g_norm, b_norm], dtype=np.float32)
 
-    def angular_error(self, estimated_illuminant, ground_truth_illuminant):
+    def _angular_error(self, estimated_illuminant, ground_truth_illuminant):
         estimated_vector = self._chromaticity_to_rgb(estimated_illuminant)
         dot_product = np.dot(estimated_vector, self.ground_truth_vector)
         norm_estimated = np.linalg.norm(estimated_vector)
@@ -36,20 +47,23 @@ class SingleIlluminantErrorMetrics(ErrorMetrics):
         angle_deg = np.degrees(angle_rad)
         return angle_deg
     
-    def square_error(self, estimated_illuminant, ground_truth_illuminant):
-        estimated_vector = self._chromaticity_to_rgb(estimated_illuminant)
-        error = np.sum((estimated_vector - self.ground_truth_vector) ** 2)
+
+    def _square_error(self, estimated_illuminant, ground_truth_illuminant):
+        estimated_vector = self._chromaticity_to_rgb(estimated_illuminant) * 255.0
+        ground_truth_vector = self.ground_truth_vector * 255.0
+        error = np.sum((estimated_vector - ground_truth_vector) ** 2)
+        return error
+
+    def _absolute_error(self, estimated_illuminant, ground_truth_illuminant):
+        estimated_vector = self._chromaticity_to_rgb(estimated_illuminant) * 255.0
+        ground_truth_vector = self.ground_truth_vector * 255.0
+        error = np.sum(np.abs(estimated_vector - ground_truth_vector))
         return error
     
-    def absolute_error(self, estimated_illuminant, ground_truth_illuminant):
-        estimated_vector = self._chromaticity_to_rgb(estimated_illuminant)
-        error = np.sum(np.abs(estimated_vector - self.ground_truth_vector))
-        return error
-    
-    def ciede2000_error(self, estimated_illuminant, ground_truth_illuminant):
+    def _ciede2000_error(self, estimated_illuminant, ground_truth_illuminant):
         # Convert chromaticities to RGB
         estimated_rgb = self._chromaticity_to_rgb(estimated_illuminant)
-
+        ground_truth_rgb = self._chromaticity_to_rgb(ground_truth_illuminant)
         # Reshape for cv2 (single pixel)
         estimated_rgb_reshaped = np.array([[estimated_rgb]], dtype=np.float32)
         ground_truth_rgb_reshaped = np.array([[ground_truth_rgb]], dtype=np.float32)

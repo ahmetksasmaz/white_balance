@@ -1,5 +1,7 @@
 import cv2 as cv
 import numpy as np
+from error_metrics.single_illuminant_error_metrics import SingleIlluminantErrorMetrics
+from error_metrics.multi_illuminant_error_metrics import MultiIlluminantErrorMetrics
 
 class Data:
     def __init__(self):
@@ -72,3 +74,12 @@ class Data:
 
     def is_multi_illuminant(self):
         return self.multi_illuminant
+    
+    def compute_error_metrics(self, estimated_illuminants, estimated_illuminant_map=None):
+        illuminants_as_list = [i for i in self.illuminants.values() if i is not None]
+        if self.is_multi_illuminant():
+            error_metrics = MultiIlluminantErrorMetrics(illuminants_as_list, self.get_illuminant_map())
+            return error_metrics.errors(estimated_illuminants, estimated_illuminant_map)
+        else:
+            error_metrics = SingleIlluminantErrorMetrics(illuminants_as_list[0])
+            return error_metrics.errors(estimated_illuminants[0])
