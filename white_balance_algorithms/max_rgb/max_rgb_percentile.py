@@ -11,9 +11,9 @@ class MaxRGBPercentile(SingleIlluminantEstimationAlgorithm):
     def _estimate(self, data):
         image = data.get_raw_image()  # image is normalized to 0-1
         # Compute the maximum color value for each channel
-        r_max = np.percentile(image[:, :, 0], self.percentile)
+        b_max = np.percentile(image[:, :, 0], self.percentile)
         g_max = np.percentile(image[:, :, 1], self.percentile)
-        b_max = np.percentile(image[:, :, 2], self.percentile)
+        r_max = np.percentile(image[:, :, 2], self.percentile)
         # Avoid division by zero
         if g_max == 0:
             g_max = 1e-6

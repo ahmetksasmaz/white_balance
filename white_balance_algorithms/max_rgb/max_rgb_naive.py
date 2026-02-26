@@ -10,9 +10,9 @@ class MaxRGBNaive(SingleIlluminantEstimationAlgorithm):
     def _estimate(self, data):
         image = data.get_raw_image()  # image is normalized to 0-1
         # Compute the maximum color value for each channel
-        r_max = np.max(image[:, :, 0])
+        b_max = np.max(image[:, :, 0])
         g_max = np.max(image[:, :, 1])
-        b_max = np.max(image[:, :, 2])
+        r_max = np.max(image[:, :, 2])
         # Avoid division by zero
         if g_max == 0:
             g_max = 1e-6

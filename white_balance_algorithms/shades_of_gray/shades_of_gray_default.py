@@ -3,15 +3,16 @@ import numpy as np
 from datasets.data import Data
 from white_balance_algorithms.single_illuminant_estimation import SingleIlluminantEstimationAlgorithm
 
-class GrayWorldNaive(SingleIlluminantEstimationAlgorithm):
-    def __init__(self):
+class ShadesOfGrayDefault(SingleIlluminantEstimationAlgorithm):
+    def __init__(self, p=6):
         super().__init__()
+        self.p = p
     
     def _estimate(self, data):
         image = data.get_raw_image()  # image is normalized to 0-1
         # Compute the average color of the image
-        avg_color_per_channel = np.mean(image, axis=(0, 1))
-        b_avg, g_avg, r_avg = avg_color_per_channel
+        pth_l_norm = np.power(np.mean(np.power(image, self.p), axis=(0, 1)), 1.0 / self.p)
+        b_avg, g_avg, r_avg = pth_l_norm
         # Avoid division by zero
         if g_avg == 0:
             g_avg = 1e-6

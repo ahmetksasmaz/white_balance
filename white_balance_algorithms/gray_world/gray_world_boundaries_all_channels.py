@@ -26,7 +26,7 @@ class GrayWorldBoundariesAllChannels(SingleIlluminantEstimationAlgorithm):
             avg_color_per_channel = np.mean(image, axis=(0, 1))
         else:
             avg_color_per_channel = masked_pixels.mean(axis=0)
-        r_avg, g_avg, b_avg = avg_color_per_channel
+        b_avg, g_avg, r_avg = avg_color_per_channel
         # Avoid division by zero
         if g_avg == 0:
             g_avg = 1e-6

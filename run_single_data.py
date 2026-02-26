@@ -8,9 +8,14 @@ from datasets.lsmi.lsmi_dataprovider import LSMIDataProvider
 from white_balance_algorithms.gray_world.gray_world_naive import GrayWorldNaive
 from white_balance_algorithms.gray_world.gray_world_boundaries_all_channels import GrayWorldBoundariesAllChannels
 from white_balance_algorithms.gray_world.gray_world_boundaries_any_channel import GrayWorldBoundariesAnyChannel
+
 from white_balance_algorithms.max_rgb.max_rgb_naive import MaxRGBNaive
 from white_balance_algorithms.max_rgb.max_rgb_percentile import MaxRGBPercentile
 from white_balance_algorithms.max_rgb.max_rgb_gaussian import MaxRGBGaussian
+
+from white_balance_algorithms.shades_of_gray.shades_of_gray_default import ShadesOfGrayDefault
+
+from white_balance_algorithms.fast_awb.fast_awb_default import FastAWBDefault
 
 def run_single_data(dataset_name, index, algorithm_name, variant_name, params):
     if dataset_name == "cubepp":
@@ -43,6 +48,17 @@ def run_single_data(dataset_name, index, algorithm_name, variant_name, params):
             algorithm = MaxRGBGaussian(kernel_size=kernel_size, sigma=sigma)
         else:
             raise ValueError(f"Invalid variant name for max_rgb: {variant_name}")
+    elif algorithm_name == "shades_of_gray":
+        if variant_name == "default":
+            p = float(params[0]) if params else 6
+            algorithm = ShadesOfGrayDefault(p=p)
+        else:
+            raise ValueError(f"Invalid variant name for shades_of_gray: {variant_name}")
+    elif algorithm_name == "fast_awb":
+        if variant_name == "default":
+            algorithm = FastAWBDefault()
+        else:
+            raise ValueError(f"Invalid variant name for fast_awb: {variant_name}")
     else:
         raise ValueError(f"Invalid algorithm name: {algorithm_name}")
 
@@ -63,10 +79,12 @@ def main():
     args = parser.parse_args()
 
     valid_datasets = ["cubepp", "lsmi"]
-    valid_algorithms = ["gray_world", "max_rgb"]
+    valid_algorithms = ["gray_world", "max_rgb", "shades_of_gray", "fast_awb"]
     valid_variants = {
         "gray_world": ["naive", "boundaries_all_channels", "boundaries_any_channel"],
-        "max_rgb": ["naive", "percentile", "gaussian"]
+        "max_rgb": ["naive", "percentile", "gaussian"],
+        "shades_of_gray": ["default"],
+        "fast_awb": ["default"]
     }
 
     if args.dataset not in valid_datasets:

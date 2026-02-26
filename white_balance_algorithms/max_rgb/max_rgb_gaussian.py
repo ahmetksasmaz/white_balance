@@ -14,9 +14,9 @@ class MaxRGBGaussian(SingleIlluminantEstimationAlgorithm):
         # Apply Gaussian blur to the image
         blurred = cv.GaussianBlur(image, (self.kernel_size, self.kernel_size), self.sigma)
         # Compute the maximum color value for each channel
-        r_max = np.max(blurred[:, :, 0])
+        b_max = np.max(blurred[:, :, 0])
         g_max = np.max(blurred[:, :, 1])
-        b_max = np.max(blurred[:, :, 2])
+        r_max = np.max(blurred[:, :, 2])
         # Avoid division by zero
         if g_max == 0:
             g_max = 1e-6
