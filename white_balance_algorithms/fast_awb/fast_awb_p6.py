@@ -3,10 +3,10 @@ import numpy as np
 from datasets.data import Data
 from white_balance_algorithms.white_balance_algorithm import WhiteBalanceAlgorithm
 
-class FastAWBDefault(WhiteBalanceAlgorithm):
+class FastAWBP6(WhiteBalanceAlgorithm):
     def __init__(self):
         super().__init__()
-        self.p = 1
+        self.p = 6
     
     def _estimate(self, data):
         image = data.get_raw_image()  # image is normalized to 0-1
@@ -26,7 +26,7 @@ class FastAWBDefault(WhiteBalanceAlgorithm):
         
         S_bar = np.zeros(3)
         for k in range(3):
-            S_bar[k] = np.sum(rho * downsampled[:, :, k])
+            S_bar[k] = np.power(np.sum(rho * np.power(downsampled[:, :, k], self.p)), 1.0 / self.p)
 
         # S_bar is the estimated BGR illuminant color
         # Avoid division by zero

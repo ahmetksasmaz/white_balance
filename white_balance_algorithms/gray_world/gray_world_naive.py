@@ -1,9 +1,9 @@
 import cv2 as cv
 import numpy as np
 from datasets.data import Data
-from white_balance_algorithms.single_illuminant_estimation import SingleIlluminantEstimationAlgorithm
+from white_balance_algorithms.white_balance_algorithm import WhiteBalanceAlgorithm
 
-class GrayWorldNaive(SingleIlluminantEstimationAlgorithm):
+class GrayWorldNaive(WhiteBalanceAlgorithm):
     def __init__(self):
         super().__init__()
     
@@ -17,4 +17,9 @@ class GrayWorldNaive(SingleIlluminantEstimationAlgorithm):
             g_avg = 1e-6
         r_g = r_avg / g_avg
         b_g = b_avg / g_avg
-        return (r_g, b_g)
+        return {
+            "single_illuminant": (r_g, b_g),
+            "multi_illuminants": None,
+            "illuminant_map": None,
+            "estimated_srgb_image": None
+        }

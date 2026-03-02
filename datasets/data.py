@@ -2,20 +2,24 @@ import cv2 as cv
 import numpy as np
 from error_metrics.single_illuminant_error_metrics import SingleIlluminantErrorMetrics
 from error_metrics.multi_illuminant_error_metrics import MultiIlluminantErrorMetrics
+from error_metrics.image_error_metrics import ImageErrorMetrics
 
 class Data:
     def __init__(self):
         self.image_name = None
         self.raw_image = None
+        self.srgb_image = None
         self.image_dimensions = (None, None, None)
         self.illuminants = None
         self.illuminant_map = None
         self.scene_data = None
+        self.quantization = None
         self.exposure_values = {
             "exposure_time": None,
             "iso": None,
             "aperture": None
         }
+        self.sensor_linear = True
         self.multi_illuminant = False
 
     def set_image_name(self, image_name):
@@ -25,6 +29,16 @@ class Data:
         self.raw_image = raw_image
         self.image_dimensions = raw_image.shape
     
+    def set_quantization(self, quantization):
+        self.quantization = quantization
+
+    def set_srgb_image(self, srgb_image):
+        self.srgb_image = srgb_image
+        self.sensor_linear = False
+    
+    def get_srgb_image(self):
+        return self.srgb_image
+
     def set_illuminants(self, illuminants):
         self.illuminants = illuminants
     
@@ -48,7 +62,11 @@ class Data:
             "illuminants": self.illuminants,
             "illuminant_map": self.illuminant_map,
             "scene_data": self.scene_data,
-            "exposure_values": self.get_exposure_values()
+            "exposure_values": self.get_exposure_values(),
+            "srgb_image": self.get_srgb_image(),
+            "sensor_linear": self.sensor_linear,
+            "multi_illuminant": self.multi_illuminant,
+            "quantization": self.quantization
         }
     
     def get_image_name(self):
@@ -57,6 +75,9 @@ class Data:
     def get_raw_image(self):
         return self.raw_image
     
+    def get_quantization(self):
+        return self.quantization
+
     def get_image_dimensions(self):
         return self.image_dimensions
     
@@ -75,11 +96,35 @@ class Data:
     def is_multi_illuminant(self):
         return self.multi_illuminant
     
-    def compute_error_metrics(self, estimated_illuminants, estimated_illuminant_map=None):
-        illuminants_as_list = [i for i in self.illuminants.values() if i is not None]
-        if self.is_multi_illuminant():
-            error_metrics = MultiIlluminantErrorMetrics(illuminants_as_list, self.get_illuminant_map())
-            return error_metrics.errors(estimated_illuminants, estimated_illuminant_map)
-        else:
-            error_metrics = SingleIlluminantErrorMetrics(illuminants_as_list[0])
-            return error_metrics.errors(estimated_illuminants[0])
+    def compute_error_metrics(self, estimations):
+        errors_metrics = {
+            "single_illuminant_errors": None,
+            "multi_illuminant_errors": None,
+            "image_errors": None
+        }
+        if estimations["single_illuminant"] is not None:
+            if self.multi_illuminant == True:
+                print("Warning: Single illuminant estimation provided for multi-illuminant data. Taking first illuminant for error computation.")
+            if self.illuminants is None:
+                print("Warning: Ground truth illuminants not available for error computation.")
+            else:
+                first_gt_illuminant = None
+                for key in self.illuminants.keys():
+                    if self.illuminants[key] is not None:
+                        first_gt_illuminant = self.illuminants[key]
+                        break
+                single_illuminant_metrics = SingleIlluminantErrorMetrics(first_gt_illuminant)
+                errors_metrics["single_illuminant_errors"] = single_illuminant_metrics.errors(estimations["single_illuminant"])
+        if estimations["multi_illuminants"] is not None:
+            if self.multi_illuminant == False:
+                print("Warning: Multi-illuminant estimation provided for single-illuminant data. Cannot compute multi-illuminant error metrics due to lack of illuminant map.")
+            else:
+                multi_illuminant_metrics = MultiIlluminantErrorMetrics(self.illuminant_map)
+                errors_metrics["multi_illuminant_errors"] = multi_illuminant_metrics.errors(estimations["multi_illuminants"])
+        if estimations["estimated_srgb_image"] is not None:
+            if self.sensor_linear == True:
+                print("Warning: Estimated sRGB image provided for sensor-linear data. Cannot compute image error metrics due to lack of ground truth sRGB image.")
+            else:
+                image_metrics = ImageErrorMetrics(self.srgb_image)
+                errors_metrics["image_errors"] = image_metrics.errors(estimations["estimated_srgb_image"])
+        return errors_metrics

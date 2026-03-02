@@ -1,23 +1,23 @@
 import cv2 as cv
 import numpy as np
 from datasets.data import Data
-from white_balance_algorithms.single_illuminant_estimation import SingleIlluminantEstimationAlgorithm
+from white_balance_algorithms.white_balance_algorithm import WhiteBalanceAlgorithm
 
-class GrayWorldBoundariesAllChannels(SingleIlluminantEstimationAlgorithm):
-    def __init__(self, lower_bound=0.05, upper_bound=0.95):
+class GrayWorld95BoundariesAnyChannel(WhiteBalanceAlgorithm):
+    def __init__(self):
         super().__init__()
-        self.lower_bound = lower_bound
-        self.upper_bound = upper_bound
+        self.lower_bound = 0.05
+        self.upper_bound = 0.95
     
     def _estimate(self, data):
         image = data.get_raw_image()  # image is normalized to 0-1
         # Compute the average color between the lower and upper bounds (0-1)
         lower_bound_value = self.lower_bound
         upper_bound_value = self.upper_bound
-        # Create mask: only keep pixels where all channels are within bounds
-        mask = np.all(
-            (image >= lower_bound_value) & (image <= upper_bound_value), axis=-1
-        )
+        # Exclude pixels where all channels are below lower bound or all channels are above upper bound
+        all_below = np.all(image < lower_bound_value, axis=-1)
+        all_above = np.all(image > upper_bound_value, axis=-1)
+        mask = ~(all_below | all_above)
         # Use mask to select valid pixels
         masked_pixels = image[mask]
         num_masked = masked_pixels.shape[0]
@@ -32,4 +32,9 @@ class GrayWorldBoundariesAllChannels(SingleIlluminantEstimationAlgorithm):
             g_avg = 1e-6
         r_g = r_avg / g_avg
         b_g = b_avg / g_avg
-        return (r_g, b_g)
+        return {
+            "single_illuminant": (r_g, b_g),
+            "multi_illuminants": None,
+            "illuminant_map": None,
+            "estimated_srgb_image": None
+        }

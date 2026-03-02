@@ -37,7 +37,8 @@ class CubePPDataProvider(DataProvider):
         raw_image = cv.imread(image_path, cv.IMREAD_UNCHANGED)
         raw_image = raw_image.astype(np.float32)
         raw_image = np.clip((raw_image - BLACK_LEVEL) / (SATURATION_LEVEL - BLACK_LEVEL), 0, 1)
-        
+        data.set_quantization(SATURATION_LEVEL - BLACK_LEVEL)
+
         # Override dimensions if specified
         if self.override_dimensions[0] > 0 and self.override_dimensions[1] > 0:
             raw_image = cv.resize(raw_image, self.override_dimensions)

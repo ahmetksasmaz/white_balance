@@ -3,16 +3,15 @@ import numpy as np
 from datasets.data import Data
 from white_balance_algorithms.white_balance_algorithm import WhiteBalanceAlgorithm
 
-class MaxRGBGaussian(WhiteBalanceAlgorithm):
+class MaxRGBMedian(WhiteBalanceAlgorithm):
     def __init__(self):
         super().__init__()
         self.kernel_size = 5
-        self.sigma = 1
     
     def _estimate(self, data):
         image = data.get_raw_image()  # image is normalized to 0-1
-        # Apply Gaussian blur to the image
-        blurred = cv.GaussianBlur(image, (self.kernel_size, self.kernel_size), self.sigma)
+        # Apply median blur to the image
+        blurred = cv.medianBlur(image.astype(np.float32), self.kernel_size)
         # Compute the maximum color value for each channel
         b_max = np.max(blurred[:, :, 0])
         g_max = np.max(blurred[:, :, 1])
