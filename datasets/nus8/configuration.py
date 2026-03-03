@@ -1,0 +1,2 @@
+ROOT_DIRECTORY = "/Users/ahmetksasmaz/Documents/TEMP_DATASET/NUS8"
+IMAGE_EXTENSION = "PNG"

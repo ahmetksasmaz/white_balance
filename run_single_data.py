@@ -4,6 +4,8 @@ import numpy as np
 from datasets.data import Data
 from datasets.cubepp.cubepp_dataprovider import CubePPDataProvider
 from datasets.lsmi.lsmi_dataprovider import LSMIDataProvider
+from datasets.gehler.gehler_dataprovider import GehlerDataProvider
+from datasets.nus8.nus8_dataprovider import NUS8DataProvider
 
 from white_balance_algorithms.gray_world.gray_world_naive import GrayWorldNaive
 from white_balance_algorithms.gray_world.gray_world_95_boundaries_all_channels import GrayWorld95BoundariesAllChannels
@@ -31,6 +33,10 @@ def run_single_data(dataset_name, index, algorithm_name, variant_name):
         data_provider = CubePPDataProvider()
     elif dataset_name == "lsmi":
         data_provider = LSMIDataProvider()
+    elif dataset_name == "gehler":
+        data_provider = GehlerDataProvider()
+    elif dataset_name == "nus8":
+        data_provider = NUS8DataProvider()
     else:
         raise ValueError(f"Invalid dataset name: {dataset_name}")
 
@@ -98,7 +104,7 @@ def main():
     parser.add_argument('--variant', type=str, required=True, help='Algorithm variant')
     args = parser.parse_args()
 
-    valid_datasets = ["cubepp", "lsmi"]
+    valid_datasets = ["cubepp", "lsmi", "gehler", "nus8"]
     valid_algorithms = ["gray_world", "max_rgb", "shades_of_gray", "fast_awb"]
     valid_variants = {
         "gray_world": ["naive", "95_boundaries_all_channels", "95_boundaries_any_channel"],
