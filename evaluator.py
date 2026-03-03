@@ -1,6 +1,9 @@
 import json
 import datetime
 import traceback
+from concurrent.futures import ProcessPoolExecutor, as_completed
+import multiprocessing
+from tqdm import tqdm
 
 from datasets.cubepp.cubepp_dataprovider import CubePPDataProvider
 from datasets.lsmi.lsmi_dataprovider import LSMIDataProvider
@@ -24,6 +27,8 @@ from white_balance_algorithms.max_rgb.max_rgb_median_95_percentile import MaxRGB
 
 from white_balance_algorithms.shades_of_gray.shades_of_gray_default import ShadesOfGrayDefault
 from white_balance_algorithms.shades_of_gray.shades_of_gray_p3 import ShadesOfGrayP3
+from white_balance_algorithms.shades_of_gray.shades_of_gray_masked_default import ShadesOfGrayMaskedDefault
+from white_balance_algorithms.shades_of_gray.shades_of_gray_masked_p3 import ShadesOfGrayMaskedP3
 
 from white_balance_algorithms.fast_awb.fast_awb_default import FastAWBDefault
 from white_balance_algorithms.fast_awb.fast_awb_p6 import FastAWBP6
@@ -52,6 +57,8 @@ ALGORITHM_REGISTRY = {
     ("max_rgb", "median_95_percentile"): MaxRGBMedian95Percentile,
     ("shades_of_gray", "default"): ShadesOfGrayDefault,
     ("shades_of_gray", "p3"): ShadesOfGrayP3,
+    ("shades_of_gray", "masked_default"): ShadesOfGrayMaskedDefault,
+    ("shades_of_gray", "masked_p3"): ShadesOfGrayMaskedP3,
     ("fast_awb", "default"): FastAWBDefault,
     ("fast_awb", "p6"): FastAWBP6,
 }
@@ -93,6 +100,43 @@ def _extract_camera(dataset_name, data_provider, index):
     return "unknown"
 
 
+def _worker_fn(task_info):
+    """Worker function for multi-processing."""
+    dataset_name, algo_name, variant_name, idx, process_masked, camera_filter = task_info
+    try:
+        # Instantiate inside worker to avoid pickle issues with some objects
+        data_provider = DATASET_PROVIDERS[dataset_name]()
+        algorithm = ALGORITHM_REGISTRY[(algo_name, variant_name)]()
+
+        camera = _extract_camera(dataset_name, data_provider, idx)
+
+        data = data_provider[idx]
+        image_name = data.get_image_name()
+
+        estimations = algorithm.estimate(data, process_masked=process_masked)
+        error_metrics = data.compute_error_metrics(estimations)
+
+        return {
+            "dataset": dataset_name,
+            "camera": camera,
+            "image_name": image_name,
+            "algorithm": algo_name,
+            "variant": variant_name,
+            "errors": _serialize_error_metrics(error_metrics),
+        }
+    except Exception as e:
+        return {
+            "dataset": dataset_name,
+            "camera": "unknown",
+            "image_name": f"index_{idx}",
+            "algorithm": algo_name,
+            "variant": variant_name,
+            "errors": None,
+            "error_message": str(e),
+            "traceback": traceback.format_exc()
+        }
+
+
 def _serialize_error_metrics(error_metrics):
     """Convert error metrics dict to a JSON-safe dict."""
     result = {}
@@ -114,19 +158,23 @@ def _serialize_error_metrics(error_metrics):
 
 
 class Evaluator:
-    def __init__(self, datasets, algorithms, output_path="results.json", process_masked=False):
+    def __init__(self, datasets, algorithms, camera=None, output_path="results.json", process_masked=False, num_workers=1):
         """
         Args:
             datasets: list of dataset name strings, e.g. ["gehler", "nus8"]
             algorithms: list of (algorithm_name, variant_name) tuples,
                         e.g. [("gray_world", "naive"), ("max_rgb", "99_percentile")]
+            camera: if specified, only process images from this specific camera (optional)
             output_path: path for the output JSON file
             process_masked: if True, algorithms will exclude masked pixels (e.g. checkerboard)
+            num_workers: number of processes to use (default: 1)
         """
         self.datasets = datasets
         self.algorithms = algorithms
+        self.camera = camera
         self.output_path = output_path
         self.process_masked = process_masked
+        self.num_workers = num_workers
 
         # Validate inputs
         for ds in datasets:
@@ -139,54 +187,54 @@ class Evaluator:
     def run(self):
         """Run all evaluations and save results to JSON."""
         all_results = []
+        tasks = []
+
+        print(f"\nConfiguration:")
+        print(f"  Workers: {self.num_workers}")
+        print(f"  Process Masked: {self.process_masked}")
+        if self.camera:
+            print(f"  Camera Filter: {self.camera}")
 
         for dataset_name in self.datasets:
-            print(f"\n{'='*60}")
-            print(f"Dataset: {dataset_name}")
-            print(f"{'='*60}")
-
             data_provider = DATASET_PROVIDERS[dataset_name]()
-            num_images = len(data_provider)
-            print(f"  Total images: {num_images}")
+            num_dataset_images = len(data_provider)
+            
+            # Identify indices matching the camera filter
+            matching_indices = []
+            for idx in range(num_dataset_images):
+                camera = _extract_camera(dataset_name, data_provider, idx)
+                if not self.camera or camera == self.camera:
+                    matching_indices.append(idx)
+            
+            num_matching = len(matching_indices)
+            print(f"Queuing Dataset: {dataset_name} ({num_matching}/{num_dataset_images} images match camera filter)")
 
             for algo_name, variant_name in self.algorithms:
-                print(f"\n  Algorithm: {algo_name}/{variant_name}")
-                algorithm = ALGORITHM_REGISTRY[(algo_name, variant_name)]()
+                for idx in matching_indices:
+                    tasks.append((dataset_name, algo_name, variant_name, idx, self.process_masked, self.camera))
 
-                for idx in range(num_images):
-                    try:
-                        data = data_provider[idx]
-                        image_name = data.get_image_name()
-                        camera = _extract_camera(dataset_name, data_provider, idx)
+        total_tasks = len(tasks)
+        processed_count = 0
 
-                        estimations = algorithm.estimate(data, process_masked=self.process_masked)
-                        error_metrics = data.compute_error_metrics(estimations)
+        print(f"Total tasks in queue: {total_tasks}")
 
-                        result_entry = {
-                            "dataset": dataset_name,
-                            "camera": camera,
-                            "image_name": image_name,
-                            "algorithm": algo_name,
-                            "variant": variant_name,
-                            "errors": _serialize_error_metrics(error_metrics),
-                        }
-                        all_results.append(result_entry)
-
-                        if (idx + 1) % 50 == 0 or idx == num_images - 1:
-                            print(f"    Processed {idx + 1}/{num_images} images")
-
-                    except Exception as e:
-                        print(f"    ERROR on image index {idx}: {e}")
-                        traceback.print_exc()
-                        all_results.append({
-                            "dataset": dataset_name,
-                            "camera": _extract_camera(dataset_name, data_provider, idx),
-                            "image_name": f"index_{idx}",
-                            "algorithm": algo_name,
-                            "variant": variant_name,
-                            "errors": None,
-                            "error_message": str(e),
-                        })
+        if self.num_workers > 1:
+            with ProcessPoolExecutor(max_workers=self.num_workers) as executor:
+                futures = {executor.submit(_worker_fn, task): task for task in tasks}
+                for future in tqdm(as_completed(futures), total=total_tasks, desc="Evaluating", unit="task"):
+                    result = future.result()
+                    if result:
+                        all_results.append(result)
+                        if result.get("errors") is None and "error_message" in result:
+                             print(f"\n    ERROR: {result['error_message']}")
+        else:
+            # Sequential execution
+            for task in tqdm(tasks, desc="Evaluating", unit="task"):
+                result = _worker_fn(task)
+                if result:
+                    all_results.append(result)
+                    if result.get("errors") is None and "error_message" in result:
+                         print(f"\n    ERROR: {result['error_message']}")
 
         output = {
             "metadata": {

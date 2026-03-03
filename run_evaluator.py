@@ -1,4 +1,5 @@
 import argparse
+import multiprocessing
 from evaluator import Evaluator, DATASET_PROVIDERS, ALGORITHM_REGISTRY
 
 
@@ -26,6 +27,14 @@ Examples:
         help='Output JSON file path (default: results.json)'
     )
     parser.add_argument(
+        '--camera', type=str, default=None,
+        help='If specified, only process images from this specific camera (optional)'
+    )
+    parser.add_argument(
+        '--workers', type=str, default='1',
+        help='Number of worker processes to use (default: 1). Use "max" for (cpu_count - 2)'
+    )
+    parser.add_argument(
         '--process-masked', action='store_true', default=False,
         help='If set, algorithms will exclude masked pixels (e.g. checkerboard regions)'
     )
@@ -42,6 +51,12 @@ Examples:
             algo, variant = entry.split(':', 1)
             algorithms.append((algo, variant))
 
+    # Parse workers
+    if args.workers == 'max':
+        num_workers = max(1, multiprocessing.cpu_count() - 2)
+    else:
+        num_workers = int(args.workers)
+
     print(f"Datasets: {args.datasets}")
     print(f"Algorithms: {algorithms}")
     print(f"Output: {args.output}")
@@ -50,8 +65,10 @@ Examples:
     evaluator = Evaluator(
         datasets=args.datasets,
         algorithms=algorithms,
+        camera=args.camera,
         output_path=args.output,
         process_masked=args.process_masked,
+        num_workers=num_workers,
     )
     evaluator.run()
 
