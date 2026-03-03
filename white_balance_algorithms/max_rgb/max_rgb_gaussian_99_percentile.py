@@ -10,13 +10,14 @@ class MaxRGBGaussian99Percentile(WhiteBalanceAlgorithm):
         self.sigma = 1
         self.percentile = 99
     
-    def _estimate(self, data):
+    def _estimate(self, data, process_masked=False):
         image = data.get_raw_image()  # image is normalized to 0-1
-        # Apply Gaussian blur to the image
+        # Apply Gaussian blur to the image (spatial op on full image)
         blurred = cv.GaussianBlur(image, (self.kernel_size, self.kernel_size), self.sigma)
-        b_max = np.percentile(blurred[:, :, 0], self.percentile)
-        g_max = np.percentile(blurred[:, :, 1], self.percentile)
-        r_max = np.percentile(blurred[:, :, 2], self.percentile)
+        pixels = self._get_pixels(blurred, data, process_masked)  # (N, 3)
+        b_max = np.percentile(pixels[:, 0], self.percentile)
+        g_max = np.percentile(pixels[:, 1], self.percentile)
+        r_max = np.percentile(pixels[:, 2], self.percentile)
         # Avoid division by zero
         if g_max == 0:
             g_max = 1e-6

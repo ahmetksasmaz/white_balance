@@ -25,6 +25,10 @@ Examples:
         '--output', type=str, default='results.json',
         help='Output JSON file path (default: results.json)'
     )
+    parser.add_argument(
+        '--process-masked', action='store_true', default=False,
+        help='If set, algorithms will exclude masked pixels (e.g. checkerboard regions)'
+    )
     args = parser.parse_args()
 
     # Parse algorithms
@@ -41,11 +45,13 @@ Examples:
     print(f"Datasets: {args.datasets}")
     print(f"Algorithms: {algorithms}")
     print(f"Output: {args.output}")
+    print(f"Process masked: {args.process_masked}")
 
     evaluator = Evaluator(
         datasets=args.datasets,
         algorithms=algorithms,
         output_path=args.output,
+        process_masked=args.process_masked,
     )
     evaluator.run()
 

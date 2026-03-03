@@ -8,10 +8,11 @@ class ShadesOfGrayDefault(WhiteBalanceAlgorithm):
         super().__init__()
         self.p = 6
     
-    def _estimate(self, data):
+    def _estimate(self, data, process_masked=False):
         image = data.get_raw_image()  # image is normalized to 0-1
-        # Compute the average color of the image
-        pth_l_norm = np.power(np.mean(np.power(image, self.p), axis=(0, 1)), 1.0 / self.p)
+        pixels = self._get_pixels(image, data, process_masked)  # (N, 3)
+        # Minkowski p-norm per channel
+        pth_l_norm = np.power(np.mean(np.power(pixels, self.p), axis=0), 1.0 / self.p)
         b_avg, g_avg, r_avg = pth_l_norm
         # Avoid division by zero
         if g_avg == 0:

@@ -9,21 +9,18 @@ class GrayWorld95BoundariesAnyChannel(WhiteBalanceAlgorithm):
         self.lower_bound = 0.05
         self.upper_bound = 0.95
     
-    def _estimate(self, data):
+    def _estimate(self, data, process_masked=False):
         image = data.get_raw_image()  # image is normalized to 0-1
-        # Compute the average color between the lower and upper bounds (0-1)
-        lower_bound_value = self.lower_bound
-        upper_bound_value = self.upper_bound
+        pixels = self._get_pixels(image, data, process_masked)  # (N, 3)
         # Exclude pixels where all channels are below lower bound or all channels are above upper bound
-        all_below = np.all(image < lower_bound_value, axis=-1)
-        all_above = np.all(image > upper_bound_value, axis=-1)
-        mask = ~(all_below | all_above)
-        # Use mask to select valid pixels
-        masked_pixels = image[mask]
+        all_below = np.all(pixels < self.lower_bound, axis=-1)
+        all_above = np.all(pixels > self.upper_bound, axis=-1)
+        bounds_mask = ~(all_below | all_above)
+        masked_pixels = pixels[bounds_mask]
         num_masked = masked_pixels.shape[0]
         if num_masked == 0:
-            # Fallback: use mean over all pixels
-            avg_color_per_channel = np.mean(image, axis=(0, 1))
+            # Fallback: use mean over all valid pixels
+            avg_color_per_channel = pixels.mean(axis=0)
         else:
             avg_color_per_channel = masked_pixels.mean(axis=0)
         b_avg, g_avg, r_avg = avg_color_per_channel

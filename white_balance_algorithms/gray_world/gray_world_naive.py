@@ -7,10 +7,10 @@ class GrayWorldNaive(WhiteBalanceAlgorithm):
     def __init__(self):
         super().__init__()
     
-    def _estimate(self, data):
+    def _estimate(self, data, process_masked=False):
         image = data.get_raw_image()  # image is normalized to 0-1
-        # Compute the average color of the image
-        avg_color_per_channel = np.mean(image, axis=(0, 1))
+        pixels = self._get_pixels(image, data, process_masked)  # (N, 3)
+        avg_color_per_channel = pixels.mean(axis=0)
         b_avg, g_avg, r_avg = avg_color_per_channel
         # Avoid division by zero
         if g_avg == 0:

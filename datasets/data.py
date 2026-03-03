@@ -21,6 +21,7 @@ class Data:
         }
         self.sensor_linear = True
         self.multi_illuminant = False
+        self.mask = None  # Boolean array (H, W): True = valid pixel, False = masked (e.g. checkerboard)
 
     def set_image_name(self, image_name):
         self.image_name = image_name
@@ -54,6 +55,13 @@ class Data:
         self.exposure_values["iso"] = iso
         self.exposure_values["aperture"] = aperture
 
+    def set_mask(self, mask):
+        """Set a boolean mask (H, W). True = valid pixel, False = masked pixel."""
+        self.mask = mask
+
+    def get_mask(self):
+        return self.mask
+
     def get_data(self):
         return {
             "image_name": self.image_name,
@@ -66,7 +74,8 @@ class Data:
             "srgb_image": self.get_srgb_image(),
             "sensor_linear": self.sensor_linear,
             "multi_illuminant": self.multi_illuminant,
-            "quantization": self.quantization
+            "quantization": self.quantization,
+            "mask": self.mask
         }
     
     def get_image_name(self):

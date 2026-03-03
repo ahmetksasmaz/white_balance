@@ -110,17 +110,19 @@ def _serialize_error_metrics(error_metrics):
 
 
 class Evaluator:
-    def __init__(self, datasets, algorithms, output_path="results.json"):
+    def __init__(self, datasets, algorithms, output_path="results.json", process_masked=False):
         """
         Args:
             datasets: list of dataset name strings, e.g. ["gehler", "nus8"]
             algorithms: list of (algorithm_name, variant_name) tuples,
                         e.g. [("gray_world", "naive"), ("max_rgb", "99_percentile")]
             output_path: path for the output JSON file
+            process_masked: if True, algorithms will exclude masked pixels (e.g. checkerboard)
         """
         self.datasets = datasets
         self.algorithms = algorithms
         self.output_path = output_path
+        self.process_masked = process_masked
 
         # Validate inputs
         for ds in datasets:
@@ -153,7 +155,7 @@ class Evaluator:
                         image_name = data.get_image_name()
                         camera = _extract_camera(dataset_name, data_provider, idx)
 
-                        estimations = algorithm.estimate(data)
+                        estimations = algorithm.estimate(data, process_masked=self.process_masked)
                         error_metrics = data.compute_error_metrics(estimations)
 
                         result_entry = {
@@ -187,6 +189,7 @@ class Evaluator:
                 "timestamp": datetime.datetime.now().isoformat(),
                 "datasets": self.datasets,
                 "algorithms": [[a, v] for a, v in self.algorithms],
+                "process_masked": self.process_masked,
             },
             "results": all_results,
         }

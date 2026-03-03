@@ -8,14 +8,14 @@ class MaxRGBMedian(WhiteBalanceAlgorithm):
         super().__init__()
         self.kernel_size = 5
     
-    def _estimate(self, data):
+    def _estimate(self, data, process_masked=False):
         image = data.get_raw_image()  # image is normalized to 0-1
-        # Apply median blur to the image
+        # Apply median blur to the image (spatial op on full image)
         blurred = cv.medianBlur(image.astype(np.float32), self.kernel_size)
-        # Compute the maximum color value for each channel
-        b_max = np.max(blurred[:, :, 0])
-        g_max = np.max(blurred[:, :, 1])
-        r_max = np.max(blurred[:, :, 2])
+        pixels = self._get_pixels(blurred, data, process_masked)  # (N, 3)
+        b_max = np.max(pixels[:, 0])
+        g_max = np.max(pixels[:, 1])
+        r_max = np.max(pixels[:, 2])
         # Avoid division by zero
         if g_max == 0:
             g_max = 1e-6

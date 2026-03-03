@@ -14,6 +14,7 @@ class NUS8DataProvider(DataProvider):
         self.gt_illuminants = []
         self.darkness_levels = []
         self.saturation_levels = []
+        self.cc_coords = []
         
         # Iterating over the 8 camera subdirectories
         if os.path.exists(ROOT_DIRECTORY):
@@ -30,6 +31,7 @@ class NUS8DataProvider(DataProvider):
                     saturation_level = float(mat_data['saturation_level'][0][0])
                     all_image_names = [name[0][0] for name in mat_data['all_image_names']]
                     groundtruth_illuminants = mat_data['groundtruth_illuminants']
+                    cc_coords = mat_data['CC_coords'] if 'CC_coords' in mat_data else None
                     
                     # Ensure PNG images exist and append properties
                     for i, img_name in enumerate(all_image_names):
@@ -39,6 +41,7 @@ class NUS8DataProvider(DataProvider):
                             self.darkness_levels.append(darkness_level)
                             self.saturation_levels.append(saturation_level)
                             self.gt_illuminants.append(groundtruth_illuminants[i])
+                            self.cc_coords.append(cc_coords[i] if cc_coords is not None else None)
                         else:
                             # Lowercase extension check just in case
                             img_path_lower = os.path.join(cam_path, "PNG", f"{img_name}.{IMAGE_EXTENSION.lower()}")
@@ -47,6 +50,7 @@ class NUS8DataProvider(DataProvider):
                                 self.darkness_levels.append(darkness_level)
                                 self.saturation_levels.append(saturation_level)
                                 self.gt_illuminants.append(groundtruth_illuminants[i])
+                                self.cc_coords.append(cc_coords[i] if cc_coords is not None else None)
 
 
     def _construct_data(self, index):
@@ -96,6 +100,20 @@ class NUS8DataProvider(DataProvider):
             illuminants["Illuminant1"] = (rg, bg)
             
         data.set_illuminants(illuminants)
+
+        # Set checkerboard mask from CC_coords [row_start, row_end, col_start, col_end]
+        cc = self.cc_coords[index]
+        if cc is not None:
+            h, w = raw_image.shape[:2]
+            mask = np.ones((h, w), dtype=bool)
+            r_start, r_end, c_start, c_end = int(cc[0]), int(cc[1]), int(cc[2]), int(cc[3])
+            # Clamp to image bounds
+            r_start = max(0, r_start)
+            r_end = min(h, r_end)
+            c_start = max(0, c_start)
+            c_end = min(w, c_end)
+            mask[r_start:r_end, c_start:c_end] = False
+            data.set_mask(mask)
 
         return data
 

@@ -8,12 +8,12 @@ class MaxRGB95Percentile(WhiteBalanceAlgorithm):
         super().__init__()
         self.percentile = 95
     
-    def _estimate(self, data):
+    def _estimate(self, data, process_masked=False):
         image = data.get_raw_image()  # image is normalized to 0-1
-        # Compute the maximum color value for each channel
-        b_max = np.percentile(image[:, :, 0], self.percentile)
-        g_max = np.percentile(image[:, :, 1], self.percentile)
-        r_max = np.percentile(image[:, :, 2], self.percentile)
+        pixels = self._get_pixels(image, data, process_masked)  # (N, 3)
+        b_max = np.percentile(pixels[:, 0], self.percentile)
+        g_max = np.percentile(pixels[:, 1], self.percentile)
+        r_max = np.percentile(pixels[:, 2], self.percentile)
         # Avoid division by zero
         if g_max == 0:
             g_max = 1e-6
