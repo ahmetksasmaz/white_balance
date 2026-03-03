@@ -1,0 +1,620 @@
+{
+  "metadata": {
+    "source_file": "nus8_masked_results.json",
+    "timestamp": "2026-03-03T21:55:07.892728"
+  },
+  "reports": [
+    {
+      "dataset": "nus8",
+      "camera": "Canon600D",
+      "algorithm": "gray_world",
+      "variant": "naive",
+      "num_images": 200,
+      "metrics": {
+        "angular_error": {
+          "mean": 4.055051375627517,
+          "median": 3.146041512489319,
+          "trimean": 3.33245687186718,
+          "best_25": 0.9351907825469971,
+          "worst_25": 8.811571998596191,
+          "max": 15.8306884765625
+        }
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon600D",
+      "algorithm": "max_rgb",
+      "variant": "99_percentile",
+      "num_images": 200,
+      "metrics": {
+        "angular_error": {
+          "mean": 4.0322007857263085,
+          "median": 2.5980316400527954,
+          "trimean": 2.865502581000328,
+          "best_25": 0.7397979372739791,
+          "worst_25": 9.908097658157349,
+          "max": 18.00448226928711
+        }
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon600D",
+      "algorithm": "max_rgb",
+      "variant": "naive",
+      "num_images": 200,
+      "metrics": {
+        "angular_error": {
+          "mean": 12.33278856307268,
+          "median": 17.0186824798584,
+          "trimean": 13.940318688750267,
+          "best_25": 2.080871216058731,
+          "worst_25": 19.509599533081055,
+          "max": 22.980113983154297
+        }
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon600D",
+      "algorithm": "shades_of_gray",
+      "variant": "default",
+      "num_images": 200,
+      "metrics": {
+        "angular_error": {
+          "mean": 6.492028422281146,
+          "median": 5.009078502655029,
+          "trimean": 5.679111078381538,
+          "best_25": 1.1300057741999625,
+          "worst_25": 14.126280937194824,
+          "max": 19.325002670288086
+        }
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "FujifilmXM1",
+      "algorithm": "gray_world",
+      "variant": "naive",
+      "num_images": 196,
+      "metrics": {
+        "angular_error": {
+          "mean": 4.265492056819554,
+          "median": 3.2511266469955444,
+          "trimean": 3.4772540852427483,
+          "best_25": 0.9659878652618856,
+          "worst_25": 9.380003384181432,
+          "max": 21.040990829467773
+        }
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "FujifilmXM1",
+      "algorithm": "max_rgb",
+      "variant": "99_percentile",
+      "num_images": 196,
+      "metrics": {
+        "angular_error": {
+          "mean": 4.249195771557944,
+          "median": 2.5253337621688843,
+          "trimean": 2.927655041217804,
+          "best_25": 0.7562436376299176,
+          "worst_25": 10.537061730209661,
+          "max": 23.143404006958008
+        }
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "FujifilmXM1",
+      "algorithm": "max_rgb",
+      "variant": "naive",
+      "num_images": 196,
+      "metrics": {
+        "angular_error": {
+          "mean": 11.177810744971644,
+          "median": 13.336932182312012,
+          "trimean": 11.783740475773811,
+          "best_25": 1.9113847260572472,
+          "worst_25": 19.468620884175202,
+          "max": 26.097129821777344
+        }
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "FujifilmXM1",
+      "algorithm": "shades_of_gray",
+      "variant": "default",
+      "num_images": 196,
+      "metrics": {
+        "angular_error": {
+          "mean": 6.3451458167056645,
+          "median": 4.515127897262573,
+          "trimean": 5.39911325275898,
+          "best_25": 1.2270344082190066,
+          "worst_25": 14.082612874556562,
+          "max": 23.752851486206055
+        }
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "NikonD40",
+      "algorithm": "gray_world",
+      "variant": "naive",
+      "num_images": 117,
+      "metrics": {
+        "angular_error": {
+          "mean": 4.891453858751517,
+          "median": 3.8543753623962402,
+          "trimean": 4.09980034828186,
+          "best_25": 1.1540977857236205,
+          "worst_25": 10.308558431164972,
+          "max": 18.35234260559082
+        }
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "NikonD40",
+      "algorithm": "max_rgb",
+      "variant": "99_percentile",
+      "num_images": 117,
+      "metrics": {
+        "angular_error": {
+          "mean": 6.6181585610422315,
+          "median": 4.577441215515137,
+          "trimean": 5.195448577404022,
+          "best_25": 1.1230569892916187,
+          "worst_25": 15.55373895579371,
+          "max": 21.580759048461914
+        }
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "NikonD40",
+      "algorithm": "max_rgb",
+      "variant": "naive",
+      "num_images": 117,
+      "metrics": {
+        "angular_error": {
+          "mean": 14.479729257078253,
+          "median": 17.69612693786621,
+          "trimean": 15.385957717895508,
+          "best_25": 4.2980451583862305,
+          "worst_25": 20.88793734846444,
+          "max": 23.930007934570312
+        }
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "NikonD40",
+      "algorithm": "shades_of_gray",
+      "variant": "default",
+      "num_images": 117,
+      "metrics": {
+        "angular_error": {
+          "mean": 8.338893743152292,
+          "median": 6.784025192260742,
+          "trimean": 7.540841042995453,
+          "best_25": 2.181933943567605,
+          "worst_25": 15.81884893877753,
+          "max": 20.35634994506836
+        }
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "NikonD5200",
+      "algorithm": "gray_world",
+      "variant": "naive",
+      "num_images": 200,
+      "metrics": {
+        "angular_error": {
+          "mean": 4.334243836253881,
+          "median": 3.310311198234558,
+          "trimean": 3.5389001667499542,
+          "best_25": 0.9842938894033432,
+          "worst_25": 9.656476707458497,
+          "max": 20.23018455505371
+        }
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "NikonD5200",
+      "algorithm": "max_rgb",
+      "variant": "99_percentile",
+      "num_images": 200,
+      "metrics": {
+        "angular_error": {
+          "mean": 3.835649951919913,
+          "median": 2.3541311025619507,
+          "trimean": 2.7693570405244827,
+          "best_25": 0.6029440578818321,
+          "worst_25": 9.556882495880126,
+          "max": 17.623180389404297
+        }
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "NikonD5200",
+      "algorithm": "max_rgb",
+      "variant": "naive",
+      "num_images": 200,
+      "metrics": {
+        "angular_error": {
+          "mean": 14.595753262341022,
+          "median": 18.624302864074707,
+          "trimean": 15.874014556407928,
+          "best_25": 2.237180815935135,
+          "worst_25": 23.783427200317384,
+          "max": 53.07542419433594
+        }
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "NikonD5200",
+      "algorithm": "shades_of_gray",
+      "variant": "default",
+      "num_images": 200,
+      "metrics": {
+        "angular_error": {
+          "mean": 6.749315263200551,
+          "median": 4.925088167190552,
+          "trimean": 5.593946039676666,
+          "best_25": 1.0836988217383623,
+          "worst_25": 14.87665620803833,
+          "max": 22.047100067138672
+        }
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "OlympusEPL6",
+      "algorithm": "gray_world",
+      "variant": "naive",
+      "num_images": 208,
+      "metrics": {
+        "angular_error": {
+          "mean": 3.6079397959849584,
+          "median": 2.755956768989563,
+          "trimean": 2.876756012439728,
+          "best_25": 0.9047328080408849,
+          "worst_25": 7.910538288263174,
+          "max": 16.38025665283203
+        }
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "OlympusEPL6",
+      "algorithm": "max_rgb",
+      "variant": "99_percentile",
+      "num_images": 208,
+      "metrics": {
+        "angular_error": {
+          "mean": 3.9932585303456736,
+          "median": 2.6186004877090454,
+          "trimean": 2.8982442393898964,
+          "best_25": 0.8170894622229613,
+          "worst_25": 9.400138451502873,
+          "max": 20.550352096557617
+        }
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "OlympusEPL6",
+      "algorithm": "max_rgb",
+      "variant": "naive",
+      "num_images": 208,
+      "metrics": {
+        "angular_error": {
+          "mean": 11.825276333981982,
+          "median": 14.382221698760986,
+          "trimean": 12.575311437249184,
+          "best_25": 1.7616504998161242,
+          "worst_25": 21.08217144012451,
+          "max": 26.72807502746582
+        }
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "OlympusEPL6",
+      "algorithm": "shades_of_gray",
+      "variant": "default",
+      "num_images": 208,
+      "metrics": {
+        "angular_error": {
+          "mean": 6.814622381773706,
+          "median": 4.442523241043091,
+          "trimean": 5.509674444794655,
+          "best_25": 1.297207709401846,
+          "worst_25": 15.295983131115253,
+          "max": 23.140249252319336
+        }
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "PanasonicGX1",
+      "algorithm": "gray_world",
+      "variant": "naive",
+      "num_images": 203,
+      "metrics": {
+        "angular_error": {
+          "mean": 3.981518910289398,
+          "median": 3.1473424434661865,
+          "trimean": 3.248861089348793,
+          "best_25": 0.8808867281675339,
+          "worst_25": 8.7493781375885,
+          "max": 16.721790313720703
+        }
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "PanasonicGX1",
+      "algorithm": "max_rgb",
+      "variant": "99_percentile",
+      "num_images": 203,
+      "metrics": {
+        "angular_error": {
+          "mean": 4.695196189573539,
+          "median": 2.8233442306518555,
+          "trimean": 3.2705713659524918,
+          "best_25": 0.7325017820298672,
+          "worst_25": 12.142290954589845,
+          "max": 21.24092674255371
+        }
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "PanasonicGX1",
+      "algorithm": "max_rgb",
+      "variant": "naive",
+      "num_images": 203,
+      "metrics": {
+        "angular_error": {
+          "mean": 13.88024150693945,
+          "median": 18.33391761779785,
+          "trimean": 15.570981085300446,
+          "best_25": 2.4596553903818132,
+          "worst_25": 20.611888732910156,
+          "max": 23.913026809692383
+        }
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "PanasonicGX1",
+      "algorithm": "shades_of_gray",
+      "variant": "default",
+      "num_images": 203,
+      "metrics": {
+        "angular_error": {
+          "mean": 6.973570194077022,
+          "median": 5.537039279937744,
+          "trimean": 6.140473783016205,
+          "best_25": 1.2331156584620475,
+          "worst_25": 15.203771171569825,
+          "max": 19.253637313842773
+        }
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "SamsungNX2000",
+      "algorithm": "gray_world",
+      "variant": "naive",
+      "num_images": 202,
+      "metrics": {
+        "angular_error": {
+          "mean": 4.1769030312500375,
+          "median": 3.2136030197143555,
+          "trimean": 3.47215536236763,
+          "best_25": 0.9165568780899048,
+          "worst_25": 8.95748574256897,
+          "max": 17.361289978027344
+        }
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "SamsungNX2000",
+      "algorithm": "max_rgb",
+      "variant": "99_percentile",
+      "num_images": 202,
+      "metrics": {
+        "angular_error": {
+          "mean": 5.084436591677736,
+          "median": 3.0966408252716064,
+          "trimean": 3.4039252549409866,
+          "best_25": 0.879781085550785,
+          "worst_25": 13.13192545890808,
+          "max": 20.676311492919922
+        }
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "SamsungNX2000",
+      "algorithm": "max_rgb",
+      "variant": "naive",
+      "num_images": 202,
+      "metrics": {
+        "angular_error": {
+          "mean": 14.759357820052912,
+          "median": 19.469943046569824,
+          "trimean": 16.553519755601883,
+          "best_25": 3.1414954447746277,
+          "worst_25": 21.784564971923828,
+          "max": 25.82741928100586
+        }
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "SamsungNX2000",
+      "algorithm": "shades_of_gray",
+      "variant": "default",
+      "num_images": 202,
+      "metrics": {
+        "angular_error": {
+          "mean": 7.674230547972245,
+          "median": 5.524641036987305,
+          "trimean": 6.608635038137436,
+          "best_25": 1.801276815533638,
+          "worst_25": 16.060417823791504,
+          "max": 24.491390228271484
+        }
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "SonyA57",
+      "algorithm": "gray_world",
+      "variant": "naive",
+      "num_images": 268,
+      "metrics": {
+        "angular_error": {
+          "mean": 4.111927539999805,
+          "median": 3.025894045829773,
+          "trimean": 3.3889427706599236,
+          "best_25": 0.897895321917178,
+          "worst_25": 9.05545635365728,
+          "max": 17.545679092407227
+        }
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "SonyA57",
+      "algorithm": "max_rgb",
+      "variant": "99_percentile",
+      "num_images": 268,
+      "metrics": {
+        "angular_error": {
+          "mean": 3.710931557883967,
+          "median": 2.5410600900650024,
+          "trimean": 2.7409932240843773,
+          "best_25": 0.819566712895436,
+          "worst_25": 8.562463724791114,
+          "max": 21.12394905090332
+        }
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "SonyA57",
+      "algorithm": "max_rgb",
+      "variant": "naive",
+      "num_images": 268,
+      "metrics": {
+        "angular_error": {
+          "mean": 10.991313729935618,
+          "median": 8.872395515441895,
+          "trimean": 10.30685542523861,
+          "best_25": 1.4182104503930504,
+          "worst_25": 22.22726098815007,
+          "max": 39.85368728637695
+        }
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "SonyA57",
+      "algorithm": "shades_of_gray",
+      "variant": "default",
+      "num_images": 268,
+      "metrics": {
+        "angular_error": {
+          "mean": 5.948340244702439,
+          "median": 3.842392086982727,
+          "trimean": 4.57431073486805,
+          "best_25": 1.2032599146686382,
+          "worst_25": 13.950817065452462,
+          "max": 21.565832138061523
+        }
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "all",
+      "algorithm": "gray_world",
+      "variant": "naive",
+      "num_images": 1594,
+      "metrics": {
+        "angular_error": {
+          "mean": 4.134646421814877,
+          "median": 3.1451956033706665,
+          "trimean": 3.360235705971718,
+          "best_25": 0.9296466081061555,
+          "worst_25": 9.05677078357294,
+          "max": 21.040990829467773
+        }
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "all",
+      "algorithm": "max_rgb",
+      "variant": "99_percentile",
+      "num_images": 1594,
+      "metrics": {
+        "angular_error": {
+          "mean": 4.382713626238192,
+          "median": 2.744451403617859,
+          "trimean": 3.0764556229114532,
+          "best_25": 0.7807946631394739,
+          "worst_25": 10.870693802234516,
+          "max": 23.143404006958008
+        }
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "all",
+      "algorithm": "max_rgb",
+      "variant": "naive",
+      "num_images": 1594,
+      "metrics": {
+        "angular_error": {
+          "mean": 12.845104427117775,
+          "median": 16.40001106262207,
+          "trimean": 14.141072869300842,
+          "best_25": 2.018598819647602,
+          "worst_25": 21.723822009024307,
+          "max": 53.07542419433594
+        }
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "all",
+      "algorithm": "shades_of_gray",
+      "variant": "default",
+      "num_images": 1594,
+      "metrics": {
+        "angular_error": {
+          "mean": 6.803634784314104,
+          "median": 4.824263334274292,
+          "trimean": 5.682709813117981,
+          "best_25": 1.3039113307587016,
+          "worst_25": 14.932785062933688,
+          "max": 24.491390228271484
+        }
+      }
+    }
+  ]
+}
