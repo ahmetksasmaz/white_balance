@@ -7,6 +7,8 @@ from ..data import Data
 from .configuration import *
 
 class NUS8DataProvider(DataProvider):
+    EXCLUDED_CAMERAS = ["NikonD40"]
+
     def __init__(self, override_dimensions=(-1, -1)):
         super().__init__(override_dimensions)
         
@@ -18,7 +20,7 @@ class NUS8DataProvider(DataProvider):
         
         # Iterating over the 8 camera subdirectories
         if os.path.exists(ROOT_DIRECTORY):
-            camera_dirs = sorted([d for d in os.listdir(ROOT_DIRECTORY) if os.path.isdir(os.path.join(ROOT_DIRECTORY, d)) and not d.startswith('.')])
+            camera_dirs = sorted([d for d in os.listdir(ROOT_DIRECTORY) if os.path.isdir(os.path.join(ROOT_DIRECTORY, d)) and not d.startswith('.') and d not in self.EXCLUDED_CAMERAS])
             for cam_dir in camera_dirs:
                 cam_path = os.path.join(ROOT_DIRECTORY, cam_dir)
                 gt_mat_path = os.path.join(cam_path, f"{cam_dir}_gt.mat")

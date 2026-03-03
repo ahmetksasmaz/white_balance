@@ -6,6 +6,7 @@ from datasets.cubepp.cubepp_dataprovider import CubePPDataProvider
 from datasets.lsmi.lsmi_dataprovider import LSMIDataProvider
 from datasets.gehler.gehler_dataprovider import GehlerDataProvider
 from datasets.nus8.nus8_dataprovider import NUS8DataProvider
+from datasets.nus8.nus8_extended_dataprovider import NUS8ExtendedDataProvider
 
 from white_balance_algorithms.gray_world.gray_world_naive import GrayWorldNaive
 from white_balance_algorithms.gray_world.gray_world_95_boundaries_all_channels import GrayWorld95BoundariesAllChannels
@@ -22,6 +23,7 @@ from white_balance_algorithms.max_rgb.max_rgb_median_99_percentile import MaxRGB
 from white_balance_algorithms.max_rgb.max_rgb_median_95_percentile import MaxRGBMedian95Percentile
 
 from white_balance_algorithms.shades_of_gray.shades_of_gray_default import ShadesOfGrayDefault
+from white_balance_algorithms.shades_of_gray.shades_of_gray_p3 import ShadesOfGrayP3
 
 from white_balance_algorithms.fast_awb.fast_awb_default import FastAWBDefault
 from white_balance_algorithms.fast_awb.fast_awb_p6 import FastAWBP6
@@ -32,6 +34,7 @@ DATASET_PROVIDERS = {
     "lsmi": LSMIDataProvider,
     "gehler": GehlerDataProvider,
     "nus8": NUS8DataProvider,
+    "nus8extended": NUS8ExtendedDataProvider,
 }
 
 ALGORITHM_REGISTRY = {
@@ -48,6 +51,7 @@ ALGORITHM_REGISTRY = {
     ("max_rgb", "median_99_percentile"): MaxRGBMedian99Percentile,
     ("max_rgb", "median_95_percentile"): MaxRGBMedian95Percentile,
     ("shades_of_gray", "default"): ShadesOfGrayDefault,
+    ("shades_of_gray", "p3"): ShadesOfGrayP3,
     ("fast_awb", "default"): FastAWBDefault,
     ("fast_awb", "p6"): FastAWBP6,
 }
@@ -67,7 +71,7 @@ def _extract_camera(dataset_name, data_provider, index):
             return "canon5d"
         return "unknown"
 
-    if dataset_name == "nus8":
+    if dataset_name in ("nus8", "nus8extended"):
         # Path pattern: .../CameraName/PNG/image.PNG
         parts = image_path.replace("\\", "/").split("/")
         for i, part in enumerate(parts):
