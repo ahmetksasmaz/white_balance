@@ -63,6 +63,14 @@ class Reporter:
                 entry["variant"],
             )
 
+            # Also aggregate across all cameras per dataset
+            dataset_key = (
+                entry["dataset"],
+                "all",
+                entry["algorithm"],
+                entry["variant"],
+            )
+
             errors = entry["errors"]
 
             # Collect single illuminant errors
@@ -70,18 +78,21 @@ class Reporter:
                 for metric_name, metric_value in errors["single_illuminant_errors"].items():
                     if metric_value is not None:
                         groups[key][metric_name].append(metric_value)
+                        groups[dataset_key][metric_name].append(metric_value)
 
             # Collect image errors
             if errors.get("image_errors") is not None:
                 for metric_name, metric_value in errors["image_errors"].items():
                     if metric_value is not None:
                         groups[key][metric_name].append(metric_value)
+                        groups[dataset_key][metric_name].append(metric_value)
 
             # Collect multi illuminant errors (when implemented)
             if errors.get("multi_illuminant_errors") is not None:
                 for metric_name, metric_value in errors["multi_illuminant_errors"].items():
                     if metric_value is not None:
                         groups[key][metric_name].append(metric_value)
+                        groups[dataset_key][metric_name].append(metric_value)
 
         # Build reports
         reports = []
