@@ -25,19 +25,26 @@ class LogChrominanceHistogram(Visuals):
     def __draw_log_chroma_from_image(self, data):
         image = data.get_raw_image()
         input_log_u, input_log_v = self.__log_chrominance(image)
-        quantization = data.get_quantization()
-        hist, xedges, yedges = np.histogram2d(input_log_u.flatten(), input_log_v.flatten(), bins=[quantization,quantization], range=[self.HIST_RANGE, self.HIST_RANGE])
-        normalized_hist = hist / np.max(hist)
+        
+        # Use image_size for bins to match colormap
+        bins = self.image_size
+        hist, xedges, yedges = np.histogram2d(input_log_u.flatten(), input_log_v.flatten(), bins=[bins, bins], range=[self.HIST_RANGE, self.HIST_RANGE])
+        
+        normalized_hist = hist / (np.max(hist) + 1e-8)
+        
         # Apply colormap to histogram based on intensity
-        hist_colored = np.zeros((quantization, quantization, 3), dtype=np.float32)
-        for i in range(quantization):
-            for j in range(quantization):
+        hist_colored = np.zeros((bins, bins, 3), dtype=np.float32)
+        for i in range(bins):
+            for j in range(bins):
                 intensity = normalized_hist[i, j]
                 hist_colored[i, j] = self.LOG_COLORMAP_BGR[i, j] * intensity
+        
         hist_colored = np.power(hist_colored, self.COLOR_POWER)  # Gamma correction for better visibility
-        hist_colored = hist_colored * 255.0
-        hist_colored = np.clip(hist_colored, 0, 255)
-        hist_colored = hist_colored.astype(np.uint8)
+        # Normalize instead of clipping
+        max_val = np.max(hist_colored)
+        if max_val > 0:
+            hist_colored = hist_colored / max_val
+        hist_colored = (hist_colored * 255.0).astype(np.uint8)
         # Draw axis at (0,0)
         # center_x = int((0 - HIST_RANGE[0]) / (HIST_RANGE[1] - HIST_RANGE[0]) * quantization)
         # center_y = int((0 - HIST_RANGE[0]) / (HIST_RANGE[1] - HIST_RANGE[0]) * quantization)
@@ -46,12 +53,12 @@ class LogChrominanceHistogram(Visuals):
 
         # Draw lines to corners of the image for reference
         cv.line(hist_colored, (0, 0), (self.CORNER_LINE_LENGTH, self.CORNER_LINE_LENGTH), (self.LOG_COLORMAP_BGR[0, 0]*255).astype(np.uint8).tolist(), self.CORNER_LINE_THICKNESS)
-        cv.line(hist_colored, (quantization - 1, 0), (quantization - 1 - self.CORNER_LINE_LENGTH, self.CORNER_LINE_LENGTH), (self.LOG_COLORMAP_BGR[0, quantization - 1]*255).astype(np.uint8).tolist(), self.CORNER_LINE_THICKNESS)
-        cv.line(hist_colored, (0, quantization - 1), (self.CORNER_LINE_LENGTH, quantization - 1 - self.CORNER_LINE_LENGTH), (self.LOG_COLORMAP_BGR[quantization - 1, 0]*255).astype(np.uint8).tolist(), self.CORNER_LINE_THICKNESS)
-        cv.line(hist_colored, (quantization - 1, quantization - 1), (quantization - 1 - self.CORNER_LINE_LENGTH, quantization - 1 - self.CORNER_LINE_LENGTH), (self.LOG_COLORMAP_BGR[quantization - 1, quantization - 1]*255).astype(np.uint8).tolist(), self.CORNER_LINE_THICKNESS)
-
-        # Draw histogram multiplier text
-        cv.putText(hist_colored, f"Zoom: {(1/self.HISTOGRAM_MULTIPLIER):0.2f}x", (5, quantization//2 - 5), cv.FONT_HERSHEY_SIMPLEX, 0.33, (255, 255, 255), 1, cv.LINE_AA)
+        cv.line(hist_colored, (bins - 1, 0), (bins - 1 - self.CORNER_LINE_LENGTH, self.CORNER_LINE_LENGTH), (self.LOG_COLORMAP_BGR[0, bins - 1]*255).astype(np.uint8).tolist(), self.CORNER_LINE_THICKNESS)
+        cv.line(hist_colored, (0, bins - 1), (self.CORNER_LINE_LENGTH, bins - 1 - self.CORNER_LINE_LENGTH), (self.LOG_COLORMAP_BGR[bins - 1, 0]*255).astype(np.uint8).tolist(), self.CORNER_LINE_THICKNESS)
+        cv.line(hist_colored, (bins - 1, bins - 1), (bins - 1 - self.CORNER_LINE_LENGTH, bins - 1 - self.CORNER_LINE_LENGTH), (self.LOG_COLORMAP_BGR[bins - 1, bins - 1]*255).astype(np.uint8).tolist(), self.CORNER_LINE_THICKNESS)
+ 
+        # Draw histogram multiplier text
+        cv.putText(hist_colored, f"Zoom: {(1/self.HISTOGRAM_MULTIPLIER):0.2f}x", (5, bins//2 - 5), cv.FONT_HERSHEY_SIMPLEX, 0.33, (255, 255, 255), 1, cv.LINE_AA)
 
         return hist_colored, hist
 

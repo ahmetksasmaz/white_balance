@@ -23,34 +23,40 @@ class NormalizedRGBHistogram(Visuals):
     def __draw_rgb_chroma_from_image(self, data):
         image = data.get_raw_image()
         input_b_c, input_g_c, input_r_c = self.__rgb_chrominance(image)
-        quantization = data.get_quantization()  # Assuming square image for histogram
         
-        hist, xedges, yedges = np.histogram2d(input_r_c.flatten(), input_b_c.flatten(), bins=[quantization,quantization], range=[self.HIST_RANGE, self.HIST_RANGE])
-        normalized_hist = hist / np.max(hist)
+        # Use image_size for bins to match colormap
+        bins = self.image_size
+        hist, xedges, yedges = np.histogram2d(input_r_c.flatten(), input_b_c.flatten(), bins=[bins, bins], range=[self.HIST_RANGE, self.HIST_RANGE])
+        
+        normalized_hist = hist / (np.max(hist) + 1e-8)
+        
         # Apply colormap to histogram based on intensity
-        hist_colored = np.zeros((quantization, quantization, 3), dtype=np.float32)
-        for i in range(quantization):
-            for j in range(quantization):
+        hist_colored = np.zeros((bins, bins, 3), dtype=np.float32)
+        for i in range(bins):
+            for j in range(bins):
                 intensity = normalized_hist[i, j]
                 hist_colored[i, j] = self.RGB_COLORMAP_BGR[i, j] * intensity
+        
         hist_colored = np.power(hist_colored, self.COLOR_POWER)  # Gamma correction for better visibility
-        hist_colored = hist_colored * 255.0
-        hist_colored = np.clip(hist_colored, 0, 255)
-        hist_colored = hist_colored.astype(np.uint8)
-        cv.line(hist_colored, (0, quantization - 1), (quantization - 1, 0), (255, 255, 255), 3)
+        # Normalize instead of clipping
+        max_val = np.max(hist_colored)
+        if max_val > 0:
+            hist_colored = hist_colored / max_val
+        hist_colored = (hist_colored * 255.0).astype(np.uint8)
+        cv.line(hist_colored, (0, bins - 1), (bins - 1, 0), (255, 255, 255), 3)
 
         # Draw lines to corners of the image for reference
-        center_x = (0 + 0 + quantization - 1) // 3
-        center_y = (0 + 0 + quantization - 1) // 3
+        center_x = (0 + 0 + bins - 1) // 3
+        center_y = (0 + 0 + bins - 1) // 3
         line_1_vector = (0 - center_x, 0 - center_y)
-        line_2_vector = (quantization - 1 - center_x, 0 - center_y)
-        line_3_vector = (0 - center_x, quantization - 1 - center_y)
+        line_2_vector = (bins - 1 - center_x, 0 - center_y)
+        line_3_vector = (0 - center_x, bins - 1 - center_y)
         line_1_normalized = (line_1_vector[0] / np.sqrt(line_1_vector[0]**2 + line_1_vector[1]**2), line_1_vector[1] / np.sqrt(line_1_vector[0]**2 + line_1_vector[1]**2))
         line_2_normalized = (line_2_vector[0] / np.sqrt(line_2_vector[0]**2 + line_2_vector[1]**2), line_2_vector[1] / np.sqrt(line_2_vector[0]**2 + line_2_vector[1]**2))
         line_3_normalized = (line_3_vector[0] / np.sqrt(line_3_vector[0]**2 + line_3_vector[1]**2), line_3_vector[1] / np.sqrt(line_3_vector[0]**2 + line_3_vector[1]**2))
         cv.line(hist_colored, (0, 0), (int(0 - line_1_normalized[0] * self.CORNER_LINE_LENGTH), int(0 - line_1_normalized[1] * self.CORNER_LINE_LENGTH)), (self.RGB_COLORMAP_BGR[0, 0]*255).astype(np.uint8).tolist(), self.CORNER_LINE_THICKNESS)
-        cv.line(hist_colored, (quantization - 1, 0), (quantization - 1 - self.CORNER_LINE_LENGTH, int(0 - line_2_normalized[1] * self.CORNER_LINE_LENGTH)), (self.RGB_COLORMAP_BGR[0, quantization - 1]*255).astype(np.uint8).tolist(), self.CORNER_LINE_THICKNESS)
-        cv.line(hist_colored, (0, quantization - 1), (int(0 - line_3_normalized[0] * self.CORNER_LINE_LENGTH), quantization - 1 - self.CORNER_LINE_LENGTH), (self.RGB_COLORMAP_BGR[quantization - 1, 0]*255).astype(np.uint8).tolist(), self.CORNER_LINE_THICKNESS)
+        cv.line(hist_colored, (bins - 1, 0), (bins - 1 - self.CORNER_LINE_LENGTH, int(0 - line_2_normalized[1] * self.CORNER_LINE_LENGTH)), (self.RGB_COLORMAP_BGR[0, bins - 1]*255).astype(np.uint8).tolist(), self.CORNER_LINE_THICKNESS)
+        cv.line(hist_colored, (0, bins - 1), (int(0 - line_3_normalized[0] * self.CORNER_LINE_LENGTH), bins - 1 - self.CORNER_LINE_LENGTH), (self.RGB_COLORMAP_BGR[bins - 1, 0]*255).astype(np.uint8).tolist(), self.CORNER_LINE_THICKNESS)
 
         return hist_colored, hist
 

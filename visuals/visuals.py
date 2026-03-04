@@ -7,7 +7,7 @@ class Visuals:
         self.image_size = image_size
     
     def visualize(self, data):
-        self._visualize(data)
+        return self._visualize(data)
     
     def _visualize(self, data):
         raise NotImplementedError("Subclasses must implement this method")
