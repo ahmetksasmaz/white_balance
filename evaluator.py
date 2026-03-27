@@ -33,6 +33,9 @@ from white_balance_algorithms.shades_of_gray.shades_of_gray_masked_p3 import Sha
 from white_balance_algorithms.fast_awb.fast_awb_default import FastAWBDefault
 from white_balance_algorithms.fast_awb.fast_awb_p6 import FastAWBP6
 
+from white_balance_algorithms.cheng.cheng_prc_0_5 import ChengPrc05
+from white_balance_algorithms.cheng.cheng_prc_3 import ChengPrc3
+
 
 DATASET_PROVIDERS = {
     "cubepp": CubePPDataProvider,
@@ -61,6 +64,8 @@ ALGORITHM_REGISTRY = {
     ("shades_of_gray", "masked_p3"): ShadesOfGrayMaskedP3,
     ("fast_awb", "default"): FastAWBDefault,
     ("fast_awb", "p6"): FastAWBP6,
+    ("cheng", "prc_0_5"): ChengPrc05,
+    ("cheng", "prc_3"): ChengPrc3,
 }
 
 

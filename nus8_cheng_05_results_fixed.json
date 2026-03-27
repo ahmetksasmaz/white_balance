@@ -1,0 +1,3643 @@
+{
+  "metadata": {
+    "timestamp": "2026-03-27T19:21:39.673125",
+    "datasets": [
+      "nus8"
+    ],
+    "algorithms": [
+      [
+        "cheng",
+        "prc_0_5"
+      ]
+    ],
+    "process_masked": true
+  },
+  "results": [
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0001",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.696168899536133
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0002",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.9191970825195312
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0003",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.0645010471343994
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0004",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 5.614017963409424
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0005",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.6763486862182617
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0006",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.7146373987197876
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0007",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 3.8962645530700684
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0008",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 3.6007065773010254
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0009",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.5961046814918518
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0010",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.620395541191101
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0011",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 5.630645275115967
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0012",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.8433434963226318
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0013",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 6.032571792602539
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0014",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 11.14360523223877
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0015",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.5254571437835693
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0016",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.6016591787338257
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0017",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 3.578451633453369
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0018",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.7434964179992676
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0019",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 11.364008903503418
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0020",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.0600407123565674
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0021",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.6755063533782959
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0022",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.8704313039779663
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0023",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 3.994539499282837
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0024",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 5.197725772857666
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0025",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 9.4959135055542
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0026",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.787065029144287
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0027",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 6.568741321563721
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0028",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 3.613192081451416
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0029",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 16.5383358001709
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0030",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.2755363881587982
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0031",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 3.2370052337646484
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0032",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 3.2394838333129883
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0033",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.5932929515838623
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0034",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 7.524100303649902
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0035",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.107121467590332
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0036",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 10.9061279296875
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0037",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.1649169921875
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0038",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.9285165667533875
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0039",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.9714945554733276
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0040",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.599776029586792
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0041",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 3.679509401321411
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0042",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 3.8465945720672607
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0043",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.600030779838562
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0044",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.5330249667167664
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0045",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.9956362843513489
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0046",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.6884182095527649
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0047",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 4.835455417633057
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0048",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.7534579038619995
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0049",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 4.030071258544922
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0050",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.2608295679092407
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0051",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.8023505210876465
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0052",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 3.097940444946289
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0053",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 5.722588539123535
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0054",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.9769871234893799
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0055",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.7185819149017334
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0056",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.298994779586792
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0057",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 4.1084675788879395
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0058",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.2533377707004547
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0059",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 4.397612571716309
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0060",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 11.904082298278809
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0061",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 3.5313048362731934
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0062",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.742525100708008
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0063",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 4.661612033843994
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0064",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 11.521878242492676
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0065",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.621593952178955
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0066",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.2445836067199707
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0067",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 9.755218505859375
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0068",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 3.9651150703430176
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0069",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 10.219427108764648
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0070",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.4196477234363556
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0071",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 5.2053351402282715
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0072",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.7061691284179688
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0073",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.7013713121414185
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0074",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.6071627736091614
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0075",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.8372002243995667
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0076",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.0768368244171143
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0077",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 4.832010269165039
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0078",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.2811601459980011
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0079",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.16432450711727142
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0080",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 6.148096561431885
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0081",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.19731068611145
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0082",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.2639295756816864
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0083",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.92322039604187
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0084",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.10145103931427
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0085",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.5336556434631348
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0086",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.4731261134147644
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0087",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 4.527617931365967
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0088",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.6878494620323181
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0089",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.7981938719749451
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0090",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.3494263291358948
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0091",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 3.9518072605133057
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0092",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.047545075416565
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0093",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.007108688354492
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0094",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.37709903717041
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0095",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.017602801322937
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0096",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 11.513805389404297
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0097",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 4.107514381408691
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0098",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 6.971897602081299
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0099",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 3.163597345352173
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0100",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.29208308458328247
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0101",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.8550078868865967
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0102",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.8165000677108765
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0103",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.8675039410591125
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0104",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.66910320520401
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0105",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.33161288499832153
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0106",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.7517343163490295
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0107",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.7504419088363647
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0108",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.3594112396240234
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0109",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.6275054216384888
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0110",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.9859588742256165
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0111",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.270723819732666
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0112",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.9775407314300537
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0113",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.9618480801582336
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0114",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 6.01747465133667
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0115",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.1933739185333252
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0116",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.868126392364502
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0117",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.861094355583191
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0118",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.9981175661087036
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0119",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.4274511337280273
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0120",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.8616192936897278
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0121",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.018947958946228
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0122",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.6749267578125
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0123",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 4.045978546142578
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0124",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.29408594965934753
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0125",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.0479395389556885
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0126",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 3.5037519931793213
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0127",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 4.07020378112793
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0128",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.0738649368286133
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0129",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 5.316181182861328
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0130",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 3.722574472427368
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0131",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.07961368560791
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0132",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.9206860661506653
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0133",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 7.40991735458374
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0134",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.685037851333618
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0135",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.18345394730567932
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0136",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.4648683071136475
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0137",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.8620734214782715
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0138",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.8543210029602051
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0139",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.3981127142906189
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0140",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.437589645385742
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0141",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 9.852051734924316
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0142",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.781785726547241
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0143",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.24628834426403046
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0144",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 8.597975730895996
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0145",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 4.435927391052246
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0146",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.18662630021572113
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0147",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.0837504863739014
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0148",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.2887673377990723
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0149",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 3.1031179428100586
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0150",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.0873254537582397
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0151",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 10.053771018981934
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0152",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.0214414596557617
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0153",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.6286957859992981
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0154",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 3.942232131958008
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0155",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.1056137084960938
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0156",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.047918677330017
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0157",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.3810354769229889
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0158",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 4.774996280670166
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0159",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.9220149517059326
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0160",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 8.507984161376953
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0161",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.178025484085083
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0162",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.061180353164673
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0163",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.6663612127304077
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0164",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 4.398636817932129
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0165",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 3.106900930404663
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0166",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.022207498550415
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0167",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 5.3851776123046875
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0168",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 6.491354942321777
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0169",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.1162745952606201
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0170",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.273052930831909
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0171",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.05861496925354
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0172",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.3894999027252197
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0173",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.4494447708129883
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0174",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.4689721167087555
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0175",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 6.004887104034424
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0176",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 7.014896869659424
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0177",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 6.061715126037598
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0178",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.8599913120269775
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0179",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.9269680976867676
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0180",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.977787971496582
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0181",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.1798512935638428
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0182",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 3.2919392585754395
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0183",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 4.877448081970215
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0184",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.0878652334213257
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0185",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 6.864727973937988
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0186",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.8301587104797363
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0187",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.1587650775909424
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0188",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.31651782989501953
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0189",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.3940929174423218
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0190",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 9.085968971252441
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0191",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.780152440071106
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0192",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.8098755478858948
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0193",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.8322688341140747
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0194",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 5.34390115737915
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0195",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.6787638664245605
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0196",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 6.10964822769165
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0197",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 3.3949408531188965
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0198",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.760240077972412
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0199",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 3.1536805629730225
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0200",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.23406796157360077
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0201",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 4.872425079345703
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0202",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.7033215761184692
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0203",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 3.9841818809509277
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0204",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.4432314932346344
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0205",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 13.65073299407959
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0206",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.662489652633667
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0207",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 7.914552211761475
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0208",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.1968125104904175
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0209",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 14.7481689453125
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0210",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.4562935829162598
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0211",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 5.62935733795166
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0212",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.8469496965408325
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0213",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 7.330798149108887
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0214",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.3718777894973755
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0215",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 3.079242467880249
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0216",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 4.528656005859375
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0217",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 7.450138568878174
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0218",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.40251192450523376
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0219",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.570549964904785
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0220",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.2533377707004547
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0221",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.423335552215576
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0222",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 5.541886329650879
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0223",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.551038384437561
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0224",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 6.101781845092773
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0225",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.7625885605812073
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0226",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.803091049194336
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0227",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.47188377380371094
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0228",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.323721170425415
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0229",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.7975733280181885
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0230",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.9632599353790283
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0231",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 4.1759352684021
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0232",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.042006015777588
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0233",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 8.094368934631348
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0234",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 4.411886215209961
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0235",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.7400133609771729
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0236",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.4000738859176636
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0237",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.0746538639068604
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0238",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.998068332672119
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0239",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.341259002685547
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0240",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 3.6411006450653076
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0241",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.938459038734436
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0242",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.6227541565895081
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0243",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.5355884432792664
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0244",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.6425654888153076
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0245",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.15065784752368927
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0246",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.5801345705986023
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0247",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.9705566763877869
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0248",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.36369451880455017
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0249",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.2586548328399658
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0250",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.2461549043655396
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0251",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.8050438165664673
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0252",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.035478115081787
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0253",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.1693557500839233
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0254",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.5714694261550903
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0255",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.3839493989944458
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0256",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 2.7431674003601074
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0257",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 1.3199723958969116
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0258",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.35277020931243896
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "image_name": "Canon1DsMkIII_0259",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "errors": {
+        "single_illuminant_errors": {
+          "angular_error": 0.4338616132736206
+        },
+        "multi_illuminant_errors": null,
+        "image_errors": null
+      }
+    }
+  ]
+}

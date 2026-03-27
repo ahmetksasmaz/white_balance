@@ -1,0 +1,42 @@
+{
+  "metadata": {
+    "source_file": "D:\\white_balance\\nus8_cheng_05_results_fixed.json",
+    "timestamp": "2026-03-27T19:23:57.691532"
+  },
+  "reports": [
+    {
+      "dataset": "nus8",
+      "camera": "Canon1DsMkIII",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "num_images": 259,
+      "metrics": {
+        "angular_error": {
+          "mean": 2.9799409261886676,
+          "median": 2.0600407123565674,
+          "trimean": 2.2691508308053017,
+          "best_25": 0.567914187675342,
+          "worst_25": 7.025695886462927,
+          "max": 16.5383358001709
+        }
+      }
+    },
+    {
+      "dataset": "nus8",
+      "camera": "all",
+      "algorithm": "cheng",
+      "variant": "prc_0_5",
+      "num_images": 259,
+      "metrics": {
+        "angular_error": {
+          "mean": 2.9799409261886676,
+          "median": 2.0600407123565674,
+          "trimean": 2.2691508308053017,
+          "best_25": 0.567914187675342,
+          "worst_25": 7.025695886462927,
+          "max": 16.5383358001709
+        }
+      }
+    }
+  ]
+}

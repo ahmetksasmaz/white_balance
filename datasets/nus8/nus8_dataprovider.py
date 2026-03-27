@@ -71,8 +71,9 @@ class NUS8DataProvider(DataProvider):
         # Apply camera-specific levels
         black_level = self.darkness_levels[index]
         saturation_level = self.saturation_levels[index]
-
-        raw_image = np.clip((raw_image - black_level) / (saturation_level - black_level), 0, 1)
+        raw_image = np.clip(raw_image, black_level, saturation_level)
+        raw_image = raw_image - black_level
+        raw_image = raw_image / (saturation_level - black_level)
         data.set_quantization(saturation_level - black_level)
 
         # Override dimensions if specified
@@ -104,17 +105,14 @@ class NUS8DataProvider(DataProvider):
         data.set_illuminants(illuminants)
 
         # Set checkerboard mask from CC_coords [row_start, row_end, col_start, col_end]
-        cc = self.cc_coords[index]
-        if cc is not None:
+        cc_coord = self.cc_coords[index]
+        if cc_coord is not None:
             h, w = raw_image.shape[:2]
             mask = np.ones((h, w), dtype=bool)
-            r_start, r_end, c_start, c_end = int(cc[0]), int(cc[1]), int(cc[2]), int(cc[3])
-            # Clamp to image bounds
-            r_start = max(0, r_start)
-            r_end = min(h, r_end)
-            c_start = max(0, c_start)
-            c_end = min(w, c_end)
-            mask[r_start:r_end, c_start:c_end] = False
+            y1, y2, x1, x2 = int(cc_coord[0]), int(cc_coord[1]), int(cc_coord[2]), int(cc_coord[3])
+            
+            mask[y1:y2, x1:x2] = False
+
             data.set_mask(mask)
 
         return data

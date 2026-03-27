@@ -28,7 +28,11 @@ from white_balance_algorithms.shades_of_gray.shades_of_gray_default import Shade
 from white_balance_algorithms.fast_awb.fast_awb_default import FastAWBDefault
 from white_balance_algorithms.fast_awb.fast_awb_p6 import FastAWBP6
 
-def run_single_data(dataset_name, index, algorithm_name, variant_name):
+from white_balance_algorithms.cheng.cheng_prc_0_5 import ChengPrc05
+from white_balance_algorithms.cheng.cheng_prc_3 import ChengPrc3
+from white_balance_algorithms.shades_of_gray.shades_of_gray_p3 import ShadesOfGrayP3
+
+def run_single_data(dataset_name, index, algorithm_name, variant_name, process_masked=False):
     if dataset_name == "cubepp":
         data_provider = CubePPDataProvider()
     elif dataset_name == "lsmi":
@@ -84,10 +88,22 @@ def run_single_data(dataset_name, index, algorithm_name, variant_name):
             algorithm = FastAWBP6()
         else:
             raise ValueError(f"Invalid variant name for fast_awb: {variant_name}")
+    elif algorithm_name == "cheng":
+        if variant_name == "prc_0_5":
+            algorithm = ChengPrc05()
+        elif variant_name == "prc_3":
+            algorithm = ChengPrc3()
+        else:
+            raise ValueError(f"Invalid variant name for cheng: {variant_name}")
+    elif algorithm_name == "shades_of_gray":
+        if variant_name == "p3":
+            algorithm = ShadesOfGrayP3()
+        else:
+            algorithm = ShadesOfGrayDefault()
     else:
         raise ValueError(f"Invalid algorithm name: {algorithm_name}")
 
-    estimations = algorithm.estimate(data)
+    estimations = algorithm.estimate(data, process_masked=process_masked)
     print(f"Estimated illuminant (r/g, b/g): {estimations['single_illuminant']}")
     print(f"Estimated multi-illuminants: {estimations['multi_illuminants']}")
     print(f"Estimated illuminant map: {estimations['illuminant_map']}")
@@ -102,15 +118,17 @@ def main():
     parser.add_argument('--index', type=int, required=True, help='Image index')
     parser.add_argument('--algorithm', type=str, required=True, help='Algorithm name')
     parser.add_argument('--variant', type=str, required=True, help='Algorithm variant')
+    parser.add_argument('--process-masked', action='store_true', default=False, help='Exclude masked pixels')
     args = parser.parse_args()
 
     valid_datasets = ["cubepp", "lsmi", "gehler", "nus8"]
-    valid_algorithms = ["gray_world", "max_rgb", "shades_of_gray", "fast_awb"]
+    valid_algorithms = ["gray_world", "max_rgb", "shades_of_gray", "fast_awb", "cheng"]
     valid_variants = {
         "gray_world": ["naive", "95_boundaries_all_channels", "95_boundaries_any_channel"],
         "max_rgb": ["naive", "99_percentile", "95_percentile", "gaussian", "gaussian_95_percentile", "gaussian_99_percentile", "median", "median_95_percentile", "median_99_percentile"],
-        "shades_of_gray": ["default"],
-        "fast_awb": ["default", "p6"]
+        "shades_of_gray": ["default", "p3"],
+        "fast_awb": ["default", "p6"],
+        "cheng": ["prc_0_5", "prc_3"]
     }
 
     if args.dataset not in valid_datasets:
@@ -122,7 +140,7 @@ def main():
 
     print(f"Dataset: {args.dataset}", f"Index: {args.index}", f"Algorithm: {args.algorithm}", f"Variant: {args.variant}")
 
-    run_single_data(args.dataset, args.index, args.algorithm, args.variant)
+    run_single_data(args.dataset, args.index, args.algorithm, args.variant, args.process_masked)
 
 if __name__ == "__main__":
     main()
