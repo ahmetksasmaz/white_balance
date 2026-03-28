@@ -38,22 +38,40 @@ class NUS8DataProvider(DataProvider):
                     # Ensure PNG images exist and append properties
                     for i, img_name in enumerate(all_image_names):
                         img_path = os.path.join(cam_path, "PNG", f"{img_name}.{IMAGE_EXTENSION}")
+                        txt_path = os.path.join(cam_path, "CHECKER", f"{img_name}_mask.txt")
+                        
+                        def load_mask_coords(txt_p):
+                            if not os.path.exists(txt_p): return None
+                            patches = []
+                            with open(txt_p, 'r') as f:
+                                lines = [l.strip() for l in f.readlines() if l.strip()]
+                            if len(lines) >= 49:
+                                roi_line = lines[0].split(',')
+                                roi_x, roi_y = float(roi_line[0]), float(roi_line[1])
+                                for p in range(24):
+                                    xm = [float(v) for v in lines[1 + 2*p].split(',')]
+                                    ym = [float(v) for v in lines[2 + 2*p].split(',')]
+                                    abs_xm = [x + roi_x for x in xm]
+                                    abs_ym = [y + roi_y for y in ym]
+                                    patches.append((abs_xm, abs_ym))
+                            return patches if patches else None
+
                         if os.path.exists(img_path):
-                            self.data_names.append(img_path)
-                            self.darkness_levels.append(darkness_level)
-                            self.saturation_levels.append(saturation_level)
-                            self.gt_illuminants.append(groundtruth_illuminants[i])
-                            self.cc_coords.append(cc_coords[i] if cc_coords is not None else None)
+                            actual_img_path = img_path
                         else:
                             # Lowercase extension check just in case
                             img_path_lower = os.path.join(cam_path, "PNG", f"{img_name}.{IMAGE_EXTENSION.lower()}")
                             if os.path.exists(img_path_lower):
-                                self.data_names.append(img_path_lower)
-                                self.darkness_levels.append(darkness_level)
-                                self.saturation_levels.append(saturation_level)
-                                self.gt_illuminants.append(groundtruth_illuminants[i])
-                                self.cc_coords.append(cc_coords[i] if cc_coords is not None else None)
-
+                                actual_img_path = img_path_lower
+                            else:
+                                actual_img_path = None
+                                
+                        if actual_img_path:
+                            self.data_names.append(actual_img_path)
+                            self.darkness_levels.append(darkness_level)
+                            self.saturation_levels.append(saturation_level)
+                            self.gt_illuminants.append(groundtruth_illuminants[i])
+                            self.cc_coords.append(load_mask_coords(txt_path))
 
     def _construct_data(self, index):
         data = Data()
@@ -71,21 +89,25 @@ class NUS8DataProvider(DataProvider):
         # Apply camera-specific levels
         black_level = self.darkness_levels[index]
         saturation_level = self.saturation_levels[index]
-        raw_image = np.clip(raw_image, black_level, saturation_level)
-        raw_image = raw_image - black_level
-        raw_image = raw_image / (saturation_level - black_level)
+
+        raw_image = np.clip((raw_image - black_level) / (saturation_level - black_level), 0, 1)
         data.set_quantization(saturation_level - black_level)
 
+        h_orig, w_orig = raw_image.shape[:2]
+
         # Override dimensions if specified
+        new_width, new_height = -1, -1
         if self.override_dimensions[0] > 0 and self.override_dimensions[1] > 0:
-            raw_image = cv.resize(raw_image, self.override_dimensions)
+            new_width = self.override_dimensions[0]
+            new_height = self.override_dimensions[1]
+            raw_image = cv.resize(raw_image, (new_width, new_height))
         elif self.override_dimensions[0] > 0:
-            aspect_ratio = raw_image.shape[1] / raw_image.shape[0]
+            aspect_ratio = w_orig / h_orig
             new_width = self.override_dimensions[0]
             new_height = int(new_width / aspect_ratio)
             raw_image = cv.resize(raw_image, (new_width, new_height))
         elif self.override_dimensions[1] > 0:
-            aspect_ratio = raw_image.shape[1] / raw_image.shape[0]
+            aspect_ratio = w_orig / h_orig
             new_height = self.override_dimensions[1]
             new_width = int(new_height * aspect_ratio)
             raw_image = cv.resize(raw_image, (new_width, new_height))
@@ -104,16 +126,23 @@ class NUS8DataProvider(DataProvider):
             
         data.set_illuminants(illuminants)
 
-        # Set checkerboard mask from CC_coords [row_start, row_end, col_start, col_end]
+        # Set checkerboard mask for the 24 patches
         cc_coord = self.cc_coords[index]
         if cc_coord is not None:
-            h, w = raw_image.shape[:2]
-            mask = np.ones((h, w), dtype=bool)
-            y1, y2, x1, x2 = int(cc_coord[0]), int(cc_coord[1]), int(cc_coord[2]), int(cc_coord[3])
+            # Create mask in original resolution
+            mask_orig = np.ones((h_orig, w_orig), dtype=np.uint8)
             
-            mask[y1:y2, x1:x2] = False
-
-            data.set_mask(mask)
+            for (xm, ym) in cc_coord:
+                pts = np.array([[[x, y] for x, y in zip(xm, ym)]], dtype=np.int32)
+                cv.fillPoly(mask_orig, pts, 0)
+                
+            # Resize mask if image was resized
+            if new_width > 0 or new_height > 0:
+                mask = cv.resize(mask_orig, (new_width, new_height), interpolation=cv.INTER_NEAREST)
+            else:
+                mask = mask_orig
+                
+            data.set_mask(mask.astype(bool))
 
         return data
 

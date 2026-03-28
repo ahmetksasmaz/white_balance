@@ -16,6 +16,9 @@ class ChengPrc05(WhiteBalanceAlgorithm):
         # Get flattened pixels (H*W, 3) and remove masked pixels 
         pixels = self._get_pixels(image, data, process_masked)
         
+        mask = np.all(pixels < 0.98, axis=1) # Threshold that nus8 camera possibly saturates at 0.98, taken from the paper
+        pixels = pixels[mask]
+
         if pixels.shape[0] == 0:
             return {
                 "single_illuminant": (1.0, 1.0),
