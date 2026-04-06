@@ -9,7 +9,12 @@ from .configuration import *
 class NUS8DataProvider(DataProvider):
     EXCLUDED_CAMERAS = ["NikonD40"]
 
-    def __init__(self, override_dimensions=(-1, -1)):
+    def __init__(self, saturation_mask=('raw', 'all', 0.98), color_checker="patch", override_dimensions=(-1, -1)):
+        # saturation_mask = (type, scope, threshold) or None
+        # type = "raw" or "normalized"
+        # scope = "all" or "any"
+        # threshold = percentage
+        # color_checker = "all" or "patch"
         super().__init__(override_dimensions)
         
         self.data_names = []
@@ -17,6 +22,8 @@ class NUS8DataProvider(DataProvider):
         self.darkness_levels = []
         self.saturation_levels = []
         self.cc_coords = []
+        self.saturation_mask = saturation_mask
+        self.color_checker = color_checker
         
         # Iterating over the 8 camera subdirectories
         if os.path.exists(ROOT_DIRECTORY):
@@ -90,29 +97,29 @@ class NUS8DataProvider(DataProvider):
         black_level = self.darkness_levels[index]
         saturation_level = self.saturation_levels[index]
 
-        raw_image = np.clip((raw_image - black_level) / (saturation_level - black_level), 0, 1)
+        normalized_raw_image = np.clip((raw_image - black_level) / (saturation_level - black_level), 0, 1)
         data.set_quantization(saturation_level - black_level)
 
-        h_orig, w_orig = raw_image.shape[:2]
+        h_orig, w_orig = normalized_raw_image.shape[:2]
 
         # Override dimensions if specified
         new_width, new_height = -1, -1
         if self.override_dimensions[0] > 0 and self.override_dimensions[1] > 0:
             new_width = self.override_dimensions[0]
             new_height = self.override_dimensions[1]
-            raw_image = cv.resize(raw_image, (new_width, new_height))
+            normalized_raw_image = cv.resize(normalized_raw_image, (new_width, new_height))
         elif self.override_dimensions[0] > 0:
             aspect_ratio = w_orig / h_orig
             new_width = self.override_dimensions[0]
             new_height = int(new_width / aspect_ratio)
-            raw_image = cv.resize(raw_image, (new_width, new_height))
+            normalized_raw_image = cv.resize(normalized_raw_image, (new_width, new_height))
         elif self.override_dimensions[1] > 0:
             aspect_ratio = w_orig / h_orig
             new_height = self.override_dimensions[1]
             new_width = int(new_height * aspect_ratio)
-            raw_image = cv.resize(raw_image, (new_width, new_height))
+            normalized_raw_image = cv.resize(normalized_raw_image, (new_width, new_height))
         
-        data.set_raw_image(raw_image)
+        data.set_raw_image(normalized_raw_image)
 
         # Load GT info -> Store as a dict
         illuminants = {}
@@ -132,16 +139,37 @@ class NUS8DataProvider(DataProvider):
             # Create mask in original resolution
             mask_orig = np.ones((h_orig, w_orig), dtype=np.uint8)
             
-            for (xm, ym) in cc_coord:
-                pts = np.array([[[x, y] for x, y in zip(xm, ym)]], dtype=np.int32)
-                cv.fillPoly(mask_orig, pts, 0)
+            if self.color_checker == "patches":
+                for (xm, ym) in cc_coord:
+                    pts = np.array([[[x, y] for x, y in zip(xm, ym)]], dtype=np.int32)
+                    cv.fillPoly(mask_orig, pts, 0)
+            elif self.color_checker == "all":
+                # mask whole color checker as a rectangle
+                x_min = int(min([min(xm) for xm, ym in cc_coord]))
+                x_max = int(max([max(xm) for xm, ym in cc_coord]))
+                y_min = int(min([min(ym) for xm, ym in cc_coord]))
+                y_max = int(max([max(ym) for xm, ym in cc_coord]))
+                mask_orig[y_min:y_max, x_min:x_max] = 0
                 
+            # Mask also above saturation level
+            if self.saturation_mask is not None:
+                if(self.saturation_mask[0] == "raw"):
+                    if(self.saturation_mask[1] == "all"):
+                        mask_orig = mask_orig & np.all(raw_image <= saturation_level * self.saturation_mask[2], axis=2).astype(np.uint8)
+                    elif(self.saturation_mask[1] == "any"):
+                        mask_orig = mask_orig & np.any(raw_image <= saturation_level * self.saturation_mask[2], axis=2).astype(np.uint8)
+                elif(self.saturation_mask[0] == "normalized"):
+                    if(self.saturation_mask[1] == "all"):
+                        mask_orig = mask_orig & np.all(normalized_raw_image <= self.saturation_mask[2], axis=2).astype(np.uint8)
+                    elif(self.saturation_mask[1] == "any"):
+                        mask_orig = mask_orig & np.any(normalized_raw_image <= self.saturation_mask[2], axis=2).astype(np.uint8)
+
             # Resize mask if image was resized
             if new_width > 0 or new_height > 0:
                 mask = cv.resize(mask_orig, (new_width, new_height), interpolation=cv.INTER_NEAREST)
             else:
                 mask = mask_orig
-                
+            
             data.set_mask(mask.astype(bool))
 
         return data

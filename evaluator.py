@@ -107,10 +107,26 @@ def _extract_camera(dataset_name, data_provider, index):
 
 def _worker_fn(task_info):
     """Worker function for multi-processing."""
-    dataset_name, algo_name, variant_name, idx, process_masked, camera_filter = task_info
+    dataset_name, algo_name, variant_name, idx, process_masked, camera_filter, saturation_mask_str, color_checker_str = task_info
     try:
+        saturation_masks = {
+            'none': None,
+            'raw_all_98': ('raw', 'all', 0.98),
+            'raw_all_100': ('raw', 'all', 1.0),
+            'raw_any_98': ('raw', 'any', 0.98),
+            'raw_any_100': ('raw', 'any', 1.0),
+            'normalized_all_98': ('normalized', 'all', 0.98),
+            'normalized_all_100': ('normalized', 'all', 1.0),
+            'normalized_any_98': ('normalized', 'any', 0.98),
+            'normalized_any_100': ('normalized', 'any', 1.0),
+        }
+        saturation_mask_tuple = saturation_masks[saturation_mask_str]
+
         # Instantiate inside worker to avoid pickle issues with some objects
-        data_provider = DATASET_PROVIDERS[dataset_name]()
+        if dataset_name in ("nus8", "nus8extended"):
+            data_provider = DATASET_PROVIDERS[dataset_name](saturation_mask=saturation_mask_tuple, color_checker=color_checker_str)
+        else:
+            data_provider = DATASET_PROVIDERS[dataset_name]()
         algorithm = ALGORITHM_REGISTRY[(algo_name, variant_name)]()
 
         camera = _extract_camera(dataset_name, data_provider, idx)
@@ -163,7 +179,7 @@ def _serialize_error_metrics(error_metrics):
 
 
 class Evaluator:
-    def __init__(self, datasets, algorithms, camera=None, output_path="results.json", process_masked=False, num_workers=1):
+    def __init__(self, datasets, algorithms, camera=None, output_path="results.json", process_masked=False, num_workers=1, saturation_mask="none", color_checker="all"):
         """
         Args:
             datasets: list of dataset name strings, e.g. ["gehler", "nus8"]
@@ -173,6 +189,8 @@ class Evaluator:
             output_path: path for the output JSON file
             process_masked: if True, algorithms will exclude masked pixels (e.g. checkerboard)
             num_workers: number of processes to use (default: 1)
+            saturation_mask: saturation mask string configuration for dataset providers
+            color_checker: color checker configuration ("all" or "patch")
         """
         self.datasets = datasets
         self.algorithms = algorithms
@@ -180,6 +198,30 @@ class Evaluator:
         self.output_path = output_path
         self.process_masked = process_masked
         self.num_workers = num_workers
+        self.saturation_mask_str = saturation_mask
+        self.color_checker_str = color_checker
+        
+        has_nus_datasets = any(ds in ("nus8", "nus8extended") for ds in datasets)
+        if (not process_masked) or (not has_nus_datasets):
+            if saturation_mask != "none":
+                raise ValueError("saturation_mask is only valid for nus8 and nus8extended datasets when process_masked is enabled")
+            if color_checker != "all":
+                raise ValueError("color_checker is only valid for nus8 and nus8extended datasets when process_masked is enabled")
+        
+        saturation_masks = {
+            'none': None,
+            'raw_all_98': ('raw', 'all', 0.98),
+            'raw_all_100': ('raw', 'all', 1.0),
+            'raw_any_98': ('raw', 'any', 0.98),
+            'raw_any_100': ('raw', 'any', 1.0),
+            'normalized_all_98': ('normalized', 'all', 0.98),
+            'normalized_all_100': ('normalized', 'all', 1.0),
+            'normalized_any_98': ('normalized', 'any', 0.98),
+            'normalized_any_100': ('normalized', 'any', 1.0),
+        }
+        if saturation_mask not in saturation_masks:
+            raise ValueError(f"Invalid saturation mask: {saturation_mask}")
+        self.saturation_mask_tuple = saturation_masks[saturation_mask]
 
         # Validate inputs
         for ds in datasets:
@@ -201,7 +243,10 @@ class Evaluator:
             print(f"  Camera Filter: {self.camera}")
 
         for dataset_name in self.datasets:
-            data_provider = DATASET_PROVIDERS[dataset_name]()
+            if dataset_name in ("nus8", "nus8extended"):
+                data_provider = DATASET_PROVIDERS[dataset_name](saturation_mask=self.saturation_mask_tuple, color_checker=self.color_checker_str)
+            else:
+                data_provider = DATASET_PROVIDERS[dataset_name]()
             num_dataset_images = len(data_provider)
             
             # Identify indices matching the camera filter
@@ -216,7 +261,7 @@ class Evaluator:
 
             for algo_name, variant_name in self.algorithms:
                 for idx in matching_indices:
-                    tasks.append((dataset_name, algo_name, variant_name, idx, self.process_masked, self.camera))
+                    tasks.append((dataset_name, algo_name, variant_name, idx, self.process_masked, self.camera, self.saturation_mask_str, self.color_checker_str))
 
         total_tasks = len(tasks)
         processed_count = 0
@@ -247,6 +292,8 @@ class Evaluator:
                 "datasets": self.datasets,
                 "algorithms": [[a, v] for a, v in self.algorithms],
                 "process_masked": self.process_masked,
+                "saturation_mask": self.saturation_mask_str,
+                "color_checker": self.color_checker_str,
             },
             "results": all_results,
         }

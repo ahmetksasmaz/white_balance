@@ -1,6 +1,8 @@
 import argparse
 import multiprocessing
+import os
 from evaluator import Evaluator, DATASET_PROVIDERS, ALGORITHM_REGISTRY
+from reporter import Reporter
 
 
 def main():
@@ -38,6 +40,16 @@ Examples:
         '--process-masked', action='store_true', default=False,
         help='If set, algorithms will exclude masked pixels (e.g. checkerboard regions)'
     )
+    parser.add_argument(
+        '--saturation-mask', type=str, default='none', choices=[
+            'none', 'raw_all_98', 'raw_all_100', 'raw_any_98', 'raw_any_100', 
+            'normalized_all_98', 'normalized_all_100', 'normalized_any_98', 'normalized_any_100'
+        ], help='Saturation mask configuration'
+    )
+    parser.add_argument(
+        '--color-checker', type=str, default='all', choices=['all', 'patch'], 
+        help='Color checker mask type'
+    )
     args = parser.parse_args()
 
     # Parse algorithms
@@ -61,6 +73,8 @@ Examples:
     print(f"Algorithms: {algorithms}")
     print(f"Output: {args.output}")
     print(f"Process masked: {args.process_masked}")
+    print(f"Saturation mask: {args.saturation_mask}")
+    print(f"Color checker: {args.color_checker}")
 
     evaluator = Evaluator(
         datasets=args.datasets,
@@ -69,8 +83,14 @@ Examples:
         output_path=args.output,
         process_masked=args.process_masked,
         num_workers=num_workers,
+        saturation_mask=args.saturation_mask,
+        color_checker=args.color_checker,
     )
     evaluator.run()
+
+    report_filename = os.path.splitext(args.output)[0] + "_report.json"
+    reporter = Reporter(input_path=args.output, output_path=report_filename)
+    reporter.generate()
 
 
 if __name__ == "__main__":

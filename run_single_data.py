@@ -6,6 +6,7 @@ from datasets.cubepp.cubepp_dataprovider import CubePPDataProvider
 from datasets.lsmi.lsmi_dataprovider import LSMIDataProvider
 from datasets.gehler.gehler_dataprovider import GehlerDataProvider
 from datasets.nus8.nus8_dataprovider import NUS8DataProvider
+from datasets.nus8.nus8_extended_dataprovider import NUS8ExtendedDataProvider
 
 from white_balance_algorithms.gray_world.gray_world_naive import GrayWorldNaive
 from white_balance_algorithms.gray_world.gray_world_95_boundaries_all_channels import GrayWorld95BoundariesAllChannels
@@ -32,15 +33,28 @@ from white_balance_algorithms.cheng.cheng_prc_0_5 import ChengPrc05
 from white_balance_algorithms.cheng.cheng_prc_3 import ChengPrc3
 from white_balance_algorithms.shades_of_gray.shades_of_gray_p3 import ShadesOfGrayP3
 
-def run_single_data(dataset_name, index, algorithm_name, variant_name, process_masked=False):
+def run_single_data(dataset_name, index, algorithm_name, variant_name, process_masked=False, saturation_mask_str='none', color_checker_str='all'):
+    saturation_masks = {
+        'none': None,
+        'raw_all_98': ('raw', 'all', 0.98),
+        'raw_all_100': ('raw', 'all', 1.0),
+        'raw_any_98': ('raw', 'any', 0.98),
+        'raw_any_100': ('raw', 'any', 1.0),
+        'normalized_all_98': ('normalized', 'all', 0.98),
+        'normalized_all_100': ('normalized', 'all', 1.0),
+        'normalized_any_98': ('normalized', 'any', 0.98),
+        'normalized_any_100': ('normalized', 'any', 1.0)
+    }
+    saturation_mask_tuple = saturation_masks[saturation_mask_str]
     if dataset_name == "cubepp":
         data_provider = CubePPDataProvider()
     elif dataset_name == "lsmi":
         data_provider = LSMIDataProvider()
     elif dataset_name == "gehler":
         data_provider = GehlerDataProvider()
-    elif dataset_name == "nus8":
-        data_provider = NUS8DataProvider()
+    elif dataset_name in ["nus8", "nus8extended"]:
+        ProviderClass = NUS8DataProvider if dataset_name == "nus8" else NUS8ExtendedDataProvider
+        data_provider = ProviderClass(saturation_mask=saturation_mask_tuple, color_checker=color_checker_str)
     else:
         raise ValueError(f"Invalid dataset name: {dataset_name}")
 
@@ -119,9 +133,20 @@ def main():
     parser.add_argument('--algorithm', type=str, required=True, help='Algorithm name')
     parser.add_argument('--variant', type=str, required=True, help='Algorithm variant')
     parser.add_argument('--process-masked', action='store_true', default=False, help='Exclude masked pixels')
+    parser.add_argument('--saturation-mask', type=str, default='none', choices=[
+        'none', 'raw_all_98', 'raw_all_100', 'raw_any_98', 'raw_any_100', 
+        'normalized_all_98', 'normalized_all_100', 'normalized_any_98', 'normalized_any_100'
+    ], help='Saturation mask configuration')
+    parser.add_argument('--color-checker', type=str, default='all', choices=['all', 'patch'], help='Color checker mask type')
     args = parser.parse_args()
 
-    valid_datasets = ["cubepp", "lsmi", "gehler", "nus8"]
+    if (args.dataset not in ["nus8", "nus8extended"]) or (not args.process_masked):
+        if args.saturation_mask != "none":
+            raise ValueError("saturation-mask parameter is only valid for nus8 and nus8extended datasets when process-masked is enabled")
+        if args.color_checker != "all":
+            raise ValueError("color-checker parameter is only valid for nus8 and nus8extended datasets when process-masked is enabled")
+
+    valid_datasets = ["cubepp", "lsmi", "gehler", "nus8", "nus8extended"]
     valid_algorithms = ["gray_world", "max_rgb", "shades_of_gray", "fast_awb", "cheng"]
     valid_variants = {
         "gray_world": ["naive", "95_boundaries_all_channels", "95_boundaries_any_channel"],
@@ -140,7 +165,7 @@ def main():
 
     print(f"Dataset: {args.dataset}", f"Index: {args.index}", f"Algorithm: {args.algorithm}", f"Variant: {args.variant}")
 
-    run_single_data(args.dataset, args.index, args.algorithm, args.variant, args.process_masked)
+    run_single_data(args.dataset, args.index, args.algorithm, args.variant, args.process_masked, args.saturation_mask, args.color_checker)
 
 if __name__ == "__main__":
     main()
