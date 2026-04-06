@@ -125,6 +125,8 @@ def _worker_fn(task_info):
         # Instantiate inside worker to avoid pickle issues with some objects
         if dataset_name in ("nus8", "nus8extended"):
             data_provider = DATASET_PROVIDERS[dataset_name](saturation_mask=saturation_mask_tuple, color_checker=color_checker_str)
+        elif dataset_name == "gehler":
+            data_provider = DATASET_PROVIDERS[dataset_name](color_checker=color_checker_str)
         else:
             data_provider = DATASET_PROVIDERS[dataset_name]()
         algorithm = ALGORITHM_REGISTRY[(algo_name, variant_name)]()
@@ -202,11 +204,17 @@ class Evaluator:
         self.color_checker_str = color_checker
         
         has_nus_datasets = any(ds in ("nus8", "nus8extended") for ds in datasets)
-        if (not process_masked) or (not has_nus_datasets):
-            if saturation_mask != "none":
-                raise ValueError("saturation_mask is only valid for nus8 and nus8extended datasets when process_masked is enabled")
-            if color_checker != "all":
-                raise ValueError("color_checker is only valid for nus8 and nus8extended datasets when process_masked is enabled")
+        has_gehler_dataset = any(ds == "gehler" for ds in datasets)
+
+        if not process_masked:
+            if saturation_mask != "none" or color_checker != "all":
+                raise ValueError("saturation_mask and color_checker parameters are only valid when process_masked is enabled")
+
+        if saturation_mask != "none" and not has_nus_datasets:
+            raise ValueError("saturation_mask is only valid for nus8 and nus8extended datasets")
+
+        if color_checker != "all" and not (has_nus_datasets or has_gehler_dataset):
+            raise ValueError("color_checker is only valid for nus8, nus8extended, and gehler datasets")
         
         saturation_masks = {
             'none': None,
@@ -245,6 +253,8 @@ class Evaluator:
         for dataset_name in self.datasets:
             if dataset_name in ("nus8", "nus8extended"):
                 data_provider = DATASET_PROVIDERS[dataset_name](saturation_mask=self.saturation_mask_tuple, color_checker=self.color_checker_str)
+            elif dataset_name == "gehler":
+                data_provider = DATASET_PROVIDERS[dataset_name](color_checker=self.color_checker_str)
             else:
                 data_provider = DATASET_PROVIDERS[dataset_name]()
             num_dataset_images = len(data_provider)

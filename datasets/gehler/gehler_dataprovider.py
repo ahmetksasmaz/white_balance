@@ -7,10 +7,12 @@ from ..data import Data
 from .configuration import *
 
 class GehlerDataProvider(DataProvider):
-    def __init__(self, override_dimensions=(-1, -1)):
+    def __init__(self, color_checker="patch", override_dimensions=(-1, -1)):
         super().__init__(override_dimensions)
+        self.color_checker = color_checker
         
         self.data_names = []
+        self.cc_coords = []
         
         # Load all 1D images
         canon1d_dir = os.path.join(ROOT_DIRECTORY, "canon1d")
@@ -35,6 +37,50 @@ class GehlerDataProvider(DataProvider):
         else:
             self.real_rgb = None
 
+        # Load Checker Coordinates
+        coords_dir = os.path.join(ROOT_DIRECTORY, "groundtruth_568", "coordinates")
+        for img_path in self.data_names:
+            img_name = os.path.basename(img_path).replace("." + IMAGE_EXTENSION, "")
+            txt_path = os.path.join(coords_dir, f"{img_name}_macbeth.txt")
+            
+            def load_gehler_coords(txt_p):
+                if not os.path.exists(txt_p): return None
+                with open(txt_p, 'r') as f:
+                    lines = [l.strip().split() for l in f.readlines() if l.strip()]
+                if not lines: return None
+                
+                # First line: reference dimensions (usually [Width, Height])
+                ref_size = [float(x) for x in lines[0]]
+                
+                if len(lines) < 101: return None
+                
+                # Full checker corners: lines 2-5 (indices 1-4)
+                # Matlab code uses order [2 4 5 3] corresponding to list indices [0, 2, 3, 1]
+                l = lines[1:5]
+                full_checker = [
+                    [float(l[0][0]), float(l[0][1])], # Matlab 2 (index 1)
+                    [float(l[2][0]), float(l[2][1])], # Matlab 4 (index 3)
+                    [float(l[3][0]), float(l[3][1])], # Matlab 5 (index 4)
+                    [float(l[1][0]), float(l[1][1])],  # Matlab 3 (index 2)
+                ]
+                
+                # Patch corners: lines 6-101 (indices 5-100)
+                patches = []
+                for p in range(24):
+                    # Applying same reordering for each patch as for the full checker
+                    p_l = lines[5 + 4*p : 5 + 4*p + 4]
+                    patch_pts = [
+                        [float(p_l[0][0]), float(p_l[0][1])],
+                        [float(p_l[1][0]), float(p_l[1][1])],
+                        [float(p_l[2][0]), float(p_l[2][1])],
+                        [float(p_l[3][0]), float(p_l[3][1])],
+                    ]
+                    patches.append(patch_pts)
+                
+                return {"ref_size": ref_size, "all": full_checker, "patch": patches}
+            
+            self.cc_coords.append(load_gehler_coords(txt_path))
+
     def _construct_data(self, index):
         data = Data()
         image_path = self.data_names[index]
@@ -48,42 +94,72 @@ class GehlerDataProvider(DataProvider):
             
         raw_image = raw_image.astype(np.float32)
 
-        # Apply specific black level
-        if "canon1d" in image_path:
-            black_level = BLACK_LEVEL_1D
-        else:
-            black_level = BLACK_LEVEL_5D
-
-        raw_image = np.clip((raw_image - black_level) / (SATURATION_LEVEL - black_level), 0, 1)
+        black_level = BLACK_LEVEL_1D if "canon1d" in image_path else BLACK_LEVEL_5D
+        normalized_raw_image = np.clip((raw_image - black_level) / (SATURATION_LEVEL - black_level), 0, 1)
         data.set_quantization(SATURATION_LEVEL - black_level)
 
+        h_orig, w_orig = normalized_raw_image.shape[:2]
+
         # Override dimensions if specified
+        new_width, new_height = -1, -1
         if self.override_dimensions[0] > 0 and self.override_dimensions[1] > 0:
-            raw_image = cv.resize(raw_image, self.override_dimensions)
+            new_width, new_height = self.override_dimensions[0], self.override_dimensions[1]
+            normalized_raw_image = cv.resize(normalized_raw_image, (new_width, new_height))
         elif self.override_dimensions[0] > 0:
-            aspect_ratio = raw_image.shape[1] / raw_image.shape[0]
+            aspect_ratio = w_orig / h_orig
             new_width = self.override_dimensions[0]
             new_height = int(new_width / aspect_ratio)
-            raw_image = cv.resize(raw_image, (new_width, new_height))
+            normalized_raw_image = cv.resize(normalized_raw_image, (new_width, new_height))
         elif self.override_dimensions[1] > 0:
-            aspect_ratio = raw_image.shape[1] / raw_image.shape[0]
+            aspect_ratio = w_orig / h_orig
             new_height = self.override_dimensions[1]
             new_width = int(new_height * aspect_ratio)
-            raw_image = cv.resize(raw_image, (new_width, new_height))
+            normalized_raw_image = cv.resize(normalized_raw_image, (new_width, new_height))
         
-        data.set_raw_image(raw_image)
+        data.set_raw_image(normalized_raw_image)
 
         # Load GT info
         illuminants = {}
         if self.real_rgb is not None and index < len(self.real_rgb):
             ill_rgb = self.real_rgb[index]
-            # Convert to chroma (r/g, b/g)
             ill_chroma = ill_rgb / np.linalg.norm(ill_rgb)
-            rg = ill_chroma[0] / ill_chroma[1]  # 'real_rgb' channel order is standard RGB
+            rg = ill_chroma[0] / ill_chroma[1]
             bg = ill_chroma[2] / ill_chroma[1]
             illuminants["Illuminant1"] = (rg, bg)
-            
         data.set_illuminants(illuminants)
+
+        # Set checkerboard mask
+        cc_data = self.cc_coords[index]
+        if cc_data is not None:
+            mask_orig = np.ones((h_orig, w_orig), dtype=np.uint8)
+            
+            # Calculate scale factor based on Matlab snippet:
+            # scale = cc_coord(1,[2 1])./[size(input_im,1) size(input_im,2)];
+            # cc_coord(1,1) is Width, cc_coord(1,2) is Height
+            ref_w, ref_h = cc_data["ref_size"]
+            scale = [ref_h / h_orig, ref_w / w_orig]
+            
+            # Helper to scale points
+            def scale_pts(pts_list):
+                return [[p[0] / scale[0], p[1] / scale[1]] for p in pts_list]
+
+            if self.color_checker == "patch":
+                for patch_pts in cc_data["patch"]:
+                    scaled_patch = scale_pts(patch_pts)
+                    pts = np.array([scaled_patch], dtype=np.int32)
+                    cv.fillPoly(mask_orig, pts, 0)
+            elif self.color_checker == "all":
+                scaled_checker = scale_pts(cc_data["all"])
+                pts = np.array([scaled_checker], dtype=np.int32)
+                cv.fillPoly(mask_orig, pts, 0)
+            
+            # Resize mask if image was resized
+            if new_width > 0 or new_height > 0:
+                mask = cv.resize(mask_orig, (new_width, new_height), interpolation=cv.INTER_NEAREST)
+            else:
+                mask = mask_orig
+
+            data.set_mask(mask.astype(bool))
 
         return data
 

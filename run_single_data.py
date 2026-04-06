@@ -51,7 +51,7 @@ def run_single_data(dataset_name, index, algorithm_name, variant_name, process_m
     elif dataset_name == "lsmi":
         data_provider = LSMIDataProvider()
     elif dataset_name == "gehler":
-        data_provider = GehlerDataProvider()
+        data_provider = GehlerDataProvider(color_checker=color_checker_str)
     elif dataset_name in ["nus8", "nus8extended"]:
         ProviderClass = NUS8DataProvider if dataset_name == "nus8" else NUS8ExtendedDataProvider
         data_provider = ProviderClass(saturation_mask=saturation_mask_tuple, color_checker=color_checker_str)
@@ -140,11 +140,15 @@ def main():
     parser.add_argument('--color-checker', type=str, default='all', choices=['all', 'patch'], help='Color checker mask type')
     args = parser.parse_args()
 
-    if (args.dataset not in ["nus8", "nus8extended"]) or (not args.process_masked):
-        if args.saturation_mask != "none":
-            raise ValueError("saturation-mask parameter is only valid for nus8 and nus8extended datasets when process-masked is enabled")
-        if args.color_checker != "all":
-            raise ValueError("color-checker parameter is only valid for nus8 and nus8extended datasets when process-masked is enabled")
+    if not args.process_masked:
+        if args.saturation_mask != "none" or args.color_checker != "all":
+            raise ValueError("saturation-mask and color-checker parameters are only valid when process-masked is enabled")
+
+    if args.saturation_mask != "none" and args.dataset not in ["nus8", "nus8extended"]:
+        raise ValueError("saturation-mask parameter is only valid for nus8 and nus8extended datasets")
+
+    if args.color_checker != "all" and args.dataset not in ["nus8", "nus8extended", "gehler"]:
+        raise ValueError("color-checker parameter is only valid for nus8, nus8extended, or gehler datasets")
 
     valid_datasets = ["cubepp", "lsmi", "gehler", "nus8", "nus8extended"]
     valid_algorithms = ["gray_world", "max_rgb", "shades_of_gray", "fast_awb", "cheng"]
