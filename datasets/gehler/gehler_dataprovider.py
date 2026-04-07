@@ -180,9 +180,9 @@ class GehlerDataProvider(DataProvider):
             else:
                 mask = mask_orig
 
-            gamma_image = (np.power(normalized_raw_image, 1/2.2) * 255.0).astype(np.uint8)
-            masked_gamma_image = cv.bitwise_and(gamma_image, gamma_image, mask=mask)
-            cv.imwrite(f"masked_gamma_images/{data.get_image_name()}_masked_gamma.png", masked_gamma_image)
+            # gamma_image = (np.power(normalized_raw_image, 1/2.2) * 255.0).astype(np.uint8)
+            # masked_gamma_image = cv.bitwise_and(gamma_image, gamma_image, mask=mask)
+            # cv.imwrite(f"masked_gamma_images/{data.get_image_name()}_masked_gamma.png", masked_gamma_image)
 
             data.set_mask(mask.astype(bool))
 
