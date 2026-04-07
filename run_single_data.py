@@ -32,6 +32,7 @@ from white_balance_algorithms.fast_awb.fast_awb_p6 import FastAWBP6
 from white_balance_algorithms.cheng.cheng_prc_0_5 import ChengPrc05
 from white_balance_algorithms.cheng.cheng_prc_3 import ChengPrc3
 from white_balance_algorithms.shades_of_gray.shades_of_gray_p3 import ShadesOfGrayP3
+from white_balance_algorithms.shades_of_gray.shades_of_gray_p4 import ShadesOfGrayP4
 
 def run_single_data(dataset_name, index, algorithm_name, variant_name, process_masked=False, saturation_mask_str='none', color_checker_str='all'):
     saturation_masks = {
@@ -112,6 +113,8 @@ def run_single_data(dataset_name, index, algorithm_name, variant_name, process_m
     elif algorithm_name == "shades_of_gray":
         if variant_name == "p3":
             algorithm = ShadesOfGrayP3()
+        elif variant_name == "p4":
+            algorithm = ShadesOfGrayP4()
         else:
             algorithm = ShadesOfGrayDefault()
     else:
@@ -155,7 +158,7 @@ def main():
     valid_variants = {
         "gray_world": ["naive", "95_boundaries_all_channels", "95_boundaries_any_channel"],
         "max_rgb": ["naive", "99_percentile", "95_percentile", "gaussian", "gaussian_95_percentile", "gaussian_99_percentile", "median", "median_95_percentile", "median_99_percentile"],
-        "shades_of_gray": ["default", "p3"],
+        "shades_of_gray": ["default", "p3", "p4"],
         "fast_awb": ["default", "p6"],
         "cheng": ["prc_0_5", "prc_3"]
     }

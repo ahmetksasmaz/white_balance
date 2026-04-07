@@ -49,6 +49,12 @@ def main():
                     except AttributeError:
                         # Fallback for unexpected type
                         print("Illuminant Map Type:", type(illuminant_map))
+
+                # Check for Mask
+                mask = test_data.get_mask()
+                if mask is not None:
+                    print("Mask Shape:", mask.shape)
+                    print("Valid Pixels (Masked):", np.sum(mask))
                         
             else:
                 print(f"Requested image_index {image_index} is out of bounds (Dataset size: {dataset_len}).")

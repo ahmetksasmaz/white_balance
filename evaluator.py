@@ -27,6 +27,7 @@ from white_balance_algorithms.max_rgb.max_rgb_median_95_percentile import MaxRGB
 
 from white_balance_algorithms.shades_of_gray.shades_of_gray_default import ShadesOfGrayDefault
 from white_balance_algorithms.shades_of_gray.shades_of_gray_p3 import ShadesOfGrayP3
+from white_balance_algorithms.shades_of_gray.shades_of_gray_p4 import ShadesOfGrayP4
 from white_balance_algorithms.shades_of_gray.shades_of_gray_masked_default import ShadesOfGrayMaskedDefault
 from white_balance_algorithms.shades_of_gray.shades_of_gray_masked_p3 import ShadesOfGrayMaskedP3
 
@@ -60,6 +61,7 @@ ALGORITHM_REGISTRY = {
     ("max_rgb", "median_95_percentile"): MaxRGBMedian95Percentile,
     ("shades_of_gray", "default"): ShadesOfGrayDefault,
     ("shades_of_gray", "p3"): ShadesOfGrayP3,
+    ("shades_of_gray", "p4"): ShadesOfGrayP4,
     ("shades_of_gray", "masked_default"): ShadesOfGrayMaskedDefault,
     ("shades_of_gray", "masked_p3"): ShadesOfGrayMaskedP3,
     ("fast_awb", "default"): FastAWBDefault,
