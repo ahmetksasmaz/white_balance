@@ -7,8 +7,13 @@ from ..data import Data
 from .configuration import *
 
 class GehlerDataProvider(DataProvider):
-    def __init__(self, color_checker="patch", override_dimensions=(-1, -1)):
+    def __init__(self, saturation_mask=None, color_checker="patch", override_dimensions=(-1, -1)):
+        # saturation_mask = (type, scope, threshold) or None
+        # type = "raw" or "normalized"
+        # scope = "all" or "any"
+        # threshold = percentage
         super().__init__(override_dimensions)
+        self.saturation_mask = saturation_mask
         self.color_checker = color_checker
         
         self.data_names = []
@@ -128,8 +133,9 @@ class GehlerDataProvider(DataProvider):
             illuminants["Illuminant1"] = (rg, bg)
         data.set_illuminants(illuminants)
 
-        # Set checkerboard mask
+        # Set checkerboard and saturation mask
         cc_data = self.cc_coords[index]
+        mask_orig = None
         if cc_data is not None:
             mask_orig = np.ones((h_orig, w_orig), dtype=np.uint8)
             
@@ -152,12 +158,31 @@ class GehlerDataProvider(DataProvider):
                 scaled_checker = scale_pts(cc_data["all"])
                 pts = np.array([scaled_checker], dtype=np.int32)
                 cv.fillPoly(mask_orig, pts, 0)
-            
+        elif self.saturation_mask is not None:
+            mask_orig = np.ones((h_orig, w_orig), dtype=np.uint8)
+
+        if mask_orig is not None:
+            if self.saturation_mask is not None:
+                if self.saturation_mask[0] == "raw":
+                    if self.saturation_mask[1] == "all":
+                        mask_orig = mask_orig & np.all(raw_image <= SATURATION_LEVEL * self.saturation_mask[2], axis=2).astype(np.uint8)
+                    elif self.saturation_mask[1] == "any":
+                        mask_orig = mask_orig & np.any(raw_image <= SATURATION_LEVEL * self.saturation_mask[2], axis=2).astype(np.uint8)
+                elif self.saturation_mask[0] == "normalized":
+                    if self.saturation_mask[1] == "all":
+                        mask_orig = mask_orig & np.all(normalized_raw_image <= self.saturation_mask[2], axis=2).astype(np.uint8)
+                    elif self.saturation_mask[1] == "any":
+                        mask_orig = mask_orig & np.any(normalized_raw_image <= self.saturation_mask[2], axis=2).astype(np.uint8)
+
             # Resize mask if image was resized
             if new_width > 0 or new_height > 0:
                 mask = cv.resize(mask_orig, (new_width, new_height), interpolation=cv.INTER_NEAREST)
             else:
                 mask = mask_orig
+
+            gamma_image = (np.power(normalized_raw_image, 1/2.2) * 255.0).astype(np.uint8)
+            masked_gamma_image = cv.bitwise_and(gamma_image, gamma_image, mask=mask)
+            cv.imwrite(f"masked_gamma_images/{data.get_image_name()}_masked_gamma.png", masked_gamma_image)
 
             data.set_mask(mask.astype(bool))
 

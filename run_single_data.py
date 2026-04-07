@@ -147,8 +147,8 @@ def main():
         if args.saturation_mask != "none" or args.color_checker != "all":
             raise ValueError("saturation-mask and color-checker parameters are only valid when process-masked is enabled")
 
-    if args.saturation_mask != "none" and args.dataset not in ["nus8", "nus8extended"]:
-        raise ValueError("saturation-mask parameter is only valid for nus8 and nus8extended datasets")
+    if args.saturation_mask != "none" and args.dataset not in ["nus8", "nus8extended", "gehler"]:
+        raise ValueError("saturation-mask parameter is only valid for nus8, nus8extended, and gehler datasets")
 
     if args.color_checker != "all" and args.dataset not in ["nus8", "nus8extended", "gehler"]:
         raise ValueError("color-checker parameter is only valid for nus8, nus8extended, or gehler datasets")
