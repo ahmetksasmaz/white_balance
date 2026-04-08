@@ -100,7 +100,9 @@ class GehlerDataProvider(DataProvider):
         raw_image = raw_image.astype(np.float32)
 
         black_level = BLACK_LEVEL_1D if "canon1d" in image_path else BLACK_LEVEL_5D
-        normalized_raw_image = np.clip((raw_image - black_level) / (SATURATION_LEVEL - black_level), 0, 1)
+        raw_image = raw_image - black_level
+        normalized_raw_image = raw_image / raw_image.max()
+        normalized_raw_image = np.clip(normalized_raw_image, 0, 1)
         data.set_quantization(SATURATION_LEVEL - black_level)
 
         h_orig, w_orig = normalized_raw_image.shape[:2]
@@ -163,16 +165,20 @@ class GehlerDataProvider(DataProvider):
 
         if mask_orig is not None:
             if self.saturation_mask is not None:
+                sat_mask = np.ones((h_orig, w_orig), dtype=np.uint8)
                 if self.saturation_mask[0] == "raw":
                     if self.saturation_mask[1] == "all":
-                        mask_orig = mask_orig & np.all(raw_image <= SATURATION_LEVEL * self.saturation_mask[2], axis=2).astype(np.uint8)
+                        sat_mask = np.all(raw_image <= raw_image.max() * self.saturation_mask[2], axis=2).astype(np.uint8)
                     elif self.saturation_mask[1] == "any":
-                        mask_orig = mask_orig & np.any(raw_image <= SATURATION_LEVEL * self.saturation_mask[2], axis=2).astype(np.uint8)
+                        sat_mask = np.any(raw_image <= raw_image.max() * self.saturation_mask[2], axis=2).astype(np.uint8)
                 elif self.saturation_mask[0] == "normalized":
                     if self.saturation_mask[1] == "all":
-                        mask_orig = mask_orig & np.all(normalized_raw_image <= self.saturation_mask[2], axis=2).astype(np.uint8)
+                        sat_mask = np.all(normalized_raw_image <= self.saturation_mask[2], axis=2).astype(np.uint8)
                     elif self.saturation_mask[1] == "any":
-                        mask_orig = mask_orig & np.any(normalized_raw_image <= self.saturation_mask[2], axis=2).astype(np.uint8)
+                        sat_mask = np.any(normalized_raw_image <= self.saturation_mask[2], axis=2).astype(np.uint8)
+                kernel = np.ones((3, 3), dtype=np.uint8)
+                sat_mask = cv.dilate(sat_mask, kernel, iterations=1)
+                mask_orig = mask_orig & sat_mask
 
             # Resize mask if image was resized
             if new_width > 0 or new_height > 0:
@@ -183,6 +189,11 @@ class GehlerDataProvider(DataProvider):
             # gamma_image = (np.power(normalized_raw_image, 1/2.2) * 255.0).astype(np.uint8)
             # masked_gamma_image = cv.bitwise_and(gamma_image, gamma_image, mask=mask)
             # cv.imwrite(f"masked_gamma_images/{data.get_image_name()}_masked_gamma.png", masked_gamma_image)
+
+            # reordered_gamma_image = (np.power(normalized_raw_image, 1/2.2) * 255.0).astype(np.uint8)
+            # reordered_gamma_image = cv.cvtColor(reordered_gamma_image, cv.COLOR_BGR2RGB)  # Convert from BGR to RGB
+            # reordered_masked_gamma_image = cv.bitwise_and(reordered_gamma_image, reordered_gamma_image, mask=mask)
+            # cv.imwrite(f"masked_gamma_images/{data.get_image_name()}_masked_gamma_reordered.png", reordered_masked_gamma_image)
 
             data.set_mask(mask.astype(bool))
 
