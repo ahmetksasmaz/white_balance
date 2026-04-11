@@ -185,16 +185,7 @@ class GehlerDataProvider(DataProvider):
                 mask = cv.resize(mask_orig, (new_width, new_height), interpolation=cv.INTER_NEAREST)
             else:
                 mask = mask_orig
-
-            # gamma_image = (np.power(normalized_raw_image, 1/2.2) * 255.0).astype(np.uint8)
-            # masked_gamma_image = cv.bitwise_and(gamma_image, gamma_image, mask=mask)
-            # cv.imwrite(f"masked_gamma_images/{data.get_image_name()}_masked_gamma.png", masked_gamma_image)
-
-            # reordered_gamma_image = (np.power(normalized_raw_image, 1/2.2) * 255.0).astype(np.uint8)
-            # reordered_gamma_image = cv.cvtColor(reordered_gamma_image, cv.COLOR_BGR2RGB)  # Convert from BGR to RGB
-            # reordered_masked_gamma_image = cv.bitwise_and(reordered_gamma_image, reordered_gamma_image, mask=mask)
-            # cv.imwrite(f"masked_gamma_images/{data.get_image_name()}_masked_gamma_reordered.png", reordered_masked_gamma_image)
-
+            
             data.set_mask(mask.astype(bool))
 
         return data
