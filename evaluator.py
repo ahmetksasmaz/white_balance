@@ -10,6 +10,7 @@ from datasets.lsmi.lsmi_dataprovider import LSMIDataProvider
 from datasets.gehler.gehler_dataprovider import GehlerDataProvider
 from datasets.nus8.nus8_dataprovider import NUS8DataProvider
 from datasets.nus8.nus8_extended_dataprovider import NUS8ExtendedDataProvider
+from datasets.miniature.miniature_dataprovider import MiniatureDataProvider
 
 from white_balance_algorithms.gray_world.gray_world_naive import GrayWorldNaive
 from white_balance_algorithms.gray_world.gray_world_95_boundaries_all_channels import GrayWorld95BoundariesAllChannels
@@ -44,6 +45,7 @@ DATASET_PROVIDERS = {
     "gehler": GehlerDataProvider,
     "nus8": NUS8DataProvider,
     "nus8extended": NUS8ExtendedDataProvider,
+    "miniature": MiniatureDataProvider,
 }
 
 ALGORITHM_REGISTRY = {

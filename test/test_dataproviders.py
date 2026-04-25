@@ -38,7 +38,12 @@ def main():
                 test_data = provider[image_index]
                 
                 print("Image Name:", test_data.get_image_name())
-                print("Image Dimensions:", test_data.get_image_dimensions())
+                print("Raw Image Dimensions:", test_data.get_image_dimensions())
+                srgb_image = test_data.get_srgb_image()
+                if srgb_image is not None:
+                    print("sRGB Image Dimensions:", srgb_image.shape)
+                print("Quantization:", test_data.get_quantization())
+                print("Exposure Values:", test_data.get_exposure_values())
                 print("GT Info:", test_data.get_illuminants())
                 
                 # Check for illuminant map (used in LSMI, etc.)
@@ -49,12 +54,20 @@ def main():
                     except AttributeError:
                         # Fallback for unexpected type
                         print("Illuminant Map Type:", type(illuminant_map))
+                else:
+                    print("Illuminant Map: None")
 
                 # Check for Mask
                 mask = test_data.get_mask()
                 if mask is not None:
-                    print("Mask Shape:", mask.shape)
-                    print("Valid Pixels (Masked):", np.sum(mask))
+                    mask_bool = mask.astype(bool) if isinstance(mask, np.ndarray) else bool(mask)
+                    if isinstance(mask_bool, np.ndarray):
+                        print("Mask Shape:", mask_bool.shape)
+                        print("Valid Pixels (Masked):", np.sum(mask_bool))
+                    else:
+                        print("Mask Type:", type(mask_bool))
+                else:
+                    print("Mask: None")
                         
             else:
                 print(f"Requested image_index {image_index} is out of bounds (Dataset size: {dataset_len}).")

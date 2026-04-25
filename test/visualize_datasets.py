@@ -87,42 +87,45 @@ def main():
             try:
                 data = provider[idx]
                 raw_img = data.get_raw_image()
+                srgb_img = data.get_srgb_image()
                 mask = data.get_mask()
-                
-                if raw_img is None:
-                    print(f"Failed to load image at index {idx}")
-                    empty = np.zeros((cell_size, cell_size, 3), dtype=np.uint8)
-                    row1_images.append(empty)
-                    row2_images.append(empty)
-                    row3_images.append(empty)
-                    row4_images.append(empty)
-                    continue
-                
-                # 1. Prepare Display Image (Gamma Corrected)
-                corrected_img = np.power(np.clip(raw_img, 0, 1), 1.0 / 2.2)
+
+                if raw_img is None and srgb_img is None:
+                    raise ValueError(f"Failed to load image at index {idx}")
+
+                display_source = raw_img if raw_img is not None else srgb_img
+                display_image = display_source.astype(np.float32)
+                if srgb_img is not None and raw_img is None and display_image.max() > 1.0:
+                    display_image = display_image / 255.0
+
+                corrected_img = np.power(np.clip(display_image, 0, 1), 1.0 / 2.2)
                 display_img = (corrected_img * 255.0).clip(0, 255).astype(np.uint8)
-                if len(display_img.shape) == 2:
+                if len(display_img.shape) == 2 or display_img.shape[2] == 1:
                     display_img = cv.cvtColor(display_img, cv.COLOR_GRAY2BGR)
-                row1_images.append(resize_and_pad(display_img, size=cell_size))
-                
+
                 # 2. Masked Image visualization
                 if mask is not None:
-                    # Apply mask: pixels where mask is False become black
+                    mask_arr = mask.astype(bool) if isinstance(mask, np.ndarray) else np.array(mask, dtype=bool)
+                    if mask_arr.shape != display_img.shape[:2]:
+                        try:
+                            target_size = (display_img.shape[1], display_img.shape[0])
+                            mask_arr = cv.resize(mask_arr.astype(np.uint8), target_size, interpolation=cv.INTER_NEAREST).astype(bool)
+                        except Exception:
+                            mask_arr = np.ones(display_img.shape[:2], dtype=bool)
                     masked_display = display_img.copy()
-                    masked_display[~mask] = 0
-                    row2_images.append(resize_and_pad(masked_display, size=cell_size))
+                    masked_display[~mask_arr] = 0
                 else:
-                    # Show the original if no mask is provided
-                    row2_images.append(resize_and_pad(display_img, size=cell_size))
+                    masked_display = display_img.copy()
 
                 # 3. Log Chrominance Histogram (using visualizer class)
                 log_chroma_img, _ = log_chroma_vis.visualize(data)
-                row3_images.append(cv.resize(log_chroma_img, (cell_size, cell_size)))
-                
-                # 4. Normalized RGB Histogram (using visualizer class)
                 rgb_hist_img, _ = rgb_hist_vis.visualize(data)
+
+                row1_images.append(resize_and_pad(display_img, size=cell_size))
+                row2_images.append(resize_and_pad(masked_display, size=cell_size))
+                row3_images.append(cv.resize(log_chroma_img, (cell_size, cell_size)))
                 row4_images.append(cv.resize(rgb_hist_img, (cell_size, cell_size)))
-                
+
             except Exception as e:
                 print(f"Error processing image {idx}: {e}")
                 empty = np.zeros((cell_size, cell_size, 3), dtype=np.uint8)
@@ -143,10 +146,17 @@ def main():
         grid_canvas = np.full((canvas_h, canvas_w, 3), bg_color, dtype=np.uint8)
         
         all_cells = row1_images + row2_images + row3_images + row4_images
-        
+        if len(all_cells) != grid_rows * grid_cols:
+            if len(all_cells) > grid_rows * grid_cols:
+                all_cells = all_cells[:grid_rows * grid_cols]
+            else:
+                empty = np.zeros((cell_size, cell_size, 3), dtype=np.uint8)
+                while len(all_cells) < grid_rows * grid_cols:
+                    all_cells.append(empty)
+
         for i, cell_img in enumerate(all_cells):
-            r = i // 3
-            c = i % 3
+            r = i // grid_cols
+            c = i % grid_cols
             y_offset = margin + r * (cell_size + margin)
             x_offset = margin + c * (cell_size + margin)
             grid_canvas[y_offset:y_offset+cell_size, x_offset:x_offset+cell_size] = cell_img
