@@ -13,8 +13,8 @@ class LogChrominanceHistogram(Visuals):
         # G = 1.0 and R = 1/255 -> log_u = log(1) - log(1/255) = log(255)
         # G = 1/255 and R = 1.0 -> log_u = log(1/255) - log(1) = -log(255)
         self.CHROMA_RANGE = np.log(255.0)  # Range of log chroma values to visualize
-        self.HISTOGRAM_MULTIPLIER = 0.25 # To zoom in the histogram visualization
-        self.HIST_RANGE = [-self.CHROMA_RANGE*self.HISTOGRAM_MULTIPLIER, self.CHROMA_RANGE*self.HISTOGRAM_MULTIPLIER] 
+        self.HISTOGRAM_MULTIPLIER = 1.0
+        self.HIST_RANGE = [-self.CHROMA_RANGE*self.HISTOGRAM_MULTIPLIER, self.CHROMA_RANGE*self.HISTOGRAM_MULTIPLIER]
         self.CORNER_LINE_LENGTH = 25
         self.CORNER_LINE_THICKNESS = 2
         self.LOG_COLORMAP_BGR = self.__visualize_log_chroma()
@@ -45,11 +45,12 @@ class LogChrominanceHistogram(Visuals):
         if max_val > 0:
             hist_colored = hist_colored / max_val
         hist_colored = (hist_colored * 255.0).astype(np.uint8)
-        # Draw axis at (0,0)
-        # center_x = int((0 - HIST_RANGE[0]) / (HIST_RANGE[1] - HIST_RANGE[0]) * quantization)
-        # center_y = int((0 - HIST_RANGE[0]) / (HIST_RANGE[1] - HIST_RANGE[0]) * quantization)
-        # cv.line(hist_colored, (center_x, 0), (center_x, quantization-1), (255, 255, 255), 1)
-        # cv.line(hist_colored, (0, center_y), (quantization-1, center_y), (255, 255, 255), 1)
+
+        # Draw very thin center axes for easier reference at (0,0) in log chroma coordinates
+        center = int((0.0 - self.HIST_RANGE[0]) / (self.HIST_RANGE[1] - self.HIST_RANGE[0]) * (bins - 1))
+        axis_color = (245, 245, 245)
+        cv.line(hist_colored, (center, 0), (center, bins - 1), axis_color, 1, cv.LINE_AA)
+        cv.line(hist_colored, (0, center), (bins - 1, center), axis_color, 1, cv.LINE_AA)
 
         # Draw lines to corners of the image for reference
         cv.line(hist_colored, (0, 0), (self.CORNER_LINE_LENGTH, self.CORNER_LINE_LENGTH), (self.LOG_COLORMAP_BGR[0, 0]*255).astype(np.uint8).tolist(), self.CORNER_LINE_THICKNESS)
@@ -57,9 +58,6 @@ class LogChrominanceHistogram(Visuals):
         cv.line(hist_colored, (0, bins - 1), (self.CORNER_LINE_LENGTH, bins - 1 - self.CORNER_LINE_LENGTH), (self.LOG_COLORMAP_BGR[bins - 1, 0]*255).astype(np.uint8).tolist(), self.CORNER_LINE_THICKNESS)
         cv.line(hist_colored, (bins - 1, bins - 1), (bins - 1 - self.CORNER_LINE_LENGTH, bins - 1 - self.CORNER_LINE_LENGTH), (self.LOG_COLORMAP_BGR[bins - 1, bins - 1]*255).astype(np.uint8).tolist(), self.CORNER_LINE_THICKNESS)
  
-        # Draw histogram multiplier text
-        cv.putText(hist_colored, f"Zoom: {(1/self.HISTOGRAM_MULTIPLIER):0.2f}x", (5, bins//2 - 5), cv.FONT_HERSHEY_SIMPLEX, 0.33, (255, 255, 255), 1, cv.LINE_AA)
-
         return hist_colored, hist
 
     def __log_chrominance(self, raw_image):

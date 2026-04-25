@@ -1,10 +1,14 @@
 import json
 import datetime
+import os
 import traceback
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import multiprocessing
+import cv2 as cv
+import numpy as np
 from tqdm import tqdm
 
+from datasets.data import Data
 from datasets.cubepp.cubepp_dataprovider import CubePPDataProvider
 from datasets.lsmi.lsmi_dataprovider import LSMIDataProvider
 from datasets.gehler.gehler_dataprovider import GehlerDataProvider
@@ -37,6 +41,9 @@ from white_balance_algorithms.fast_awb.fast_awb_p6 import FastAWBP6
 
 from white_balance_algorithms.cheng.cheng_prc_0_5 import ChengPrc05
 from white_balance_algorithms.cheng.cheng_prc_3 import ChengPrc3
+
+from visuals.log_chrominance_histogram import LogChrominanceHistogram
+from visuals.normalized_rgb_histogram import NormalizedRGBHistogram
 
 
 DATASET_PROVIDERS = {
@@ -111,7 +118,7 @@ def _extract_camera(dataset_name, data_provider, index):
 
 def _worker_fn(task_info):
     """Worker function for multi-processing."""
-    dataset_name, algo_name, variant_name, idx, process_masked, camera_filter, saturation_mask_str, color_checker_str = task_info
+    dataset_name, algo_name, variant_name, idx, process_masked, camera_filter, saturation_mask_str, color_checker_str, export_corrected_images, export_resize_factor, output_path = task_info
     try:
         saturation_masks = {
             'none': None,
@@ -143,6 +150,27 @@ def _worker_fn(task_info):
 
         all_data = data.get_data()
 
+        exported_paths = {
+            "masked_grid_path": None,
+        }
+        if export_corrected_images:
+            export_dir = _prepare_export_paths(output_path, dataset_name, algo_name, variant_name, image_name)
+            masked_grid = _get_masked_grid_image(
+                data,
+                estimations.get("single_illuminant_corrected_raw_image"),
+                estimations.get("single_illuminant"),
+                image_size=300,
+            )
+            if masked_grid is not None:
+                filename = f"{dataset_name}_{image_name}_{algo_name}_{variant_name}_masked_grid.png"
+                path = os.path.join(export_dir, filename)
+                if _export_image_array(masked_grid, path, export_resize_factor):
+                    exported_paths["masked_grid_path"] = path
+
+        single_illuminant_value = estimations.get("single_illuminant")
+        if single_illuminant_value is not None:
+            single_illuminant_value = [str(single_illuminant_value[0]), str(single_illuminant_value[1])]
+
         return {
             "dataset": dataset_name,
             "camera": camera,
@@ -150,10 +178,8 @@ def _worker_fn(task_info):
             "algorithm": algo_name,
             "variant": variant_name,
             "estimations": {
-                "single_illuminant": [str(estimations["single_illuminant"][0]), str(estimations["single_illuminant"][1])],
-                # "multi_illuminants": estimations["multi_illuminants"],
-                # "illuminant_map": estimations["illuminant_map"],
-                # "estimated_srgb_image": estimations["estimated_srgb_image"],
+                "single_illuminant": single_illuminant_value,
+                "masked_grid_path": exported_paths["masked_grid_path"],
             },
             "ground_truths": {
                 "illuminants": _serialize_error_metrics(all_data["illuminants"]),
@@ -197,8 +223,238 @@ def _serialize_error_metrics(error_metrics):
     return result
 
 
+def _prepare_display_image(image):
+    img = np.asarray(image, dtype=np.float32)
+    if img.max() > 1.1:
+        img = img / 255.0
+    img = np.clip(img, 0.0, 1.0)
+    img = np.power(img, 1.0 / 2.2)
+    img = (img * 255.0).clip(0, 255).astype(np.uint8)
+    if img.ndim == 2:
+        img = cv.cvtColor(img, cv.COLOR_GRAY2BGR)
+    elif img.ndim == 3 and img.shape[2] == 1:
+        img = cv.cvtColor(img, cv.COLOR_GRAY2BGR)
+    return img
+
+
+def _get_masked_display_image(data):
+    raw_img = data.get_raw_image()
+    srgb_img = data.get_srgb_image()
+    mask = data.get_mask()
+    if mask is None or (raw_img is None and srgb_img is None):
+        return None
+
+    display_source = raw_img if raw_img is not None else srgb_img
+    display_img = _prepare_display_image(display_source)
+
+    mask_arr = mask.astype(bool) if isinstance(mask, np.ndarray) else np.array(mask, dtype=bool)
+    if mask_arr.shape != display_img.shape[:2]:
+        try:
+            mask_arr = cv.resize(mask_arr.astype(np.uint8), (display_img.shape[1], display_img.shape[0]), interpolation=cv.INTER_NEAREST).astype(bool)
+        except Exception:
+            mask_arr = np.ones(display_img.shape[:2], dtype=bool)
+
+    masked_display = display_img.copy()
+    masked_display[~mask_arr] = 0
+    return masked_display
+
+
+def _apply_von_kries_single(raw_image, single_illuminant):
+    if raw_image is None or single_illuminant is None:
+        return None
+    try:
+        r_g, b_g = single_illuminant
+        r_scale = 1.0 / float(r_g) if float(r_g) != 0 else 0.0
+        b_scale = 1.0 / float(b_g) if float(b_g) != 0 else 0.0
+        scale = np.array([b_scale, 1.0, r_scale], dtype=np.float32)
+        corrected = raw_image.astype(np.float32) * scale.reshape((1, 1, 3))
+        return np.clip(corrected, 0.0, 1.0)
+    except Exception:
+        return None
+
+
+def _get_first_ground_truth_illuminant(data):
+    illuminants = data.get_illuminants()
+    if illuminants is None:
+        return None
+    for value in illuminants.values():
+        if value is not None:
+            return value
+    return None
+
+
+def _draw_labeled_text(image, text, position, font_scale=0.65, font_thickness=2, text_color=(255, 255, 255), outline_color=(0, 0, 0)):
+    if image is None or text is None:
+        return image
+    labeled = image.copy()
+    font = cv.FONT_HERSHEY_COMPLEX
+    cv.putText(labeled, text, position, font, font_scale, outline_color, font_thickness + 1, cv.LINE_AA)
+    cv.putText(labeled, text, position, font, font_scale, text_color, font_thickness, cv.LINE_AA)
+    return labeled
+
+
+def _draw_illuminant_label(image, illuminant, label="GT"):
+    if image is None or illuminant is None:
+        return image
+    text = f"{label}: {illuminant[0]:0.2f}, {illuminant[1]:0.2f}"
+    return _draw_labeled_text(image, text, (10, 25), font_scale=0.7, font_thickness=2)
+
+
+def _get_masked_grid_image(data, corrected_raw, estimated_illuminant, image_size=300):
+    raw_img = data.get_raw_image()
+    mask = data.get_mask()
+    if raw_img is None or mask is None:
+        return None
+
+    mask_arr = mask.astype(bool) if isinstance(mask, np.ndarray) else np.array(mask, dtype=bool)
+    if mask_arr.shape != raw_img.shape[:2]:
+        try:
+            mask_arr = cv.resize(mask_arr.astype(np.uint8), (raw_img.shape[1], raw_img.shape[0]), interpolation=cv.INTER_NEAREST).astype(bool)
+        except Exception:
+            return None
+
+    masked_raw = raw_img.copy()
+    masked_raw[~mask_arr] = 0
+
+    if corrected_raw is None:
+        corrected_raw = masked_raw.copy()
+    else:
+        corrected_raw = corrected_raw.astype(np.float32)
+        if corrected_raw.shape[:2] != raw_img.shape[:2]:
+            corrected_raw = cv.resize(corrected_raw, (raw_img.shape[1], raw_img.shape[0]), interpolation=cv.INTER_LINEAR)
+        corrected_raw = corrected_raw.copy()
+        corrected_raw[~mask_arr] = 0
+
+    gt_illuminant = _get_first_ground_truth_illuminant(data)
+    gt_corrected_raw = None
+    if gt_illuminant is not None:
+        gt_corrected_raw = _apply_von_kries_single(masked_raw, gt_illuminant)
+        if gt_corrected_raw is not None:
+            gt_corrected_raw = gt_corrected_raw.copy()
+            gt_corrected_raw[~mask_arr] = 0
+
+    input_data = Data()
+    input_data.set_image_name(data.get_image_name())
+    input_data.set_raw_image(masked_raw)
+    input_data.set_mask(mask_arr)
+
+    corrected_data = Data()
+    corrected_data.set_image_name(data.get_image_name())
+    corrected_data.set_raw_image(corrected_raw)
+    corrected_data.set_mask(mask_arr)
+
+    gt_data = None
+    if gt_corrected_raw is not None:
+        gt_data = Data()
+        gt_data.set_image_name(data.get_image_name())
+        gt_data.set_raw_image(gt_corrected_raw)
+        gt_data.set_mask(mask_arr)
+
+    log_vis = LogChrominanceHistogram(image_size=image_size)
+    rgb_vis = NormalizedRGBHistogram(image_size=image_size)
+    input_log, _ = log_vis.visualize(input_data)
+    corrected_log, _ = log_vis.visualize(corrected_data)
+    gt_log = None
+    input_rgb, _ = rgb_vis.visualize(input_data)
+    corrected_rgb, _ = rgb_vis.visualize(corrected_data)
+    gt_rgb = None
+
+    if gt_data is not None:
+        gt_log, _ = log_vis.visualize(gt_data)
+        gt_rgb, _ = rgb_vis.visualize(gt_data)
+
+    if input_log is None or corrected_log is None or input_rgb is None or corrected_rgb is None:
+        return None
+
+    def _blank_cell():
+        return np.full((image_size, image_size, 3), 32, dtype=np.uint8)
+
+    if gt_log is None:
+        gt_log = _blank_cell()
+    if gt_rgb is None:
+        gt_rgb = _blank_cell()
+
+    input_display = _prepare_display_image(masked_raw)
+    corrected_display = _prepare_display_image(corrected_raw)
+    gt_display = _blank_cell() if gt_corrected_raw is None else _prepare_display_image(gt_corrected_raw)
+
+    input_display = cv.resize(input_display, (image_size, image_size), interpolation=cv.INTER_AREA)
+    corrected_display = cv.resize(corrected_display, (image_size, image_size), interpolation=cv.INTER_AREA)
+    gt_display = cv.resize(gt_display, (image_size, image_size), interpolation=cv.INTER_AREA)
+
+    input_display = _draw_labeled_text(input_display, "Input", (10, 25), font_scale=0.75, font_thickness=2)
+    corrected_display = _draw_labeled_text(corrected_display, "Corrected with Est.", (10, 25), font_scale=0.7, font_thickness=2)
+    if gt_corrected_raw is not None:
+        gt_display = _draw_labeled_text(gt_display, "Corrected with GT", (10, 25), font_scale=0.7, font_thickness=2)
+
+    if estimated_illuminant is not None:
+        estimated_text = f"({estimated_illuminant[0]:0.2f},{estimated_illuminant[1]:0.2f})"
+        corrected_display = _draw_labeled_text(corrected_display, estimated_text, (10, image_size - 12), font_scale=0.6, font_thickness=2)
+
+    if gt_illuminant is not None and gt_corrected_raw is not None:
+        gt_text = f"({gt_illuminant[0]:0.2f},{gt_illuminant[1]:0.2f})"
+        gt_display = _draw_labeled_text(gt_display, gt_text, (10, image_size - 12), font_scale=0.6, font_thickness=2)
+
+    if input_log.shape[:2] != (image_size, image_size):
+        input_log = cv.resize(input_log, (image_size, image_size), interpolation=cv.INTER_AREA)
+    if corrected_log.shape[:2] != (image_size, image_size):
+        corrected_log = cv.resize(corrected_log, (image_size, image_size), interpolation=cv.INTER_AREA)
+    if gt_log.shape[:2] != (image_size, image_size):
+        gt_log = cv.resize(gt_log, (image_size, image_size), interpolation=cv.INTER_AREA)
+
+    if input_rgb.shape[:2] != (image_size, image_size):
+        input_rgb = cv.resize(input_rgb, (image_size, image_size), interpolation=cv.INTER_AREA)
+    if corrected_rgb.shape[:2] != (image_size, image_size):
+        corrected_rgb = cv.resize(corrected_rgb, (image_size, image_size), interpolation=cv.INTER_AREA)
+    if gt_rgb.shape[:2] != (image_size, image_size):
+        gt_rgb = cv.resize(gt_rgb, (image_size, image_size), interpolation=cv.INTER_AREA)
+
+    separator_color = (64, 64, 64)
+    spacer = np.full((image_size, 10, 3), separator_color, dtype=np.uint8)
+    row1 = np.concatenate([input_display, spacer, corrected_display, spacer, gt_display], axis=1)
+    row2 = np.concatenate([input_log, spacer, corrected_log, spacer, gt_log], axis=1)
+    row3 = np.concatenate([input_rgb, spacer, corrected_rgb, spacer, gt_rgb], axis=1)
+
+    row_spacer = np.full((10, row1.shape[1], 3), separator_color, dtype=np.uint8)
+    return np.concatenate([row1, row_spacer, row2, row_spacer, row3], axis=0)
+
+
+def _export_image_array(image, image_path, resize_factor=None):
+    if image is None:
+        return False
+
+    img = np.asarray(image)
+    if img.ndim == 2:
+        img = np.stack([img, img, img], axis=-1)
+    if img.ndim == 3 and img.shape[2] == 1:
+        img = np.concatenate([img, img, img], axis=-1)
+
+    if img.dtype == np.uint8:
+        out_img = img
+    else:
+        img = img.astype(np.float32)
+        if img.max() > 1.1:
+            img = img / 255.0
+        img = np.clip(img, 0.0, 1.0)
+        img = np.power(img, 1.0 / 2.2)
+        out_img = (img * 255.0).clip(0, 255).astype(np.uint8)
+
+    if resize_factor is not None and resize_factor > 1:
+        target_size = (max(1, out_img.shape[1] // resize_factor), max(1, out_img.shape[0] // resize_factor))
+        out_img = cv.resize(out_img, target_size, interpolation=cv.INTER_AREA)
+
+    os.makedirs(os.path.dirname(image_path), exist_ok=True)
+    return cv.imwrite(image_path, out_img)
+
+
+def _prepare_export_paths(output_path, dataset_name, algo_name, variant_name, image_name):
+    base_export_dir = os.path.splitext(output_path)[0] + "_exported_images"
+    os.makedirs(base_export_dir, exist_ok=True)
+    return base_export_dir
+
+
 class Evaluator:
-    def __init__(self, datasets, algorithms, camera=None, output_path="results.json", process_masked=False, num_workers=1, saturation_mask="none", color_checker="all"):
+    def __init__(self, datasets, algorithms, camera=None, output_path="results.json", process_masked=False, num_workers=1, saturation_mask="none", color_checker="all", export_corrected_images=False, export_resize_factor=None):
         """
         Args:
             datasets: list of dataset name strings, e.g. ["gehler", "nus8"]
@@ -210,6 +466,8 @@ class Evaluator:
             num_workers: number of processes to use (default: 1)
             saturation_mask: saturation mask string configuration for dataset providers
             color_checker: color checker configuration ("all" or "patch")
+            export_corrected_images: if True, save corrected raw images to disk during evaluation
+            export_resize_factor: optional integer downsample factor for exported corrected images (powers of two)
         """
         self.datasets = datasets
         self.algorithms = algorithms
@@ -219,6 +477,12 @@ class Evaluator:
         self.num_workers = num_workers
         self.saturation_mask_str = saturation_mask
         self.color_checker_str = color_checker
+        self.export_corrected_images = export_corrected_images
+        self.export_resize_factor = export_resize_factor
+
+        if self.export_resize_factor is not None:
+            if self.export_resize_factor not in [2, 4, 8, 16, 32, 64]:
+                raise ValueError("export_resize_factor must be a power of two, e.g. 2, 4, 8, 16, 32, 64")
         
         has_nus_datasets = any(ds in ("nus8", "nus8extended") for ds in datasets)
         has_gehler_dataset = any(ds == "gehler" for ds in datasets)
@@ -264,6 +528,9 @@ class Evaluator:
         print(f"\nConfiguration:")
         print(f"  Workers: {self.num_workers}")
         print(f"  Process Masked: {self.process_masked}")
+        print(f"  Export Corrected Images: {self.export_corrected_images}")
+        if self.export_corrected_images:
+            print(f"  Export Resize Factor: {self.export_resize_factor}")
         if self.camera:
             print(f"  Camera Filter: {self.camera}")
 
@@ -286,8 +553,7 @@ class Evaluator:
 
             for algo_name, variant_name in self.algorithms:
                 for idx in matching_indices:
-                    tasks.append((dataset_name, algo_name, variant_name, idx, self.process_masked, self.camera, self.saturation_mask_str, self.color_checker_str))
-
+                    tasks.append((dataset_name, algo_name, variant_name, idx, self.process_masked, self.camera, self.saturation_mask_str, self.color_checker_str, self.export_corrected_images, self.export_resize_factor, self.output_path))
         total_tasks = len(tasks)
         processed_count = 0
 
@@ -319,6 +585,8 @@ class Evaluator:
                 "process_masked": self.process_masked,
                 "saturation_mask": self.saturation_mask_str,
                 "color_checker": self.color_checker_str,
+                "export_corrected_images": self.export_corrected_images,
+                "export_resize_factor": self.export_resize_factor,
             },
             "results": all_results,
         }

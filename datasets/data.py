@@ -114,14 +114,15 @@ class Data:
         if estimations["single_illuminant"] is not None:
             if self.multi_illuminant == True:
                 print("Warning: Single illuminant estimation provided for multi-illuminant data. Taking first illuminant for error computation.")
-            if self.illuminants is None:
-                print("Warning: Ground truth illuminants not available for error computation.")
-            else:
-                first_gt_illuminant = None
+            first_gt_illuminant = None
+            if self.illuminants is not None:
                 for key in self.illuminants.keys():
                     if self.illuminants[key] is not None:
                         first_gt_illuminant = self.illuminants[key]
                         break
+            if first_gt_illuminant is None:
+                print("Warning: Ground truth illuminants not available for error computation.")
+            else:
                 single_illuminant_metrics = SingleIlluminantErrorMetrics(first_gt_illuminant)
                 errors_metrics["single_illuminant_errors"] = single_illuminant_metrics.errors(estimations["single_illuminant"])
         if estimations["multi_illuminants"] is not None:

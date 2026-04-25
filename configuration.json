@@ -1,0 +1,67 @@
+{
+  // Dataset names to evaluate. Valid dataset names:
+  //   cubepp, lsmi, gehler, nus8, nus8extended, miniature
+  "datasets": ["miniature"],
+
+  // Algorithm and variant pairs in the form algorithm:variant.
+  // Valid algorithm variants:
+  //   gray_world:naive
+  //   gray_world:95_boundaries_all_channels
+  //   gray_world:95_boundaries_any_channel
+  //   max_rgb:naive
+  //   max_rgb:99_percentile
+  //   max_rgb:95_percentile
+  //   max_rgb:gaussian
+  //   max_rgb:gaussian_99_percentile
+  //   max_rgb:gaussian_95_percentile
+  //   max_rgb:median
+  //   max_rgb:median_99_percentile
+  //   max_rgb:median_95_percentile
+  //   shades_of_gray:default
+  //   shades_of_gray:p3
+  //   shades_of_gray:p4
+  //   shades_of_gray:masked_default
+  //   shades_of_gray:masked_p3
+  //   fast_awb:default
+  //   fast_awb:p6
+  //   cheng:prc_0_5
+  //   cheng:prc_3
+  "algorithms": [
+    "gray_world:naive",
+    "max_rgb:naive",
+    "shades_of_gray:p3"
+  ],
+
+  // Output JSON results file path.
+  "output": "results.json",
+
+  // Optional camera filter. Use null to process all cameras.
+  "camera": null,
+
+  // Number of worker processes, or "max" to use (cpu_count - 2) workers.
+  "workers": "max",
+
+  // Whether to process only masked pixels for algorithms that support masking.
+  "process_masked": true,
+
+  // Saturation mask option. Valid values:
+  //   none
+  //   raw_all_98
+  //   raw_all_100
+  //   raw_any_98
+  //   raw_any_100
+  //   normalized_all_98
+  //   normalized_all_100
+  //   normalized_any_98
+  //   normalized_any_100
+  "saturation_mask": "none",
+
+  // Color checker mask type. Valid values: all, patch
+  "color_checker": "all",
+
+  // Export corrected images to disk when true.
+  "export_corrected_images": true,
+
+  // Resize factor for exported images. Valid values: null, 2, 4, 8, 16, 32, 64
+  "export_resize_factor": null
+}
