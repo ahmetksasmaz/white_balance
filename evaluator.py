@@ -15,6 +15,7 @@ from datasets.gehler.gehler_dataprovider import GehlerDataProvider
 from datasets.nus8.nus8_dataprovider import NUS8DataProvider
 from datasets.nus8.nus8_extended_dataprovider import NUS8ExtendedDataProvider
 from datasets.miniature.miniature_dataprovider import MiniatureDataProvider
+from datasets.reallife.reallife_dataprovider import ReallifeDataProvider
 
 from white_balance_algorithms.gray_world.gray_world_naive import GrayWorldNaive
 from white_balance_algorithms.gray_world.gray_world_95_boundaries_all_channels import GrayWorld95BoundariesAllChannels
@@ -54,6 +55,7 @@ DATASET_PROVIDERS = {
     "nus8": NUS8DataProvider,
     "nus8extended": NUS8ExtendedDataProvider,
     "miniature": MiniatureDataProvider,
+    "reallife": ReallifeDataProvider,
 }
 
 ALGORITHM_REGISTRY = {
@@ -165,6 +167,7 @@ def _worker_fn(task_info):
                 corrected_raw,
                 estimations.get("single_illuminant"),
                 image_size=300,
+                apply_mask=process_masked,
             )
             if masked_grid is not None:
                 filename = f"{dataset_name}_{image_name}_{algo_name}_{variant_name}_masked_grid.png"
@@ -175,7 +178,7 @@ def _worker_fn(task_info):
             if illuminant_map is not None:
                 filename = f"{dataset_name}_{image_name}_{algo_name}_{variant_name}_illuminant_map.png"
                 path = os.path.join(export_dir, filename)
-                if _export_illuminant_map_as_image(illuminant_map, path, data.get_mask()):
+                if _export_illuminant_map_as_image(illuminant_map, path, data.get_mask() if process_masked else None):
                     exported_paths["illuminant_map_path"] = path
 
         single_illuminant_value = estimations.get("single_illuminant")
@@ -349,21 +352,24 @@ def _draw_illuminant_label(image, illuminant, label="GT"):
     return _draw_labeled_text(image, text, (10, 25), font_scale=0.7, font_thickness=2)
 
 
-def _get_masked_grid_image(data, corrected_raw, estimated_illuminant, image_size=300):
+def _get_masked_grid_image(data, corrected_raw, estimated_illuminant, image_size=300, apply_mask=True):
     raw_img = data.get_raw_image()
-    mask = data.get_mask()
-    if raw_img is None or mask is None:
+    if raw_img is None:
         return None
 
-    mask_arr = mask.astype(bool) if isinstance(mask, np.ndarray) else np.array(mask, dtype=bool)
-    if mask_arr.shape != raw_img.shape[:2]:
-        try:
-            mask_arr = cv.resize(mask_arr.astype(np.uint8), (raw_img.shape[1], raw_img.shape[0]), interpolation=cv.INTER_NEAREST).astype(bool)
-        except Exception:
-            return None
+    mask = data.get_mask() if apply_mask else None
+    mask_arr = None
+    if mask is not None:
+        mask_arr = mask.astype(bool) if isinstance(mask, np.ndarray) else np.array(mask, dtype=bool)
+        if mask_arr.shape != raw_img.shape[:2]:
+            try:
+                mask_arr = cv.resize(mask_arr.astype(np.uint8), (raw_img.shape[1], raw_img.shape[0]), interpolation=cv.INTER_NEAREST).astype(bool)
+            except Exception:
+                return None
 
     masked_raw = raw_img.copy()
-    masked_raw[~mask_arr] = 0
+    if mask_arr is not None:
+        masked_raw[~mask_arr] = 0
 
     if corrected_raw is None:
         corrected_raw = masked_raw.copy()
@@ -372,7 +378,8 @@ def _get_masked_grid_image(data, corrected_raw, estimated_illuminant, image_size
         if corrected_raw.shape[:2] != raw_img.shape[:2]:
             corrected_raw = cv.resize(corrected_raw, (raw_img.shape[1], raw_img.shape[0]), interpolation=cv.INTER_LINEAR)
         corrected_raw = corrected_raw.copy()
-        corrected_raw[~mask_arr] = 0
+        if mask_arr is not None:
+            corrected_raw[~mask_arr] = 0
 
     gt_illuminant = _get_first_ground_truth_illuminant(data)
     gt_corrected_raw = None
@@ -380,17 +387,20 @@ def _get_masked_grid_image(data, corrected_raw, estimated_illuminant, image_size
         gt_corrected_raw = _apply_von_kries_single(masked_raw, gt_illuminant)
         if gt_corrected_raw is not None:
             gt_corrected_raw = gt_corrected_raw.copy()
-            gt_corrected_raw[~mask_arr] = 0
+            if mask_arr is not None:
+                gt_corrected_raw[~mask_arr] = 0
 
     input_data = Data()
     input_data.set_image_name(data.get_image_name())
     input_data.set_raw_image(masked_raw)
-    input_data.set_mask(mask_arr)
+    if mask_arr is not None:
+        input_data.set_mask(mask_arr)
 
     corrected_data = Data()
     corrected_data.set_image_name(data.get_image_name())
     corrected_data.set_raw_image(corrected_raw)
-    corrected_data.set_mask(mask_arr)
+    if mask_arr is not None:
+        corrected_data.set_mask(mask_arr)
 
     gt_data = None
     if gt_corrected_raw is not None:

@@ -1,7 +1,7 @@
 {
   // Dataset names to evaluate. Valid dataset names:
-  //   cubepp, lsmi, gehler, nus8, nus8extended, miniature
-  "datasets": ["miniature"],
+  //   cubepp, lsmi, gehler, nus8, nus8extended, miniature, reallife
+  "datasets": ["reallife"],
 
   // Algorithm and variant pairs in the form algorithm:variant.
   // Valid algorithm variants:
@@ -28,6 +28,7 @@
   //   cheng:prc_3
   //   svwb_unet:default
   "algorithms": [
+    "gray_world:naive",
     "svwb_unet:default"
   ],
 
@@ -41,7 +42,7 @@
   "workers": "1",
 
   // Whether to process only masked pixels for algorithms that support masking.
-  "process_masked": true,
+  "process_masked": false,
 
   // Saturation mask option. Valid values:
   //   none
