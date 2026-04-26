@@ -22,9 +22,16 @@ class Data:
         self.sensor_linear = True
         self.multi_illuminant = False
         self.mask = None  # Boolean array (H, W): True = valid pixel, False = masked (e.g. checkerboard)
+        self.camera = None
 
     def set_image_name(self, image_name):
         self.image_name = image_name
+
+    def set_camera(self, camera):
+        self.camera = camera
+
+    def get_camera(self):
+        return self.camera
 
     def set_raw_image(self, raw_image):
         self.raw_image = raw_image
@@ -65,6 +72,7 @@ class Data:
     def get_data(self):
         return {
             "image_name": self.image_name,
+            "camera": self.camera,
             "raw_image": self.get_raw_image(),
             "image_dimensions": self.image_dimensions,
             "illuminants": self.illuminants,

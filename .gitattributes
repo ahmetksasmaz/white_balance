@@ -1,0 +1,4 @@
+white_balance_algorithms/svwb_unet/pretrained_weights/galaxy.pt filter=lfs diff=lfs merge=lfs -text
+white_balance_algorithms/svwb_unet/pretrained_weights/nikon.pt filter=lfs diff=lfs merge=lfs -text
+white_balance_algorithms/svwb_unet/pretrained_weights/sony.pt filter=lfs diff=lfs merge=lfs -text
+*.pt filter=lfs diff=lfs merge=lfs -text

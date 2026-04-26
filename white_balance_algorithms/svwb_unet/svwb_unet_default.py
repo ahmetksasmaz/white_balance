@@ -1,0 +1,158 @@
+import os
+
+import cv2 as cv
+import numpy as np
+
+try:
+    import torch
+    import torch.nn.functional as F
+    from white_balance_algorithms.svwb_unet.external.model import U_Net
+    from white_balance_algorithms.svwb_unet.external.utils import rgb2uvl
+    TORCH_AVAILABLE = True
+except ImportError:
+    torch = None
+    F = None
+    U_Net = None
+    rgb2uvl = None
+    TORCH_AVAILABLE = False
+
+from datasets.data import Data
+from white_balance_algorithms.white_balance_algorithm import WhiteBalanceAlgorithm
+
+
+class SVWBUnet(WhiteBalanceAlgorithm):
+    def __init__(self, weights_dir=None, default_camera='galaxy'):
+        if not TORCH_AVAILABLE:
+            raise ImportError(
+                'SVWBUnet requires torch. Install it with `pip install torch` ' \
+                'or remove svwb_unet:default from your configuration.'
+            )
+        super().__init__()
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.model = U_Net(img_ch=3, output_ch=2)
+        self.model.to(self.device)
+        self.model.eval()
+
+        if weights_dir is None:
+            weights_dir = os.path.join(os.path.dirname(__file__), 'pretrained_weights')
+        self.weights_dir = weights_dir
+
+        self.camera_weights = {
+            'galaxy': 'galaxy.pt',
+            'nikon': 'nikon.pt',
+            'sony': 'sony.pt',
+        }
+        self.default_camera = default_camera.lower()
+        self.current_camera = None
+        self._load_weights_for_camera(self.default_camera)
+
+    def _get_weight_path(self, camera_name=None):
+        if camera_name is None:
+            camera_name = self.default_camera
+        camera_name = str(camera_name).lower()
+        filename = self.camera_weights.get(camera_name, self.camera_weights.get(self.default_camera, 'galaxy.pt'))
+        return os.path.join(self.weights_dir, filename)
+
+    def _load_weights_for_camera(self, camera_name=None):
+        camera_name = camera_name or self.default_camera
+        camera_name = str(camera_name).lower()
+        if camera_name == self.current_camera:
+            return
+
+        weight_path = self._get_weight_path(camera_name)
+        if not os.path.exists(weight_path):
+            raise FileNotFoundError(f'SVWBUnet weight file not found: {weight_path}')
+
+        checkpoint = torch.load(weight_path, map_location=self.device)
+        if isinstance(checkpoint, dict):
+            if any(k.startswith('module.') for k in checkpoint.keys()):
+                checkpoint = {k.replace('module.', ''): v for k, v in checkpoint.items()}
+        self.model.load_state_dict(checkpoint)
+        self.current_camera = camera_name
+
+    def _prepare_input(self, raw_image):
+        image = np.asarray(raw_image, dtype=np.float32)
+        if image.max() > 1.1:
+            image = image / 255.0
+        image = np.clip(image, 1e-8, None)
+        # raw_image is normalized BGR, convert to RGB for model input
+        image = image[..., ::-1]
+        uvl = rgb2uvl(image)
+        uvl = np.transpose(uvl, (2, 0, 1))
+        tensor = torch.from_numpy(uvl).unsqueeze(0).to(self.device)
+        return tensor
+
+    def _pad_to_multiple(self, tensor, multiple=256):
+        _, _, h, w = tensor.shape
+        pad_h = (multiple - (h % multiple)) % multiple
+        pad_w = (multiple - (w % multiple)) % multiple
+        if pad_h == 0 and pad_w == 0:
+            return tensor, (0, 0)
+        padded = F.pad(tensor, (0, pad_w, 0, pad_h), mode='replicate')
+        return padded, (pad_h, pad_w)
+
+    def _unpad(self, tensor, pad_shape):
+        pad_h, pad_w = pad_shape
+        if pad_h == 0 and pad_w == 0:
+            return tensor
+        h = tensor.shape[2] - pad_h if pad_h != 0 else tensor.shape[2]
+        w = tensor.shape[3] - pad_w if pad_w != 0 else tensor.shape[3]
+        return tensor[:, :, :h, :w]
+
+    def _estimate(self, data, process_masked=False):
+        raw_image = data.get_raw_image()
+        if raw_image is None:
+            return {
+                'single_illuminant': None,
+                'multi_illuminants': None,
+                'illuminant_map': None,
+                'estimated_srgb_image': None,
+            }
+
+        camera = None
+        if hasattr(data, 'get_camera'):
+            camera = data.get_camera()
+        camera = str(camera).lower() if camera is not None else self.default_camera
+        self._load_weights_for_camera(camera)
+
+        original_shape = raw_image.shape[:2]
+        resized_raw = cv.resize(raw_image, (512, 512), interpolation=cv.INTER_AREA)
+        input_tensor = self._prepare_input(resized_raw)
+        padded_input, pad_shape = self._pad_to_multiple(input_tensor, multiple=256)
+        with torch.no_grad():
+            prediction = self.model(padded_input)
+        prediction = self._unpad(prediction, pad_shape)
+
+        prediction = prediction.squeeze(0).cpu().numpy()
+        prediction = np.transpose(prediction, (1, 2, 0))
+        # predicted uv (log R/G and log B/G) from the network
+        pred_uv = prediction
+        pred_rb = np.exp(pred_uv)
+
+        raw_rgb = resized_raw[..., ::-1].astype(np.float32)
+        if raw_rgb.max() > 1.1:
+            raw_rgb = raw_rgb / 255.0
+        raw_rgb = np.clip(raw_rgb, 1e-8, None)
+
+        # Fail fast if a future refactor breaks prediction/raw alignment.
+        if pred_rb.shape[:2] != raw_rgb.shape[:2]:
+            raise ValueError(
+                f'SVWBUnet prediction/raw shape mismatch: '
+                f'pred_rb={pred_rb.shape[:2]}, raw_rgb={raw_rgb.shape[:2]}'
+            )
+
+        corrected_rgb = np.zeros_like(raw_rgb, dtype=np.float32)
+        corrected_rgb[..., 1] = raw_rgb[..., 1]
+        corrected_rgb[..., 0] = raw_rgb[..., 1] * pred_rb[..., 0]
+        corrected_rgb[..., 2] = raw_rgb[..., 1] * pred_rb[..., 1]
+
+        illuminant_map = raw_rgb / (corrected_rgb + 1e-8)
+        illuminant_map[..., 1] = 1.0
+        illuminant_map = cv.resize(illuminant_map, (original_shape[1], original_shape[0]), interpolation=cv.INTER_LINEAR)
+
+        return {
+            'single_illuminant': None,
+            'multi_illuminants': None,
+            'illuminant_map': illuminant_map,
+            'estimated_srgb_image': None,
+        }

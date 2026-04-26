@@ -26,10 +26,9 @@
   //   fast_awb:p6
   //   cheng:prc_0_5
   //   cheng:prc_3
+  //   svwb_unet:default
   "algorithms": [
-    "gray_world:naive",
-    "max_rgb:naive",
-    "shades_of_gray:p3"
+    "svwb_unet:default"
   ],
 
   // Output JSON results file path.
@@ -39,7 +38,7 @@
   "camera": null,
 
   // Number of worker processes, or "max" to use (cpu_count - 2) workers.
-  "workers": "max",
+  "workers": "1",
 
   // Whether to process only masked pixels for algorithms that support masking.
   "process_masked": true,

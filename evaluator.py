@@ -19,6 +19,7 @@ from datasets.miniature.miniature_dataprovider import MiniatureDataProvider
 from white_balance_algorithms.gray_world.gray_world_naive import GrayWorldNaive
 from white_balance_algorithms.gray_world.gray_world_95_boundaries_all_channels import GrayWorld95BoundariesAllChannels
 from white_balance_algorithms.gray_world.gray_world_95_boundaries_any_channel import GrayWorld95BoundariesAnyChannel
+from white_balance_algorithms.svwb_unet.svwb_unet_default import SVWBUnet
 
 from white_balance_algorithms.max_rgb.max_rgb_naive import MaxRGBNaive
 from white_balance_algorithms.max_rgb.max_rgb_99_percentile import MaxRGB99Percentile
@@ -77,6 +78,7 @@ ALGORITHM_REGISTRY = {
     ("fast_awb", "p6"): FastAWBP6,
     ("cheng", "prc_0_5"): ChengPrc05,
     ("cheng", "prc_3"): ChengPrc3,
+    ("svwb_unet", "default"): SVWBUnet,
 }
 
 
@@ -143,6 +145,7 @@ def _worker_fn(task_info):
         camera = _extract_camera(dataset_name, data_provider, idx)
 
         data = data_provider[idx]
+        data.set_camera(camera)
         image_name = data.get_image_name()
 
         estimations = algorithm.estimate(data, process_masked=process_masked)
@@ -152,12 +155,14 @@ def _worker_fn(task_info):
 
         exported_paths = {
             "masked_grid_path": None,
+            "illuminant_map_path": None,
         }
         if export_corrected_images:
             export_dir = _prepare_export_paths(output_path, dataset_name, algo_name, variant_name, image_name)
+            corrected_raw = _get_corrected_raw_image_from_estimations(data.get_raw_image(), estimations)
             masked_grid = _get_masked_grid_image(
                 data,
-                estimations.get("single_illuminant_corrected_raw_image"),
+                corrected_raw,
                 estimations.get("single_illuminant"),
                 image_size=300,
             )
@@ -166,6 +171,12 @@ def _worker_fn(task_info):
                 path = os.path.join(export_dir, filename)
                 if _export_image_array(masked_grid, path, export_resize_factor):
                     exported_paths["masked_grid_path"] = path
+            illuminant_map = estimations.get("illuminant_map")
+            if illuminant_map is not None:
+                filename = f"{dataset_name}_{image_name}_{algo_name}_{variant_name}_illuminant_map.png"
+                path = os.path.join(export_dir, filename)
+                if _export_illuminant_map_as_image(illuminant_map, path, data.get_mask()):
+                    exported_paths["illuminant_map_path"] = path
 
         single_illuminant_value = estimations.get("single_illuminant")
         if single_illuminant_value is not None:
@@ -180,6 +191,7 @@ def _worker_fn(task_info):
             "estimations": {
                 "single_illuminant": single_illuminant_value,
                 "masked_grid_path": exported_paths["masked_grid_path"],
+                "illuminant_map_path": exported_paths["illuminant_map_path"],
             },
             "ground_truths": {
                 "illuminants": _serialize_error_metrics(all_data["illuminants"]),
@@ -271,6 +283,43 @@ def _apply_von_kries_single(raw_image, single_illuminant):
         return np.clip(corrected, 0.0, 1.0)
     except Exception:
         return None
+
+
+def _apply_von_kries_map(raw_image, illuminant_map):
+    if raw_image is None or illuminant_map is None:
+        return None
+
+    if illuminant_map.ndim == 3:
+        if illuminant_map.shape[2] == 2:
+            r_g = illuminant_map[..., 0].astype(np.float32)
+            b_g = illuminant_map[..., 1].astype(np.float32)
+            with np.errstate(divide='ignore', invalid='ignore'):
+                inv_r = np.where(r_g != 0, 1.0 / r_g, 0.0)
+                inv_b = np.where(b_g != 0, 1.0 / b_g, 0.0)
+            inv_map = np.stack([inv_b, np.ones_like(inv_b), inv_r], axis=-1)
+            corrected = raw_image.astype(np.float32) * inv_map
+            return np.clip(corrected, 0.0, 1.0)
+        elif illuminant_map.shape[2] == 3:
+            with np.errstate(divide='ignore', invalid='ignore'):
+                inv_map = np.where(illuminant_map != 0, 1.0 / illuminant_map, 0.0)
+            corrected = raw_image.astype(np.float32) * inv_map
+            return np.clip(corrected, 0.0, 1.0)
+    return None
+
+
+def _get_corrected_raw_image_from_estimations(raw_image, estimations):
+    if estimations is None:
+        return None
+    corrected_raw = estimations.get("multi_illuminant_corrected_raw_image")
+    if corrected_raw is not None:
+        return corrected_raw
+    corrected_raw = estimations.get("single_illuminant_corrected_raw_image")
+    if corrected_raw is not None:
+        return corrected_raw
+    illuminant_map = estimations.get("illuminant_map")
+    if illuminant_map is not None:
+        return _apply_von_kries_map(raw_image, illuminant_map)
+    return None
 
 
 def _get_first_ground_truth_illuminant(data):
@@ -442,6 +491,49 @@ def _export_image_array(image, image_path, resize_factor=None):
     if resize_factor is not None and resize_factor > 1:
         target_size = (max(1, out_img.shape[1] // resize_factor), max(1, out_img.shape[0] // resize_factor))
         out_img = cv.resize(out_img, target_size, interpolation=cv.INTER_AREA)
+
+    os.makedirs(os.path.dirname(image_path), exist_ok=True)
+    return cv.imwrite(image_path, out_img)
+
+
+def _export_illuminant_map_as_image(illuminant_map, image_path, mask=None):
+    if illuminant_map is None:
+        return False
+
+    illuminant_map = np.asarray(illuminant_map, dtype=np.float32)
+    if illuminant_map.ndim != 3 or illuminant_map.shape[2] != 2:
+        return False
+
+    if mask is not None:
+        mask_arr = np.asarray(mask)
+        if mask_arr.ndim == 3 and mask_arr.shape[2] == 1:
+            mask_arr = mask_arr[..., 0]
+        mask_arr = mask_arr.astype(bool)
+        if mask_arr.shape != illuminant_map.shape[:2]:
+            try:
+                mask_arr = cv.resize(mask_arr.astype(np.uint8), (illuminant_map.shape[1], illuminant_map.shape[0]), interpolation=cv.INTER_NEAREST).astype(bool)
+            except Exception:
+                mask_arr = np.ones(illuminant_map.shape[:2], dtype=bool)
+    else:
+        mask_arr = np.ones(illuminant_map.shape[:2], dtype=bool)
+
+    rg = illuminant_map[..., 0]
+    bg = illuminant_map[..., 1]
+    height, width = rg.shape
+
+    rgb = np.zeros((height, width, 3), dtype=np.float32)
+    rgb[..., 0] = (rg - 1.0) * 0.5 + 0.5
+    rgb[..., 1] = 1.0
+    rgb[..., 2] = (bg - 1.0) * 0.5 + 0.5
+
+    rgb = np.clip(rgb, 0.0, 1.0)
+
+    if mask_arr.shape == (height, width):
+        rgb[~mask_arr] = 0.0
+
+    out_img = (rgb * 255.0).astype(np.uint8)
+    # Convert RGB to BGR before saving with OpenCV
+    out_img = cv.cvtColor(out_img, cv.COLOR_RGB2BGR)
 
     os.makedirs(os.path.dirname(image_path), exist_ok=True)
     return cv.imwrite(image_path, out_img)
