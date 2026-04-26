@@ -1,7 +1,7 @@
 {
   // Dataset names to evaluate. Valid dataset names:
   //   cubepp, lsmi, gehler, nus8, nus8extended, miniature, reallife
-  "datasets": ["reallife"],
+  "datasets": ["reallife", "miniature"],
 
   // Algorithm and variant pairs in the form algorithm:variant.
   // Valid algorithm variants:
@@ -29,11 +29,13 @@
   //   svwb_unet:default
   "algorithms": [
     "gray_world:naive",
+    "max_rgb:naive",
+    "shades_of_gray:p3",
     "svwb_unet:default"
   ],
 
   // Output JSON results file path.
-  "output": "results.json",
+  "output": "results_miniature_reallife.json",
 
   // Optional camera filter. Use null to process all cameras.
   "camera": null,

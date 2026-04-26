@@ -166,7 +166,7 @@ def _worker_fn(task_info):
                 data,
                 corrected_raw,
                 estimations.get("single_illuminant"),
-                image_size=300,
+                image_size=900,
                 apply_mask=process_masked,
             )
             if masked_grid is not None:
@@ -352,7 +352,7 @@ def _draw_illuminant_label(image, illuminant, label="GT"):
     return _draw_labeled_text(image, text, (10, 25), font_scale=0.7, font_thickness=2)
 
 
-def _get_masked_grid_image(data, corrected_raw, estimated_illuminant, image_size=300, apply_mask=True):
+def _get_masked_grid_image(data, corrected_raw, estimated_illuminant, image_size=900, apply_mask=True):
     raw_img = data.get_raw_image()
     if raw_img is None:
         return None
