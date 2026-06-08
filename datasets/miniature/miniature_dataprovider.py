@@ -38,24 +38,28 @@ class MiniatureDataProvider(DataProvider):
         new_width, new_height = -1, -1
         if self.override_dimensions[0] > 0 and self.override_dimensions[1] > 0:
             new_width, new_height = self.override_dimensions[0], self.override_dimensions[1]
-            normalized_raw_image = cv.resize(normalized_raw_image, (new_width, new_height))
+            normalized_raw_image = cv.resize(normalized_raw_image, (new_width, new_height), interpolation=cv.INTER_AREA)
         elif self.override_dimensions[0] > 0:
             aspect_ratio = w_orig / h_orig
             new_width = self.override_dimensions[0]
             new_height = int(new_width / aspect_ratio)
-            normalized_raw_image = cv.resize(normalized_raw_image, (new_width, new_height))
+            normalized_raw_image = cv.resize(normalized_raw_image, (new_width, new_height), interpolation=cv.INTER_AREA)
         elif self.override_dimensions[1] > 0:
             aspect_ratio = w_orig / h_orig
             new_height = self.override_dimensions[1]
             new_width = int(new_height * aspect_ratio)
-            normalized_raw_image = cv.resize(normalized_raw_image, (new_width, new_height))
-        
+            normalized_raw_image = cv.resize(normalized_raw_image, (new_width, new_height), interpolation=cv.INTER_AREA)
+
+        raw_h, raw_w = normalized_raw_image.shape[:2]
         data.set_raw_image(normalized_raw_image)
 
         # Load sRGB Image
         srgb_image = cv.imread(os.path.join(self.srgb_dir, f"{image_name}.{SRGB_EXTENSION}"), cv.IMREAD_UNCHANGED)
         if srgb_image is None:
             raise ValueError(f"Failed to load sRGB image for {image_name}")
+
+        if srgb_image.shape[:2] != (raw_h, raw_w):
+            srgb_image = cv.resize(srgb_image, (raw_w, raw_h), interpolation=cv.INTER_AREA)
 
         data.set_srgb_image(srgb_image)
 
@@ -72,7 +76,7 @@ class MiniatureDataProvider(DataProvider):
             else:
                 mask_bool = mask_image != 0
             mask_bool = mask_bool.astype(np.uint8)
-            mask_bool = cv.resize(mask_bool, (w_orig, h_orig), interpolation=cv.INTER_NEAREST).astype(bool)
+            mask_bool = cv.resize(mask_bool, (raw_w, raw_h), interpolation=cv.INTER_NEAREST).astype(bool)
             data.set_mask(mask_bool)
         else:
             data.set_mask(None)

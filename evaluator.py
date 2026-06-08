@@ -21,6 +21,7 @@ from white_balance_algorithms.gray_world.gray_world_naive import GrayWorldNaive
 from white_balance_algorithms.gray_world.gray_world_95_boundaries_all_channels import GrayWorld95BoundariesAllChannels
 from white_balance_algorithms.gray_world.gray_world_95_boundaries_any_channel import GrayWorld95BoundariesAnyChannel
 from white_balance_algorithms.svwb_unet.svwb_unet_default import SVWBUnet
+from white_balance_algorithms.panoptic_sgbm_wb.panoptic_sgbm_wb_default import PanopticSGBMWB
 
 from white_balance_algorithms.max_rgb.max_rgb_naive import MaxRGBNaive
 from white_balance_algorithms.max_rgb.max_rgb_99_percentile import MaxRGB99Percentile
@@ -81,6 +82,7 @@ ALGORITHM_REGISTRY = {
     ("cheng", "prc_0_5"): ChengPrc05,
     ("cheng", "prc_3"): ChengPrc3,
     ("svwb_unet", "default"): SVWBUnet,
+    ("panoptic_sgbm_wb", "default"): PanopticSGBMWB,
 }
 
 
