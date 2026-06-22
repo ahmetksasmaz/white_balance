@@ -1,4 +1,4 @@
-ROOT_DIRECTORY = "/Users/ahmetksasmaz/Documents/TEMP_DATASET/Reallife"
+ROOT_DIRECTORY = "/arf/scratch/asasmaz/Datasets/Reallife"
 LINEAR_CORRUPTED_EXTENSION = "png"
 LINEAR_CORRUPTED_SUFFIX = "_rawlike_corrupted"
 SRGB_EXTENSION = "jpg"

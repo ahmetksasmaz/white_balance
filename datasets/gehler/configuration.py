@@ -1,4 +1,4 @@
-ROOT_DIRECTORY = "/Users/ahmetksasmaz/Documents/TEMP_DATASET/Gehler"
+ROOT_DIRECTORY = "/arf/scratch/asasmaz/Datasets/ShiGehler"
 INPUT_IMAGE_DIRECTORY = ROOT_DIRECTORY
 IMAGE_EXTENSION = "png"
 BLACK_LEVEL_1D = 0

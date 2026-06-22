@@ -124,7 +124,7 @@ def _extract_camera(dataset_name, data_provider, index):
 
 def _worker_fn(task_info):
     """Worker function for multi-processing."""
-    dataset_name, algo_name, variant_name, idx, process_masked, camera_filter, saturation_mask_str, color_checker_str, export_corrected_images, export_resize_factor, output_path = task_info
+    dataset_name, algo_name, variant_name, idx, process_masked, camera_filter, saturation_mask_str, color_checker_str, export_corrected_images, export_input_images, export_resize_factor, output_path = task_info
     try:
         saturation_masks = {
             'none': None,
@@ -158,11 +158,24 @@ def _worker_fn(task_info):
         all_data = data.get_data()
 
         exported_paths = {
+            "input_image_path": None,
             "masked_grid_path": None,
             "illuminant_map_path": None,
         }
-        if export_corrected_images:
+        export_dir = None
+        if export_corrected_images or export_input_images:
             export_dir = _prepare_export_paths(output_path, dataset_name, algo_name, variant_name, image_name)
+
+        if export_input_images:
+            input_image = data.get_raw_image() if data.get_raw_image() is not None else data.get_srgb_image()
+            if input_image is not None and export_dir is not None:
+                filename = f"{dataset_name}_{image_name}_{algo_name}_{variant_name}_input.png"
+                path = os.path.join(export_dir, filename)
+                display_input = _prepare_display_image(input_image)
+                if _export_image_array(display_input, path, export_resize_factor):
+                    exported_paths["input_image_path"] = path
+
+        if export_corrected_images:
             corrected_raw = _get_corrected_raw_image_from_estimations(data.get_raw_image(), estimations)
             masked_grid = _get_masked_grid_image(
                 data,
@@ -171,13 +184,13 @@ def _worker_fn(task_info):
                 image_size=900,
                 apply_mask=process_masked,
             )
-            if masked_grid is not None:
+            if masked_grid is not None and export_dir is not None:
                 filename = f"{dataset_name}_{image_name}_{algo_name}_{variant_name}_masked_grid.png"
                 path = os.path.join(export_dir, filename)
                 if _export_image_array(masked_grid, path, export_resize_factor):
                     exported_paths["masked_grid_path"] = path
             illuminant_map = estimations.get("illuminant_map")
-            if illuminant_map is not None:
+            if illuminant_map is not None and export_dir is not None:
                 filename = f"{dataset_name}_{image_name}_{algo_name}_{variant_name}_illuminant_map.png"
                 path = os.path.join(export_dir, filename)
                 if _export_illuminant_map_as_image(illuminant_map, path, data.get_mask() if process_masked else None):
@@ -558,7 +571,7 @@ def _prepare_export_paths(output_path, dataset_name, algo_name, variant_name, im
 
 
 class Evaluator:
-    def __init__(self, datasets, algorithms, camera=None, output_path="results.json", process_masked=False, num_workers=1, saturation_mask="none", color_checker="all", export_corrected_images=False, export_resize_factor=None):
+    def __init__(self, datasets, algorithms, camera=None, output_path="results.json", process_masked=False, num_workers=1, saturation_mask="none", color_checker="all", export_corrected_images=False, export_input_images=False, export_resize_factor=None, max_images=None):
         """
         Args:
             datasets: list of dataset name strings, e.g. ["gehler", "nus8"]
@@ -571,7 +584,9 @@ class Evaluator:
             saturation_mask: saturation mask string configuration for dataset providers
             color_checker: color checker configuration ("all" or "patch")
             export_corrected_images: if True, save corrected raw images to disk during evaluation
-            export_resize_factor: optional integer downsample factor for exported corrected images (powers of two)
+            export_input_images: if True, save the input display image to disk for visualization
+            export_resize_factor: optional integer downsample factor for exported images (powers of two)
+            max_images: optional integer limit for the number of images to process per dataset
         """
         self.datasets = datasets
         self.algorithms = algorithms
@@ -582,11 +597,20 @@ class Evaluator:
         self.saturation_mask_str = saturation_mask
         self.color_checker_str = color_checker
         self.export_corrected_images = export_corrected_images
+        self.export_input_images = export_input_images
         self.export_resize_factor = export_resize_factor
+        self.max_images = max_images
 
         if self.export_resize_factor is not None:
             if self.export_resize_factor not in [2, 4, 8, 16, 32, 64]:
                 raise ValueError("export_resize_factor must be a power of two, e.g. 2, 4, 8, 16, 32, 64")
+
+        if self.max_images is not None:
+            if not isinstance(self.max_images, int) or self.max_images <= 0:
+                raise ValueError("max_images must be a positive integer")
+
+        if not isinstance(self.export_input_images, bool):
+            raise ValueError("export_input_images must be a boolean value")
         
         has_nus_datasets = any(ds in ("nus8", "nus8extended") for ds in datasets)
         has_gehler_dataset = any(ds == "gehler" for ds in datasets)
@@ -633,7 +657,8 @@ class Evaluator:
         print(f"  Workers: {self.num_workers}")
         print(f"  Process Masked: {self.process_masked}")
         print(f"  Export Corrected Images: {self.export_corrected_images}")
-        if self.export_corrected_images:
+        print(f"  Export Input Images: {self.export_input_images}")
+        if self.export_corrected_images or self.export_input_images:
             print(f"  Export Resize Factor: {self.export_resize_factor}")
         if self.camera:
             print(f"  Camera Filter: {self.camera}")
@@ -651,13 +676,15 @@ class Evaluator:
                 camera = _extract_camera(dataset_name, data_provider, idx)
                 if not self.camera or camera == self.camera:
                     matching_indices.append(idx)
+            if self.max_images is not None:
+                matching_indices = matching_indices[:self.max_images]
             
             num_matching = len(matching_indices)
-            print(f"Queuing Dataset: {dataset_name} ({num_matching}/{num_dataset_images} images match camera filter)")
+            print(f"Queuing Dataset: {dataset_name} ({num_matching}/{num_dataset_images} images selected for evaluation)")
 
             for algo_name, variant_name in self.algorithms:
                 for idx in matching_indices:
-                    tasks.append((dataset_name, algo_name, variant_name, idx, self.process_masked, self.camera, self.saturation_mask_str, self.color_checker_str, self.export_corrected_images, self.export_resize_factor, self.output_path))
+                    tasks.append((dataset_name, algo_name, variant_name, idx, self.process_masked, self.camera, self.saturation_mask_str, self.color_checker_str, self.export_corrected_images, self.export_input_images, self.export_resize_factor, self.output_path))
         total_tasks = len(tasks)
         processed_count = 0
 
@@ -688,9 +715,11 @@ class Evaluator:
                 "algorithms": [[a, v] for a, v in self.algorithms],
                 "process_masked": self.process_masked,
                 "saturation_mask": self.saturation_mask_str,
-                "color_checker": self.color_checker_str,
-                "export_corrected_images": self.export_corrected_images,
-                "export_resize_factor": self.export_resize_factor,
+            "color_checker": self.color_checker_str,
+            "export_corrected_images": self.export_corrected_images,
+            "export_input_images": self.export_input_images,
+            "export_resize_factor": self.export_resize_factor,
+            "max_images": self.max_images,
             },
             "results": all_results,
         }

@@ -1,4 +1,4 @@
-ROOT_DIRECTORY = "/Users/ahmetksasmaz/Library/CloudStorage/GoogleDrive-ahmetksasmaz@gmail.com/My Drive/ceng/MS Thesis/Datasets/Cube++"
+ROOT_DIRECTORY = "/arf/scratch/asasmaz/Datasets/Cube++"
 INPUT_IMAGE_DIRECTORY = ROOT_DIRECTORY+"/PNG"
 IMAGE_EXTENSION = "png"
 BLACK_LEVEL = 2048

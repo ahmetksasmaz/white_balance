@@ -1,4 +1,4 @@
-ROOT_DIRECTORY = "/Users/ahmetksasmaz/Documents/TEMP_DATASET/Miniature"
+ROOT_DIRECTORY = "/arf/scratch/asasmaz/Datasets/Miniature"
 LINEAR_TIFF_IMAGE_DIRECTORY = "linear_tiff"
 SRGB_IMAGE_DIRECTORY = "camera_wb_srgb"
 MASK_DIRECTORY = "masks_and_annotations"

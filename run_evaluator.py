@@ -93,7 +93,19 @@ Command-line arguments override values from configuration.json.
     )
     parser.add_argument(
         '--export-resize-factor', type=int, default=None, choices=[2, 4, 8, 16, 32, 64],
-        help='Optional downsample factor for exported corrected images (powers of two). If omitted, loaded from configuration file.'
+        help='Optional downsample factor for exported corrected images and input visualization images (powers of two). If omitted, loaded from configuration file.'
+    )
+    parser.add_argument(
+        '--export-input-images', action='store_true', default=None,
+        help='If set, export a gamma-corrected visual representation of the input image to disk. If omitted, loaded from configuration file.'
+    )
+    parser.add_argument(
+        '--max-images', type=int, default=None,
+        help='Optional limit for the number of images to process per dataset. If omitted, full dataset is processed.'
+    )
+    parser.add_argument(
+        '--test-mode', action='store_true', default=None,
+        help='If set, run in test mode and process at most 5 images per dataset.'
     )
     args = parser.parse_args()
     config = load_configuration(args.config)
@@ -107,7 +119,13 @@ Command-line arguments override values from configuration.json.
     saturation_mask = get_config_value(args, config, 'saturation_mask', 'none')
     color_checker = get_config_value(args, config, 'color_checker', 'all')
     export_corrected_images = normalize_bool(get_config_value(args, config, 'export_corrected_images', False))
+    export_input_images = normalize_bool(get_config_value(args, config, 'export_input_images', False))
     export_resize_factor = get_config_value(args, config, 'export_resize_factor', None)
+    max_images = get_config_value(args, config, 'max_images', None)
+    test_mode = normalize_bool(get_config_value(args, config, 'test_mode', False))
+
+    if test_mode and max_images is None:
+        max_images = 5
 
     if datasets is None:
         raise ValueError('Dataset list must be provided either in configuration.json or via --datasets')
@@ -144,7 +162,9 @@ Command-line arguments override values from configuration.json.
     print(f"Saturation mask: {saturation_mask}")
     print(f"Color checker: {color_checker}")
     print(f"Export corrected images: {export_corrected_images}")
+    print(f"Export input images: {export_input_images}")
     print(f"Export resize factor: {export_resize_factor}")
+    print(f"Max images per dataset: {max_images}")
 
     evaluator = Evaluator(
         datasets=datasets,
@@ -156,7 +176,9 @@ Command-line arguments override values from configuration.json.
         saturation_mask=saturation_mask,
         color_checker=color_checker,
         export_corrected_images=export_corrected_images,
+        export_input_images=export_input_images,
         export_resize_factor=export_resize_factor,
+        max_images=max_images,
     )
     evaluator.run()
 
