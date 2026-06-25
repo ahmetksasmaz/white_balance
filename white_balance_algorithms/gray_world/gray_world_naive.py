@@ -1,25 +1,15 @@
-import cv2 as cv
 import numpy as np
-from datasets.data import Data
 from white_balance_algorithms.white_balance_algorithm import WhiteBalanceAlgorithm
 
 class GrayWorldNaive(WhiteBalanceAlgorithm):
-    def __init__(self):
-        super().__init__()
-    
     def _estimate(self, data, process_masked=False):
-        image = data.get_raw_image()  # image is normalized to 0-1
-        pixels = self._get_pixels(image, data, process_masked)  # (N, 3)
-        avg_color_per_channel = pixels.mean(axis=0)
-        b_avg, g_avg, r_avg = avg_color_per_channel
-        # Avoid division by zero
+        pixels = self._get_pixels(data.get_raw_image(), data, process_masked)
+        b_avg, g_avg, r_avg = pixels.mean(axis=0)
         if g_avg == 0:
             g_avg = 1e-6
-        r_g = r_avg / g_avg
-        b_g = b_avg / g_avg
         return {
-            "single_illuminant": (r_g, b_g),
+            "single_illuminant": (r_avg / g_avg, b_avg / g_avg),
             "multi_illuminants": None,
             "illuminant_map": None,
-            "estimated_srgb_image": None
+            "estimated_srgb_image": None,
         }

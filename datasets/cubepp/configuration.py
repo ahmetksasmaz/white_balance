@@ -1,4 +1,6 @@
-ROOT_DIRECTORY = "/arf/scratch/asasmaz/Datasets/Cube++"
+import os
+
+ROOT_DIRECTORY = os.environ.get("DATASET_CUBEPP_ROOT", "")
 INPUT_IMAGE_DIRECTORY = ROOT_DIRECTORY+"/PNG"
 IMAGE_EXTENSION = "png"
 BLACK_LEVEL = 2048

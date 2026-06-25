@@ -3,6 +3,10 @@ import json
 import multiprocessing
 import os
 import re
+
+from datasets.path_resolver import load_dotenv_if_present, validate_dataset_paths
+load_dotenv_if_present()
+
 from evaluator import Evaluator, DATASET_PROVIDERS, ALGORITHM_REGISTRY
 from reporter import Reporter
 
@@ -13,7 +17,6 @@ def load_configuration(config_path):
     with open(config_path, 'r') as f:
         raw_text = f.read()
 
-    # Allow JSON configuration files to include comments with //, #, or /* */
     without_line_comments = re.sub(r'(?m)^\s*(//|#).*$', '', raw_text)
     without_block_comments = re.sub(r'/\*.*?\*/', '', without_line_comments, flags=re.DOTALL)
     return json.loads(without_block_comments)
@@ -107,6 +110,10 @@ Command-line arguments override values from configuration.json.
         '--test-mode', action='store_true', default=None,
         help='If set, run in test mode and process at most 5 images per dataset.'
     )
+    parser.add_argument(
+        '--resume', action='store_true', default=False,
+        help='Resume a previously interrupted evaluation by loading the checkpoint file and skipping completed tasks.'
+    )
     args = parser.parse_args()
     config = load_configuration(args.config)
 
@@ -166,6 +173,8 @@ Command-line arguments override values from configuration.json.
     print(f"Export resize factor: {export_resize_factor}")
     print(f"Max images per dataset: {max_images}")
 
+    validate_dataset_paths(datasets)
+
     evaluator = Evaluator(
         datasets=datasets,
         algorithms=algorithms,
@@ -179,6 +188,7 @@ Command-line arguments override values from configuration.json.
         export_input_images=export_input_images,
         export_resize_factor=export_resize_factor,
         max_images=max_images,
+        resume=args.resume,
     )
     evaluator.run()
 

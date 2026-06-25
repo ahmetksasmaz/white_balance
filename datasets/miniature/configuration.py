@@ -1,4 +1,6 @@
-ROOT_DIRECTORY = "/arf/scratch/asasmaz/Datasets/Miniature"
+import os
+
+ROOT_DIRECTORY = os.environ.get("DATASET_MINIATURE_ROOT", "")
 LINEAR_TIFF_IMAGE_DIRECTORY = "linear_tiff"
 SRGB_IMAGE_DIRECTORY = "camera_wb_srgb"
 MASK_DIRECTORY = "masks_and_annotations"

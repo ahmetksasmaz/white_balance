@@ -1,7 +1,6 @@
 import argparse
 import cv2 as cv
 import numpy as np
-from datasets.data import Data
 from datasets.cubepp.cubepp_dataprovider import CubePPDataProvider
 from datasets.lsmi.lsmi_dataprovider import LSMIDataProvider
 from datasets.gehler.gehler_dataprovider import GehlerDataProvider
@@ -25,14 +24,14 @@ from white_balance_algorithms.max_rgb.max_rgb_median_99_percentile import MaxRGB
 from white_balance_algorithms.max_rgb.max_rgb_median_95_percentile import MaxRGBMedian95Percentile
 
 from white_balance_algorithms.shades_of_gray.shades_of_gray_default import ShadesOfGrayDefault
+from white_balance_algorithms.shades_of_gray.shades_of_gray_p3 import ShadesOfGrayP3
+from white_balance_algorithms.shades_of_gray.shades_of_gray_p4 import ShadesOfGrayP4
 
 from white_balance_algorithms.fast_awb.fast_awb_default import FastAWBDefault
 from white_balance_algorithms.fast_awb.fast_awb_p6 import FastAWBP6
 
 from white_balance_algorithms.cheng.cheng_prc_0_5 import ChengPrc05
 from white_balance_algorithms.cheng.cheng_prc_3 import ChengPrc3
-from white_balance_algorithms.shades_of_gray.shades_of_gray_p3 import ShadesOfGrayP3
-from white_balance_algorithms.shades_of_gray.shades_of_gray_p4 import ShadesOfGrayP4
 
 def run_single_data(dataset_name, index, algorithm_name, variant_name, process_masked=False, saturation_mask_str='none', color_checker_str='all'):
     saturation_masks = {
@@ -94,6 +93,10 @@ def run_single_data(dataset_name, index, algorithm_name, variant_name, process_m
     elif algorithm_name == "shades_of_gray":
         if variant_name == "default":
             algorithm = ShadesOfGrayDefault()
+        elif variant_name == "p3":
+            algorithm = ShadesOfGrayP3()
+        elif variant_name == "p4":
+            algorithm = ShadesOfGrayP4()
         else:
             raise ValueError(f"Invalid variant name for shades_of_gray: {variant_name}")
     elif algorithm_name == "fast_awb":
@@ -110,13 +113,6 @@ def run_single_data(dataset_name, index, algorithm_name, variant_name, process_m
             algorithm = ChengPrc3()
         else:
             raise ValueError(f"Invalid variant name for cheng: {variant_name}")
-    elif algorithm_name == "shades_of_gray":
-        if variant_name == "p3":
-            algorithm = ShadesOfGrayP3()
-        elif variant_name == "p4":
-            algorithm = ShadesOfGrayP4()
-        else:
-            algorithm = ShadesOfGrayDefault()
     else:
         raise ValueError(f"Invalid algorithm name: {algorithm_name}")
 
@@ -137,7 +133,7 @@ def main():
     parser.add_argument('--variant', type=str, required=True, help='Algorithm variant')
     parser.add_argument('--process-masked', action='store_true', default=False, help='Exclude masked pixels')
     parser.add_argument('--saturation-mask', type=str, default='none', choices=[
-        'none', 'raw_all_98', 'raw_all_100', 'raw_any_98', 'raw_any_100', 
+        'none', 'raw_all_98', 'raw_all_100', 'raw_any_98', 'raw_any_100',
         'normalized_all_98', 'normalized_all_100', 'normalized_any_98', 'normalized_any_100'
     ], help='Saturation mask configuration')
     parser.add_argument('--color-checker', type=str, default='all', choices=['all', 'patch'], help='Color checker mask type')

@@ -1,4 +1,6 @@
-ROOT_DIRECTORY = "/arf/scratch/asasmaz/Datasets/ShiGehler"
+import os
+
+ROOT_DIRECTORY = os.environ.get("DATASET_GEHLER_ROOT", "")
 INPUT_IMAGE_DIRECTORY = ROOT_DIRECTORY
 IMAGE_EXTENSION = "png"
 BLACK_LEVEL_1D = 0

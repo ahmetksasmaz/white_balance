@@ -85,9 +85,42 @@ ALGORITHM_REGISTRY = {
     ("panoptic_sgbm_wb", "default"): PanopticSGBMWB,
 }
 
+_PROVIDER_CACHE = {}
+_ALGO_CACHE = {}
+_SATURATION_MASKS = {
+    'none': None,
+    'raw_all_98': ('raw', 'all', 0.98),
+    'raw_all_100': ('raw', 'all', 1.0),
+    'raw_any_98': ('raw', 'any', 0.98),
+    'raw_any_100': ('raw', 'any', 1.0),
+    'normalized_all_98': ('normalized', 'all', 0.98),
+    'normalized_all_100': ('normalized', 'all', 1.0),
+    'normalized_any_98': ('normalized', 'any', 0.98),
+    'normalized_any_100': ('normalized', 'any', 1.0),
+}
+
+
+def _get_data_provider(dataset_name, saturation_mask_str, color_checker_str):
+    key = (dataset_name, saturation_mask_str, color_checker_str)
+    if key not in _PROVIDER_CACHE:
+        sat_tuple = _SATURATION_MASKS[saturation_mask_str]
+        if dataset_name in ("nus8", "nus8extended", "gehler"):
+            _PROVIDER_CACHE[key] = DATASET_PROVIDERS[dataset_name](
+                saturation_mask=sat_tuple, color_checker=color_checker_str
+            )
+        else:
+            _PROVIDER_CACHE[key] = DATASET_PROVIDERS[dataset_name]()
+    return _PROVIDER_CACHE[key]
+
+
+def _get_algorithm(algo_name, variant_name):
+    key = (algo_name, variant_name)
+    if key not in _ALGO_CACHE:
+        _ALGO_CACHE[key] = ALGORITHM_REGISTRY[(algo_name, variant_name)]()
+    return _ALGO_CACHE[key]
+
 
 def _extract_camera(dataset_name, data_provider, index):
-    """Extract camera identifier from the data provider's internal path info."""
     if dataset_name == "cubepp":
         return "default_camera"
 
@@ -101,7 +134,6 @@ def _extract_camera(dataset_name, data_provider, index):
         return "unknown"
 
     if dataset_name in ("nus8", "nus8extended"):
-        # Path pattern: .../CameraName/PNG/image.PNG
         parts = image_path.replace("\\", "/").split("/")
         for i, part in enumerate(parts):
             if part == "PNG" and i > 0:
@@ -109,7 +141,6 @@ def _extract_camera(dataset_name, data_provider, index):
         return "unknown"
 
     if dataset_name == "lsmi":
-        # Path pattern: .../camera_model/place/file
         path_lower = image_path.lower()
         if "/galaxy/" in path_lower:
             return "galaxy"
@@ -123,28 +154,11 @@ def _extract_camera(dataset_name, data_provider, index):
 
 
 def _worker_fn(task_info):
-    """Worker function for multi-processing."""
     dataset_name, algo_name, variant_name, idx, process_masked, camera_filter, saturation_mask_str, color_checker_str, export_corrected_images, export_input_images, export_resize_factor, output_path = task_info
+    checkpoint_key = [dataset_name, algo_name, variant_name, idx]
     try:
-        saturation_masks = {
-            'none': None,
-            'raw_all_98': ('raw', 'all', 0.98),
-            'raw_all_100': ('raw', 'all', 1.0),
-            'raw_any_98': ('raw', 'any', 0.98),
-            'raw_any_100': ('raw', 'any', 1.0),
-            'normalized_all_98': ('normalized', 'all', 0.98),
-            'normalized_all_100': ('normalized', 'all', 1.0),
-            'normalized_any_98': ('normalized', 'any', 0.98),
-            'normalized_any_100': ('normalized', 'any', 1.0),
-        }
-        saturation_mask_tuple = saturation_masks[saturation_mask_str]
-
-        # Instantiate inside worker to avoid pickle issues with some objects
-        if dataset_name in ("nus8", "nus8extended", "gehler"):
-            data_provider = DATASET_PROVIDERS[dataset_name](saturation_mask=saturation_mask_tuple, color_checker=color_checker_str)
-        else:
-            data_provider = DATASET_PROVIDERS[dataset_name]()
-        algorithm = ALGORITHM_REGISTRY[(algo_name, variant_name)]()
+        data_provider = _get_data_provider(dataset_name, saturation_mask_str, color_checker_str)
+        algorithm = _get_algorithm(algo_name, variant_name)
 
         camera = _extract_camera(dataset_name, data_provider, idx)
 
@@ -160,7 +174,6 @@ def _worker_fn(task_info):
         exported_paths = {
             "input_image_path": None,
             "masked_grid_path": None,
-            "illuminant_map_path": None,
         }
         export_dir = None
         if export_corrected_images or export_input_images:
@@ -171,8 +184,7 @@ def _worker_fn(task_info):
             if input_image is not None and export_dir is not None:
                 filename = f"{dataset_name}_{image_name}_{algo_name}_{variant_name}_input.png"
                 path = os.path.join(export_dir, filename)
-                display_input = _prepare_display_image(input_image)
-                if _export_image_array(display_input, path, export_resize_factor):
+                if _export_image_array(_prepare_display_image(input_image), path, export_resize_factor):
                     exported_paths["input_image_path"] = path
 
         if export_corrected_images:
@@ -198,14 +210,13 @@ def _worker_fn(task_info):
             "image_name": image_name,
             "algorithm": algo_name,
             "variant": variant_name,
+            "_checkpoint_key": checkpoint_key,
             "estimations": {
                 "single_illuminant": [str(estimations["single_illuminant"][0]), str(estimations["single_illuminant"][1])] if estimations.get("single_illuminant") is not None else None,
                 "masked_grid_path": exported_paths["masked_grid_path"],
             },
             "ground_truths": {
                 "illuminants": _serialize_error_metrics(all_data["illuminants"]),
-                #"illuminant_map": all_data["illuminant_map"],
-                #"srgb_image": all_data["srgb_image"]
             },
             "errors": _serialize_error_metrics(error_metrics),
         }
@@ -216,6 +227,7 @@ def _worker_fn(task_info):
             "image_name": f"index_{idx}",
             "algorithm": algo_name,
             "variant": variant_name,
+            "_checkpoint_key": checkpoint_key,
             "estimations": None,
             "ground_truths": None,
             "errors": None,
@@ -225,7 +237,6 @@ def _worker_fn(task_info):
 
 
 def _serialize_error_metrics(error_metrics):
-    """Convert error metrics, ground truth illuminants, or lists to JSON-safe types."""
     if error_metrics is None:
         return None
     if isinstance(error_metrics, dict):
@@ -234,14 +245,7 @@ def _serialize_error_metrics(error_metrics):
             if value is None:
                 result[key] = None
             elif isinstance(value, dict):
-                result[key] = {}
-                for k, v in value.items():
-                    if hasattr(v, 'item'):
-                        result[key][k] = v.item()
-                    elif isinstance(v, float):
-                        result[key][k] = v
-                    else:
-                        result[key][k] = v
+                result[key] = {k: (v.item() if hasattr(v, 'item') else v) for k, v in value.items()}
             elif isinstance(value, (list, tuple)):
                 result[key] = [_serialize_error_metrics(v) if isinstance(v, (dict, list, tuple)) else (v.item() if hasattr(v, 'item') else v) for v in value]
             else:
@@ -258,8 +262,7 @@ def _prepare_display_image(image):
     img = np.asarray(image, dtype=np.float32)
     if img.max() > 1.1:
         img = img / 255.0
-    img = np.clip(img, 0.0, 1.0)
-    img = np.power(img, 1.0 / 2.2)
+    img = np.power(np.clip(img, 0.0, 1.0), 1.0 / 2.2)
     img = (img * 255.0).clip(0, 255).astype(np.uint8)
     if img.ndim == 2:
         img = cv.cvtColor(img, cv.COLOR_GRAY2BGR)
@@ -275,9 +278,7 @@ def _get_masked_display_image(data):
     if mask is None or (raw_img is None and srgb_img is None):
         return None
 
-    display_source = raw_img if raw_img is not None else srgb_img
-    display_img = _prepare_display_image(display_source)
-
+    display_img = _prepare_display_image(raw_img if raw_img is not None else srgb_img)
     mask_arr = mask.astype(bool) if isinstance(mask, np.ndarray) else np.array(mask, dtype=bool)
     if mask_arr.shape != display_img.shape[:2]:
         try:
@@ -297,9 +298,7 @@ def _apply_von_kries_single(raw_image, single_illuminant):
         r_g, b_g = single_illuminant
         r_scale = 1.0 / float(r_g) if float(r_g) != 0 else 0.0
         b_scale = 1.0 / float(b_g) if float(b_g) != 0 else 0.0
-        scale = np.array([b_scale, 1.0, r_scale], dtype=np.float32)
-        corrected = raw_image.astype(np.float32) * scale.reshape((1, 1, 3))
-        return np.clip(corrected, 0.0, 1.0)
+        return np.clip(raw_image.astype(np.float32) * np.array([b_scale, 1.0, r_scale], dtype=np.float32).reshape((1, 1, 3)), 0.0, 1.0)
     except Exception:
         return None
 
@@ -307,7 +306,6 @@ def _apply_von_kries_single(raw_image, single_illuminant):
 def _apply_von_kries_map(raw_image, illuminant_map):
     if raw_image is None or illuminant_map is None:
         return None
-
     if illuminant_map.ndim == 3:
         if illuminant_map.shape[2] == 2:
             r_g = illuminant_map[..., 0].astype(np.float32)
@@ -315,24 +313,18 @@ def _apply_von_kries_map(raw_image, illuminant_map):
             with np.errstate(divide='ignore', invalid='ignore'):
                 inv_r = np.where(r_g != 0, 1.0 / r_g, 0.0)
                 inv_b = np.where(b_g != 0, 1.0 / b_g, 0.0)
-            inv_map = np.stack([inv_b, np.ones_like(inv_b), inv_r], axis=-1)
-            corrected = raw_image.astype(np.float32) * inv_map
-            return np.clip(corrected, 0.0, 1.0)
+            return np.clip(raw_image.astype(np.float32) * np.stack([inv_b, np.ones_like(inv_b), inv_r], axis=-1), 0.0, 1.0)
         elif illuminant_map.shape[2] == 3:
             with np.errstate(divide='ignore', invalid='ignore'):
                 inv_map = np.where(illuminant_map != 0, 1.0 / illuminant_map, 0.0)
-            corrected = raw_image.astype(np.float32) * inv_map
-            return np.clip(corrected, 0.0, 1.0)
+            return np.clip(raw_image.astype(np.float32) * inv_map, 0.0, 1.0)
     return None
 
 
 def _get_corrected_raw_image_from_estimations(raw_image, estimations):
     if estimations is None:
         return None
-    corrected_raw = estimations.get("multi_illuminant_corrected_raw_image")
-    if corrected_raw is not None:
-        return corrected_raw
-    corrected_raw = estimations.get("single_illuminant_corrected_raw_image")
+    corrected_raw = estimations.get("multi_illuminant_corrected_raw_image") or estimations.get("single_illuminant_corrected_raw_image")
     if corrected_raw is not None:
         return corrected_raw
     illuminant_map = estimations.get("illuminant_map")
@@ -345,17 +337,13 @@ def _get_first_ground_truth_illuminant(data):
     illuminants = data.get_illuminants()
     if illuminants is None:
         return None
-    valid_illuminants = []
     if hasattr(illuminants, "values"):
-        valid_illuminants = [value for value in illuminants.values() if value is not None]
+        valid = [v for v in illuminants.values() if v is not None]
     elif isinstance(illuminants, (list, tuple)):
-        valid_illuminants = [value for value in illuminants if value is not None]
+        valid = [v for v in illuminants if v is not None]
     else:
-        valid_illuminants = [illuminants]
-
-    if len(valid_illuminants) == 1:
-        return valid_illuminants[0]
-    return None
+        valid = [illuminants]
+    return valid[0] if len(valid) == 1 else None
 
 
 def _draw_labeled_text(image, text, position, font_scale=0.65, font_thickness=2, text_color=(255, 255, 255), outline_color=(0, 0, 0)):
@@ -384,12 +372,10 @@ def _prepare_illumination_map_display(illuminant_map, mask=None, size=200):
         rgb[..., 2] = (bg - 1.0) * 0.5 + 0.5
     else:
         rgb = illuminant_map.astype(np.float32)
-        norm = np.linalg.norm(rgb, axis=-1, keepdims=True)
-        norm = np.where(norm == 0, 1.0, norm)
+        norm = np.where(np.linalg.norm(rgb, axis=-1, keepdims=True) == 0, 1.0, np.linalg.norm(rgb, axis=-1, keepdims=True))
         rgb = rgb / norm
 
     rgb = np.clip(rgb, 0.0, 1.0)
-
     if mask is not None:
         mask_arr = mask.astype(bool) if isinstance(mask, np.ndarray) else np.asarray(mask, dtype=bool)
         if mask_arr.ndim == 3 and mask_arr.shape[2] == 1:
@@ -397,16 +383,13 @@ def _prepare_illumination_map_display(illuminant_map, mask=None, size=200):
         if mask_arr.shape == rgb.shape[:2]:
             rgb[~mask_arr] = 0.0
 
-    thumb = (rgb * 255.0).astype(np.uint8)
-    thumb = cv.resize(thumb, (size, size), interpolation=cv.INTER_AREA)
-    return thumb
+    return cv.resize((rgb * 255.0).astype(np.uint8), (size, size), interpolation=cv.INTER_AREA)
 
 
 def _draw_illuminant_label(image, illuminant, label="GT"):
     if image is None or illuminant is None:
         return image
-    text = f"{label}: {illuminant[0]:0.2f}, {illuminant[1]:0.2f}"
-    return _draw_labeled_text(image, text, (10, 25), font_scale=0.7, font_thickness=2)
+    return _draw_labeled_text(image, f"{label}: {illuminant[0]:0.2f}, {illuminant[1]:0.2f}", (10, 25), font_scale=0.7, font_thickness=2)
 
 
 def _get_masked_grid_image(data, corrected_raw, estimated_illuminant, estimated_illuminant_map=None, gt_illuminant_map=None, image_size=900, apply_mask=True):
@@ -473,10 +456,9 @@ def _get_masked_grid_image(data, corrected_raw, estimated_illuminant, estimated_
     rgb_vis = NormalizedRGBHistogram(image_size=image_size)
     input_log, _ = log_vis.visualize(input_data)
     corrected_log, _ = log_vis.visualize(corrected_data)
-    gt_log = None
     input_rgb, _ = rgb_vis.visualize(input_data)
     corrected_rgb, _ = rgb_vis.visualize(corrected_data)
-    gt_rgb = None
+    gt_log = gt_rgb = None
 
     if gt_data is not None:
         gt_log, _ = log_vis.visualize(gt_data)
@@ -488,18 +470,12 @@ def _get_masked_grid_image(data, corrected_raw, estimated_illuminant, estimated_
     def _blank_cell():
         return np.full((image_size, image_size, 3), 32, dtype=np.uint8)
 
-    if gt_log is None:
-        gt_log = _blank_cell()
-    if gt_rgb is None:
-        gt_rgb = _blank_cell()
+    if gt_log is None: gt_log = _blank_cell()
+    if gt_rgb is None: gt_rgb = _blank_cell()
 
-    input_display = _prepare_display_image(masked_raw)
-    corrected_display = _prepare_display_image(corrected_raw)
-    gt_display = _blank_cell() if gt_corrected_raw is None else _prepare_display_image(gt_corrected_raw)
-
-    input_display = cv.resize(input_display, (image_size, image_size), interpolation=cv.INTER_AREA)
-    corrected_display = cv.resize(corrected_display, (image_size, image_size), interpolation=cv.INTER_AREA)
-    gt_display = cv.resize(gt_display, (image_size, image_size), interpolation=cv.INTER_AREA)
+    input_display = cv.resize(_prepare_display_image(masked_raw), (image_size, image_size), interpolation=cv.INTER_AREA)
+    corrected_display = cv.resize(_prepare_display_image(corrected_raw), (image_size, image_size), interpolation=cv.INTER_AREA)
+    gt_display = cv.resize(_blank_cell() if gt_corrected_raw is None else _prepare_display_image(gt_corrected_raw), (image_size, image_size), interpolation=cv.INTER_AREA)
 
     input_display = _draw_labeled_text(input_display, "Input", (10, 25), font_scale=0.75, font_thickness=2)
     corrected_display = _draw_labeled_text(corrected_display, "Corrected with Est.", (10, 25), font_scale=0.7, font_thickness=2)
@@ -518,19 +494,9 @@ def _get_masked_grid_image(data, corrected_raw, estimated_illuminant, estimated_
     else:
         gt_map_cell = _draw_labeled_text(gt_map_cell, "GT Map", (10, 25), font_scale=0.7, font_thickness=2)
 
-    if input_log.shape[:2] != (image_size, image_size):
-        input_log = cv.resize(input_log, (image_size, image_size), interpolation=cv.INTER_AREA)
-    if corrected_log.shape[:2] != (image_size, image_size):
-        corrected_log = cv.resize(corrected_log, (image_size, image_size), interpolation=cv.INTER_AREA)
-    if gt_log.shape[:2] != (image_size, image_size):
-        gt_log = cv.resize(gt_log, (image_size, image_size), interpolation=cv.INTER_AREA)
-
-    if input_rgb.shape[:2] != (image_size, image_size):
-        input_rgb = cv.resize(input_rgb, (image_size, image_size), interpolation=cv.INTER_AREA)
-    if corrected_rgb.shape[:2] != (image_size, image_size):
-        corrected_rgb = cv.resize(corrected_rgb, (image_size, image_size), interpolation=cv.INTER_AREA)
-    if gt_rgb.shape[:2] != (image_size, image_size):
-        gt_rgb = cv.resize(gt_rgb, (image_size, image_size), interpolation=cv.INTER_AREA)
+    for cell in [input_log, corrected_log, gt_log, input_rgb, corrected_rgb, gt_rgb]:
+        if cell.shape[:2] != (image_size, image_size):
+            cell = cv.resize(cell, (image_size, image_size), interpolation=cv.INTER_AREA)
 
     separator_color = (64, 64, 64)
     spacer = np.full((image_size, 10, 3), separator_color, dtype=np.uint8)
@@ -559,56 +525,11 @@ def _export_image_array(image, image_path, resize_factor=None):
         img = img.astype(np.float32)
         if img.max() > 1.1:
             img = img / 255.0
-        img = np.clip(img, 0.0, 1.0)
-        img = np.power(img, 1.0 / 2.2)
-        out_img = (img * 255.0).clip(0, 255).astype(np.uint8)
+        out_img = (np.power(np.clip(img, 0.0, 1.0), 1.0 / 2.2) * 255.0).clip(0, 255).astype(np.uint8)
 
     if resize_factor is not None and resize_factor > 1:
         target_size = (max(1, out_img.shape[1] // resize_factor), max(1, out_img.shape[0] // resize_factor))
         out_img = cv.resize(out_img, target_size, interpolation=cv.INTER_AREA)
-
-    os.makedirs(os.path.dirname(image_path), exist_ok=True)
-    return cv.imwrite(image_path, out_img)
-
-
-def _export_illuminant_map_as_image(illuminant_map, image_path, mask=None):
-    if illuminant_map is None:
-        return False
-
-    illuminant_map = np.asarray(illuminant_map, dtype=np.float32)
-    if illuminant_map.ndim != 3 or illuminant_map.shape[2] != 2:
-        return False
-
-    if mask is not None:
-        mask_arr = np.asarray(mask)
-        if mask_arr.ndim == 3 and mask_arr.shape[2] == 1:
-            mask_arr = mask_arr[..., 0]
-        mask_arr = mask_arr.astype(bool)
-        if mask_arr.shape != illuminant_map.shape[:2]:
-            try:
-                mask_arr = cv.resize(mask_arr.astype(np.uint8), (illuminant_map.shape[1], illuminant_map.shape[0]), interpolation=cv.INTER_NEAREST).astype(bool)
-            except Exception:
-                mask_arr = np.ones(illuminant_map.shape[:2], dtype=bool)
-    else:
-        mask_arr = np.ones(illuminant_map.shape[:2], dtype=bool)
-
-    rg = illuminant_map[..., 0]
-    bg = illuminant_map[..., 1]
-    height, width = rg.shape
-
-    rgb = np.zeros((height, width, 3), dtype=np.float32)
-    rgb[..., 0] = (rg - 1.0) * 0.5 + 0.5
-    rgb[..., 1] = 1.0
-    rgb[..., 2] = (bg - 1.0) * 0.5 + 0.5
-
-    rgb = np.clip(rgb, 0.0, 1.0)
-
-    if mask_arr.shape == (height, width):
-        rgb[~mask_arr] = 0.0
-
-    out_img = (rgb * 255.0).astype(np.uint8)
-    # Convert RGB to BGR before saving with OpenCV
-    out_img = cv.cvtColor(out_img, cv.COLOR_RGB2BGR)
 
     os.makedirs(os.path.dirname(image_path), exist_ok=True)
     return cv.imwrite(image_path, out_img)
@@ -621,23 +542,7 @@ def _prepare_export_paths(output_path, dataset_name, algo_name, variant_name, im
 
 
 class Evaluator:
-    def __init__(self, datasets, algorithms, camera=None, output_path="results.json", process_masked=False, num_workers=1, saturation_mask="none", color_checker="all", export_corrected_images=False, export_input_images=False, export_resize_factor=None, max_images=None):
-        """
-        Args:
-            datasets: list of dataset name strings, e.g. ["gehler", "nus8"]
-            algorithms: list of (algorithm_name, variant_name) tuples,
-                        e.g. [("gray_world", "naive"), ("max_rgb", "99_percentile")]
-            camera: if specified, only process images from this specific camera (optional)
-            output_path: path for the output JSON file
-            process_masked: if True, algorithms will exclude masked pixels (e.g. checkerboard)
-            num_workers: number of processes to use (default: 1)
-            saturation_mask: saturation mask string configuration for dataset providers
-            color_checker: color checker configuration ("all" or "patch")
-            export_corrected_images: if True, save corrected raw images to disk during evaluation
-            export_input_images: if True, save the input display image to disk for visualization
-            export_resize_factor: optional integer downsample factor for exported images (powers of two)
-            max_images: optional integer limit for the number of images to process per dataset
-        """
+    def __init__(self, datasets, algorithms, camera=None, output_path="results.json", process_masked=False, num_workers=1, saturation_mask="none", color_checker="all", export_corrected_images=False, export_input_images=False, export_resize_factor=None, max_images=None, resume=False):
         self.datasets = datasets
         self.algorithms = algorithms
         self.camera = camera
@@ -650,47 +555,33 @@ class Evaluator:
         self.export_input_images = export_input_images
         self.export_resize_factor = export_resize_factor
         self.max_images = max_images
+        self.resume = resume
 
-        if self.export_resize_factor is not None:
-            if self.export_resize_factor not in [2, 4, 8, 16, 32, 64]:
-                raise ValueError("export_resize_factor must be a power of two, e.g. 2, 4, 8, 16, 32, 64")
+        if self.export_resize_factor is not None and self.export_resize_factor not in [2, 4, 8, 16, 32, 64]:
+            raise ValueError("export_resize_factor must be a power of two, e.g. 2, 4, 8, 16, 32, 64")
 
-        if self.max_images is not None:
-            if not isinstance(self.max_images, int) or self.max_images <= 0:
-                raise ValueError("max_images must be a positive integer")
+        if self.max_images is not None and (not isinstance(self.max_images, int) or self.max_images <= 0):
+            raise ValueError("max_images must be a positive integer")
 
         if not isinstance(self.export_input_images, bool):
             raise ValueError("export_input_images must be a boolean value")
-        
+
         has_nus_datasets = any(ds in ("nus8", "nus8extended") for ds in datasets)
         has_gehler_dataset = any(ds == "gehler" for ds in datasets)
 
-        if not process_masked:
-            if saturation_mask != "none" or color_checker != "all":
-                raise ValueError("saturation_mask and color_checker parameters are only valid when process_masked is enabled")
+        if not process_masked and (saturation_mask != "none" or color_checker != "all"):
+            raise ValueError("saturation_mask and color_checker parameters are only valid when process_masked is enabled")
 
         if saturation_mask != "none" and not (has_nus_datasets or has_gehler_dataset):
             print("Warning: saturation_mask ignored because no nus8, nus8extended, or gehler datasets are present")
 
         if color_checker != "all" and not (has_nus_datasets or has_gehler_dataset):
             print("Warning: color_checker ignored because no nus8, nus8extended, or gehler datasets are present")
-        
-        saturation_masks = {
-            'none': None,
-            'raw_all_98': ('raw', 'all', 0.98),
-            'raw_all_100': ('raw', 'all', 1.0),
-            'raw_any_98': ('raw', 'any', 0.98),
-            'raw_any_100': ('raw', 'any', 1.0),
-            'normalized_all_98': ('normalized', 'all', 0.98),
-            'normalized_all_100': ('normalized', 'all', 1.0),
-            'normalized_any_98': ('normalized', 'any', 0.98),
-            'normalized_any_100': ('normalized', 'any', 1.0),
-        }
-        if saturation_mask not in saturation_masks:
-            raise ValueError(f"Invalid saturation mask: {saturation_mask}")
-        self.saturation_mask_tuple = saturation_masks[saturation_mask]
 
-        # Validate inputs
+        if saturation_mask not in _SATURATION_MASKS:
+            raise ValueError(f"Invalid saturation mask: {saturation_mask}")
+        self.saturation_mask_tuple = _SATURATION_MASKS[saturation_mask]
+
         for ds in datasets:
             if ds not in DATASET_PROVIDERS:
                 raise ValueError(f"Unknown dataset: {ds}. Valid: {list(DATASET_PROVIDERS.keys())}")
@@ -699,9 +590,25 @@ class Evaluator:
                 raise ValueError(f"Unknown algorithm variant: ({algo}, {variant}). Valid: {list(ALGORITHM_REGISTRY.keys())}")
 
     def run(self):
-        """Run all evaluations and save results to JSON."""
+        checkpoint_path = os.path.splitext(self.output_path)[0] + "_checkpoint.jsonl"
+
         all_results = []
-        tasks = []
+        done_set = set()
+        if self.resume and os.path.exists(checkpoint_path):
+            with open(checkpoint_path) as _f:
+                for _line in _f:
+                    _line = _line.strip()
+                    if not _line:
+                        continue
+                    try:
+                        _entry = json.loads(_line)
+                        _key = _entry.get("_checkpoint_key")
+                        if _key:
+                            done_set.add(tuple(_key))
+                        all_results.append(_entry)
+                    except json.JSONDecodeError:
+                        pass
+            print(f"Resuming: loaded {len(all_results)} completed results from {checkpoint_path}")
 
         print(f"\nConfiguration:")
         print(f"  Workers: {self.num_workers}")
@@ -713,50 +620,62 @@ class Evaluator:
         if self.camera:
             print(f"  Camera Filter: {self.camera}")
 
+        tasks = []
         for dataset_name in self.datasets:
             if dataset_name in ("nus8", "nus8extended", "gehler"):
                 data_provider = DATASET_PROVIDERS[dataset_name](saturation_mask=self.saturation_mask_tuple, color_checker=self.color_checker_str)
             else:
                 data_provider = DATASET_PROVIDERS[dataset_name]()
             num_dataset_images = len(data_provider)
-            
-            # Identify indices matching the camera filter
-            matching_indices = []
-            for idx in range(num_dataset_images):
-                camera = _extract_camera(dataset_name, data_provider, idx)
-                if not self.camera or camera == self.camera:
-                    matching_indices.append(idx)
+
+            matching_indices = [
+                idx for idx in range(num_dataset_images)
+                if not self.camera or _extract_camera(dataset_name, data_provider, idx) == self.camera
+            ]
             if self.max_images is not None:
                 matching_indices = matching_indices[:self.max_images]
-            
-            num_matching = len(matching_indices)
-            print(f"Queuing Dataset: {dataset_name} ({num_matching}/{num_dataset_images} images selected for evaluation)")
+
+            print(f"Queuing Dataset: {dataset_name} ({len(matching_indices)}/{num_dataset_images} images selected for evaluation)")
 
             for algo_name, variant_name in self.algorithms:
                 for idx in matching_indices:
                     tasks.append((dataset_name, algo_name, variant_name, idx, self.process_masked, self.camera, self.saturation_mask_str, self.color_checker_str, self.export_corrected_images, self.export_input_images, self.export_resize_factor, self.output_path))
-        total_tasks = len(tasks)
-        processed_count = 0
 
-        print(f"Total tasks in queue: {total_tasks}")
-
-        if self.num_workers > 1:
-            with ProcessPoolExecutor(max_workers=self.num_workers) as executor:
-                futures = {executor.submit(_worker_fn, task): task for task in tasks}
-                for future in tqdm(as_completed(futures), total=total_tasks, desc="Evaluating", unit="task"):
-                    result = future.result()
-                    if result:
-                        all_results.append(result)
-                        if result.get("errors") is None and "error_message" in result:
-                             print(f"\n    ERROR: {result['error_message']}")
+        if done_set:
+            tasks_to_run = [t for t in tasks if (t[0], t[1], t[2], t[3]) not in done_set]
+            skipped = len(tasks) - len(tasks_to_run)
+            if skipped:
+                print(f"Skipping {skipped} already-completed tasks (resume mode)")
         else:
-            # Sequential execution
-            for task in tqdm(tasks, desc="Evaluating", unit="task"):
-                result = _worker_fn(task)
-                if result:
-                    all_results.append(result)
-                    if result.get("errors") is None and "error_message" in result:
-                         print(f"\n    ERROR: {result['error_message']}")
+            tasks_to_run = tasks
+
+        print(f"Total tasks to run: {len(tasks_to_run)}")
+
+        def _record(result, checkpoint_f):
+            all_results.append(result)
+            if checkpoint_f is not None:
+                checkpoint_f.write(json.dumps(result) + "\n")
+                checkpoint_f.flush()
+            if result.get("errors") is None and "error_message" in result:
+                print(f"\n    ERROR: {result['error_message']}")
+
+        checkpoint_f = open(checkpoint_path, "a") if tasks_to_run else None
+        try:
+            if self.num_workers > 1:
+                with ProcessPoolExecutor(max_workers=self.num_workers) as executor:
+                    futures = {executor.submit(_worker_fn, task): task for task in tasks_to_run}
+                    for future in tqdm(as_completed(futures), total=len(tasks_to_run), desc="Evaluating", unit="task"):
+                        result = future.result()
+                        if result:
+                            _record(result, checkpoint_f)
+            else:
+                for task in tqdm(tasks_to_run, desc="Evaluating", unit="task"):
+                    result = _worker_fn(task)
+                    if result:
+                        _record(result, checkpoint_f)
+        finally:
+            if checkpoint_f is not None:
+                checkpoint_f.close()
 
         output = {
             "metadata": {
@@ -765,11 +684,11 @@ class Evaluator:
                 "algorithms": [[a, v] for a, v in self.algorithms],
                 "process_masked": self.process_masked,
                 "saturation_mask": self.saturation_mask_str,
-            "color_checker": self.color_checker_str,
-            "export_corrected_images": self.export_corrected_images,
-            "export_input_images": self.export_input_images,
-            "export_resize_factor": self.export_resize_factor,
-            "max_images": self.max_images,
+                "color_checker": self.color_checker_str,
+                "export_corrected_images": self.export_corrected_images,
+                "export_input_images": self.export_input_images,
+                "export_resize_factor": self.export_resize_factor,
+                "max_images": self.max_images,
             },
             "results": all_results,
         }

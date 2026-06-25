@@ -1,31 +1,21 @@
 import cv2 as cv
 import numpy as np
-from datasets.data import Data
 from white_balance_algorithms.white_balance_algorithm import WhiteBalanceAlgorithm
 
 class MaxRGBGaussian(WhiteBalanceAlgorithm):
     def __init__(self):
-        super().__init__()
         self.kernel_size = 5
         self.sigma = 1
-    
+
     def _estimate(self, data, process_masked=False):
-        image = data.get_raw_image()  # image is normalized to 0-1
-        # Apply Gaussian blur to the image (spatial op on full image)
-        blurred = cv.GaussianBlur(image, (self.kernel_size, self.kernel_size), self.sigma)
-        # Extract valid pixels from the blurred result
-        pixels = self._get_pixels(blurred, data, process_masked)  # (N, 3)
-        b_max = np.max(pixels[:, 0])
-        g_max = np.max(pixels[:, 1])
-        r_max = np.max(pixels[:, 2])
-        # Avoid division by zero
+        blurred = cv.GaussianBlur(data.get_raw_image(), (self.kernel_size, self.kernel_size), self.sigma)
+        pixels = self._get_pixels(blurred, data, process_masked)
+        b_max, g_max, r_max = pixels.max(axis=0)
         if g_max == 0:
             g_max = 1e-6
-        r_g = r_max / g_max
-        b_g = b_max / g_max
         return {
-            "single_illuminant": (r_g, b_g),
+            "single_illuminant": (r_max / g_max, b_max / g_max),
             "multi_illuminants": None,
             "illuminant_map": None,
-            "estimated_srgb_image": None
+            "estimated_srgb_image": None,
         }

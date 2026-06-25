@@ -1,11 +1,7 @@
-import cv2 as cv
 import numpy as np
 from datasets.data import Data
 
 class WhiteBalanceAlgorithm:
-    def __init__(self):
-        super().__init__()
-    
     def estimate(self, data, process_masked=False):
         estimations = self._estimate(data, process_masked)
         raw_image = data.get_raw_image()
@@ -24,20 +20,14 @@ class WhiteBalanceAlgorithm:
                 estimations["multi_illuminant_corrected_raw_image"] = self._apply_von_kries_map(raw_image, estimations["illuminant_map"])
 
         return estimations
-    
+
     def _estimate(self, data, process_masked=False):
-        raise NotImplementedError("This method should be implemented by subclasses")
+        raise NotImplementedError
 
     def _get_pixels(self, image, data, process_masked):
-        """Helper: returns (N, 3) array of valid pixels based on mask.
-        If process_masked=True and data has a mask, returns only unmasked pixels.
-        Otherwise returns all pixels reshaped to (H*W, 3).
-        """
         if process_masked and data.get_mask() is not None:
-            mask = data.get_mask()  # (H, W) boolean, True=valid
-            return image[mask]  # (N, 3)
-        else:
-            return image.reshape(-1, 3)  # (H*W, 3)
+            return image[data.get_mask()]
+        return image.reshape(-1, 3)
 
     def _apply_von_kries_single(self, raw_image, single_illuminant):
         try:
@@ -45,22 +35,19 @@ class WhiteBalanceAlgorithm:
             r_scale = 1.0 / float(r_g) if float(r_g) != 0 else 0.0
             b_scale = 1.0 / float(b_g) if float(b_g) != 0 else 0.0
             scale = np.array([b_scale, 1.0, r_scale], dtype=np.float32)
-            corrected = raw_image.astype(np.float32) * scale.reshape((1, 1, 3))
-            return np.clip(corrected, 0.0, 1.0)
+            return np.clip(raw_image.astype(np.float32) * scale.reshape((1, 1, 3)), 0.0, 1.0)
         except Exception:
             return None
 
     def _apply_von_kries_map(self, raw_image, illuminant_map):
         if illuminant_map is None or raw_image is None:
             return None
-
         if illuminant_map.ndim == 3:
             if illuminant_map.shape[2] == 3:
                 illuminant = illuminant_map.astype(np.float32)
                 with np.errstate(divide='ignore', invalid='ignore'):
                     inv_illuminant = np.where(illuminant != 0, 1.0 / illuminant, 0.0)
-                corrected = raw_image.astype(np.float32) * inv_illuminant
-                return np.clip(corrected, 0.0, 1.0)
+                return np.clip(raw_image.astype(np.float32) * inv_illuminant, 0.0, 1.0)
             elif illuminant_map.shape[2] == 2:
                 r_g = illuminant_map[..., 0].astype(np.float32)
                 b_g = illuminant_map[..., 1].astype(np.float32)
@@ -68,7 +55,5 @@ class WhiteBalanceAlgorithm:
                     inv_r = np.where(r_g != 0, 1.0 / r_g, 0.0)
                     inv_b = np.where(b_g != 0, 1.0 / b_g, 0.0)
                 inv_map = np.stack([inv_b, np.ones_like(inv_b), inv_r], axis=-1)
-                corrected = raw_image.astype(np.float32) * inv_map
-                return np.clip(corrected, 0.0, 1.0)
-
+                return np.clip(raw_image.astype(np.float32) * inv_map, 0.0, 1.0)
         return None
