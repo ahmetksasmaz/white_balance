@@ -106,25 +106,27 @@ class Data:
         est_single = estimations.get("single_illuminant")
         est_map = estimations.get("illuminant_map")
 
-        if est_single is not None and len(gt_illuminants) == 1 and not self.multi_illuminant:
-            errors_metrics["single_illuminant_errors"] = SingleIlluminantErrorMetrics(gt_illuminants[0]).errors(est_single)
-
-        if est_single is not None and self.multi_illuminant:
-            if gt_map is None:
-                print("Warning: Multi-illuminant ground truth map unavailable; cannot compute multi-illuminant errors from single illuminant estimation.")
+        if est_map is not None:
+            # Algorithm produces a map: always compare map vs map using mean angular error.
+            # If GT has only a single illuminant, build a flat map so the comparison is still pixel-wise.
+            if gt_map is not None:
+                effective_gt_map = gt_map
+            elif len(gt_illuminants) == 1:
+                effective_gt_map = self._build_flat_illuminant_map(gt_illuminants[0], reference_map=est_map)
             else:
+                effective_gt_map = None
+            if effective_gt_map is not None:
+                errors_metrics["multi_illuminant_errors"] = MultiIlluminantErrorMetrics(gt_illuminants, effective_gt_map).errors(None, est_map)
+            else:
+                print("Warning: No ground truth available to compare against estimated illuminant map.")
+        elif est_single is not None:
+            if not self.multi_illuminant and len(gt_illuminants) == 1:
+                errors_metrics["single_illuminant_errors"] = SingleIlluminantErrorMetrics(gt_illuminants[0]).errors(est_single)
+            elif self.multi_illuminant and gt_map is not None:
                 flat_est_map = self._build_flat_illuminant_map(est_single, reference_map=gt_map)
                 errors_metrics["multi_illuminant_errors"] = MultiIlluminantErrorMetrics(gt_illuminants, gt_map).errors(None, flat_est_map)
-
-        if est_map is not None and self.multi_illuminant:
-            if gt_map is None:
-                print("Warning: Ground truth illuminant map unavailable; cannot compute multi-illuminant errors.")
             else:
-                errors_metrics["multi_illuminant_errors"] = MultiIlluminantErrorMetrics(gt_illuminants, gt_map).errors(None, est_map)
-
-        if est_map is not None and not self.multi_illuminant and len(gt_illuminants) == 1:
-            flat_gt_map = self._build_flat_illuminant_map(gt_illuminants[0], reference_map=est_map)
-            errors_metrics["multi_illuminant_errors"] = MultiIlluminantErrorMetrics(gt_illuminants, flat_gt_map).errors(None, est_map)
+                print("Warning: Multi-illuminant ground truth map unavailable; cannot compare single-illuminant estimation against multi-illuminant GT.")
 
         if estimations.get("estimated_srgb_image") is not None:
             if self.sensor_linear:

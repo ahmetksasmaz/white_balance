@@ -9,6 +9,7 @@ import numpy as np
 from tqdm import tqdm
 
 from datasets.data import Data
+from intermediate_exporter import IntermediateExporter
 from datasets.cubepp.cubepp_dataprovider import CubePPDataProvider
 from datasets.lsmi.lsmi_dataprovider import LSMIDataProvider
 from datasets.gehler.gehler_dataprovider import GehlerDataProvider
@@ -166,18 +167,21 @@ def _worker_fn(task_info):
         data.set_camera(camera)
         image_name = data.get_image_name()
 
-        estimations = algorithm.estimate(data, process_masked=process_masked)
-        error_metrics = data.compute_error_metrics(estimations)
-
-        all_data = data.get_data()
-
         exported_paths = {
             "input_image_path": None,
             "masked_grid_path": None,
         }
         export_dir = None
+        intermediate_exporter = None
         if export_corrected_images or export_input_images:
             export_dir = _prepare_export_paths(output_path, dataset_name, algo_name, variant_name, image_name)
+            intermediate_dir = os.path.join(export_dir, "intermediate", f"{dataset_name}_{image_name}_{algo_name}_{variant_name}")
+            intermediate_exporter = IntermediateExporter(intermediate_dir)
+
+        estimations = algorithm.estimate(data, process_masked=process_masked, intermediate_exporter=intermediate_exporter)
+        error_metrics = data.compute_error_metrics(estimations)
+
+        all_data = data.get_data()
 
         if export_input_images:
             input_image = data.get_raw_image() if data.get_raw_image() is not None else data.get_srgb_image()
@@ -370,7 +374,7 @@ def _prepare_illumination_map_display(illuminant_map, mask=None, size=200):
         bg = illuminant_map[..., 1]
         rgb = np.zeros((rg.shape[0], rg.shape[1], 3), dtype=np.float32)
         rgb[..., 0] = (rg - 1.0) * 0.5 + 0.5
-        rgb[..., 1] = 1.0
+        rgb[..., 1] = 0.5
         rgb[..., 2] = (bg - 1.0) * 0.5 + 0.5
     else:
         rgb = illuminant_map.astype(np.float32)

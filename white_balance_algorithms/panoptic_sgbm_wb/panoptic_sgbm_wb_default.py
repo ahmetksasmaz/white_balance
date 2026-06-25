@@ -89,14 +89,46 @@ def normalize_vector_field(vectors: np.ndarray) -> np.ndarray:
     return vectors / norm
 
 
+class _NumpyPCA1:
+    """
+    1-component PCA for 2-channel data using numpy only.
+    Avoids sklearn's BLAS matmul which triggers spurious FP warnings on macOS
+    Accelerate when operating on large arrays with many near-zero rows.
+    The projection uses np.einsum (scalar dot per row) instead of a large matmul.
+    """
+
+    def __init__(self):
+        self.mean_ = np.zeros(2, dtype=np.float64)
+        self.components_ = np.zeros((1, 2), dtype=np.float64)
+
+    def fit_transform(self, X: np.ndarray) -> np.ndarray:
+        X64 = np.asarray(X, dtype=np.float64)
+        self.mean_ = X64.mean(axis=0)
+        centered = X64 - self.mean_
+        # 2×2 covariance avoids any large matmul
+        cov = np.cov(centered.T)
+        eigenvalues, eigenvectors = np.linalg.eigh(cov)
+        # eigh returns ascending order; take last (largest) eigenvector
+        self.components_ = eigenvectors[:, -1:].T  # shape (1, 2)
+        return np.einsum('ij,j->i', centered, self.components_[0])[:, np.newaxis].astype(np.float32)
+
+    def transform(self, X: np.ndarray) -> np.ndarray:
+        X64 = np.asarray(X, dtype=np.float64)
+        centered = X64 - self.mean_
+        return np.einsum('ij,j->i', centered, self.components_[0])[:, np.newaxis].astype(np.float32)
+
+    def inverse_transform(self, X: np.ndarray) -> np.ndarray:
+        X = np.asarray(X, dtype=np.float64)
+        if X.ndim == 1:
+            X = X.reshape(-1, 1)
+        return (np.einsum('ij,jk->ik', X, self.components_) + self.mean_).astype(np.float32)
+
+
 def make_dummy_pca():
     class DummyPCA:
         def __init__(self):
             self.components_ = np.zeros((1, 2), dtype=np.float32)
             self.mean_ = np.zeros(2, dtype=np.float32)
-
-        def fit(self, X):
-            return self
 
         def fit_transform(self, X):
             return np.zeros((X.shape[0], 1), dtype=np.float32)
@@ -117,7 +149,7 @@ def create_label_space(dtm_field: np.ndarray, num_labels: int = 16):
     flat_dtm = np.clip(np.nan_to_num(dtm_field.reshape(-1, 2), nan=0.0, posinf=0.0, neginf=0.0), -20.0, 20.0)
     if flat_dtm.size == 0 or np.allclose(flat_dtm, flat_dtm[0], atol=1e-9) or np.allclose(np.var(flat_dtm, axis=0), 0.0, atol=1e-12):
         return np.zeros(num_labels, dtype=np.float32), make_dummy_pca()
-    pca = PCA(n_components=1)
+    pca = _NumpyPCA1()
     projected = np.nan_to_num(pca.fit_transform(flat_dtm), nan=0.0, posinf=0.0, neginf=0.0)
     min_val, max_val = projected.min(), projected.max()
     labels_1d = np.zeros(num_labels, dtype=np.float32) if np.isclose(min_val, max_val, atol=1e-12) else np.linspace(min_val, max_val, num_labels).astype(np.float32)
@@ -291,7 +323,12 @@ class PanopticSGBMWB(WhiteBalanceAlgorithm):
         if raw_image is None:
             return {"single_illuminant": None, "multi_illuminants": None, "illuminant_map": None, "estimated_srgb_image": None}
 
+        exporter = getattr(self, "_intermediate_exporter", None)
+
         raw_bgr = np.asarray(raw_image, dtype=np.float32)
+        if process_masked and data.get_mask() is not None:
+            raw_bgr = raw_bgr.copy()
+            raw_bgr[~data.get_mask()] = 0
         rgb_image = self._prepare_image(raw_bgr)
         height, width = rgb_image.shape[:2]
 
@@ -301,22 +338,80 @@ class PanopticSGBMWB(WhiteBalanceAlgorithm):
             return {"single_illuminant": None, "multi_illuminants": None, "illuminant_map": None, "estimated_srgb_image": None}
 
         best_instance = merge_masks(masks, height, width)
+
+        if exporter is not None:
+            exporter.save("01_sam_segmentation", self._colorize_segmentation(best_instance), is_linear=False)
+
         sgbm_img, _ = resize_for_sgbm(rgb_image, max_width=self.sgbm_max_width, max_height=self.sgbm_max_height)
         log_chroma_small = log_chromaticity(sgbm_img)
         resized_instance = cv.resize(best_instance.astype(np.int32), (sgbm_img.shape[1], sgbm_img.shape[0]), interpolation=cv.INTER_NEAREST)
-        illuminant_map_log_small = self._run_sgbm_color_constancy(log_chroma_small, resized_instance)
+        illuminant_map_log_small = self._run_sgbm_color_constancy(log_chroma_small, resized_instance, exporter=exporter)
         illuminant_map_log = cv.resize(illuminant_map_log_small, (width, height), interpolation=cv.INTER_LINEAR)
         illuminant_map_linear = convert_log_chroma_to_linear(illuminant_map_log)
-        estimated_srgb_image = apply_sgbm_white_balance(raw_bgr, illuminant_map_log)
 
-        return {"single_illuminant": None, "multi_illuminants": None, "illuminant_map": illuminant_map_linear, "estimated_srgb_image": estimated_srgb_image}
+        if exporter is not None:
+            exporter.save("02_sgbm_illuminant_map", illuminant_map_linear, is_linear=False, normalize=True)
 
-    def _run_sgbm_color_constancy(self, log_chroma_img: np.ndarray, mask: np.ndarray) -> np.ndarray:
+        return {"single_illuminant": None, "multi_illuminants": None, "illuminant_map": illuminant_map_linear}
+
+    @staticmethod
+    def _colorize_segmentation(instance_map: np.ndarray) -> np.ndarray:
+        rng = np.random.default_rng(42)
+        unique_ids = np.unique(instance_map)
+        colors = {i: rng.integers(60, 256, size=3, dtype=np.uint8).tolist() for i in unique_ids if i >= 0}
+        vis = np.zeros((*instance_map.shape, 3), dtype=np.uint8)
+        for i, color in colors.items():
+            vis[instance_map == i] = color
+        return vis.astype(np.float32) / 255.0
+
+    def _run_sgbm_color_constancy(self, log_chroma_img: np.ndarray, mask: np.ndarray, exporter=None) -> np.ndarray:
         dtm_field = self._compute_directional_dtm(log_chroma_img, mask)
+
+        if exporter is not None:
+            exporter.save("03_dtm_field", dtm_field, is_linear=False, normalize=True)
+
         labels_1d, pca = create_label_space(dtm_field, num_labels=self.num_labels)
+
+        if exporter is not None:
+            exporter.save("04_pca_labels", self._visualize_pca_labels(dtm_field, labels_1d, pca), is_linear=False)
+
         data_cost = compute_data_cost(dtm_field, labels_1d, pca)
         aggregated_cost = semi_global_matching(data_cost, mask, direction_count=self.sgbm_directions, P1=0.02, P2=0.5)
         return winner_take_all(aggregated_cost, labels_1d, pca)
+
+    @staticmethod
+    def _visualize_pca_labels(dtm_field: np.ndarray, labels_1d: np.ndarray, pca) -> np.ndarray:
+        flat_dtm = np.clip(np.nan_to_num(dtm_field.reshape(-1, 2), nan=0.0, posinf=0.0, neginf=0.0), -20.0, 20.0)
+        projected = pca.transform(flat_dtm).ravel().astype(np.float32)
+
+        h, w = 120, 512
+        canvas = np.ones((h, w, 3), dtype=np.uint8) * 30
+
+        if projected.size == 0 or labels_1d.size == 0:
+            return canvas.astype(np.float32) / 255.0
+
+        p_min, p_max = projected.min(), projected.max()
+        span = p_max - p_min if p_max > p_min else 1.0
+
+        # Histogram of projected values
+        bins = 128
+        hist, edges = np.histogram(projected, bins=bins, range=(p_min, p_max))
+        hist_norm = hist / (hist.max() + 1e-6)
+        bar_h = h - 30
+        for i, v in enumerate(hist_norm):
+            x0 = int(i / bins * w)
+            x1 = int((i + 1) / bins * w)
+            bar_top = bar_h - int(v * bar_h)
+            canvas[bar_top:bar_h, x0:x1] = (60, 120, 200)
+
+        # Label tick marks
+        for lv in labels_1d:
+            x = int((lv - p_min) / span * (w - 1))
+            x = max(0, min(w - 1, x))
+            canvas[bar_h:bar_h + 4, max(0, x - 1):x + 2] = (80, 200, 80)
+            canvas[bar_h + 4:h, max(0, x - 1):x + 2] = (40, 160, 40)
+
+        return canvas.astype(np.float32) / 255.0
 
     def _compute_directional_dtm(self, log_chroma_img: np.ndarray, mask: np.ndarray) -> np.ndarray:
         dtm_field = np.zeros_like(log_chroma_img)

@@ -6,6 +6,21 @@ from ..dataprovider import DataProvider
 from ..data import Data
 from .configuration import *
 
+
+def _build_mcc_mask(mcc_coord: dict, height: int, width: int) -> np.ndarray:
+    # MCCCoord is annotated at 2x resolution (original sensor output).
+    # Divide all coordinates by 2 to map them to the stored TIFF resolution.
+    mask = np.ones((height, width), dtype=np.uint8)
+    for quad in mcc_coord.values():
+        pts = np.array(
+            [[float(p[0]) / 2.0, float(p[1]) / 2.0] for p in quad],
+            dtype=np.float32,
+        )
+        pts = pts.reshape((-1, 1, 2)).astype(np.int32)
+        cv.fillPoly(mask, [pts], color=0)
+    return mask.astype(bool)
+
+
 class LSMIDataProvider(DataProvider):
     def __init__(self, override_dimensions=(-1, -1)):
         super().__init__(override_dimensions)
@@ -51,19 +66,30 @@ class LSMIDataProvider(DataProvider):
         raw_image = np.clip((raw_image - BLACK_LEVEL) / (SATURATION_LEVEL - BLACK_LEVEL), 0, 1)
         data.set_quantization(SATURATION_LEVEL - BLACK_LEVEL)
 
+        metadata = self.metadatas[index]
+        mcc_coord = metadata["placeInfo"].get("MCCCoord", {})
+        orig_h, orig_w = raw_image.shape[:2]
+        mask = _build_mcc_mask(mcc_coord, orig_h, orig_w) if mcc_coord else np.ones((orig_h, orig_w), dtype=bool)
+
         if self.override_dimensions[0] > 0 and self.override_dimensions[1] > 0:
             raw_image = cv.resize(raw_image, self.override_dimensions)
+            mask = cv.resize(mask.astype(np.uint8), self.override_dimensions, interpolation=cv.INTER_NEAREST).astype(bool)
         elif self.override_dimensions[0] > 0:
             aspect_ratio = raw_image.shape[1] / raw_image.shape[0]
             new_width = self.override_dimensions[0]
-            raw_image = cv.resize(raw_image, (new_width, int(new_width / aspect_ratio)))
+            new_size = (new_width, int(new_width / aspect_ratio))
+            raw_image = cv.resize(raw_image, new_size)
+            mask = cv.resize(mask.astype(np.uint8), new_size, interpolation=cv.INTER_NEAREST).astype(bool)
         elif self.override_dimensions[1] > 0:
             aspect_ratio = raw_image.shape[1] / raw_image.shape[0]
             new_height = self.override_dimensions[1]
-            raw_image = cv.resize(raw_image, (int(new_height * aspect_ratio), new_height))
-        data.set_raw_image(raw_image)
+            new_size = (int(new_height * aspect_ratio), new_height)
+            raw_image = cv.resize(raw_image, new_size)
+            mask = cv.resize(mask.astype(np.uint8), new_size, interpolation=cv.INTER_NEAREST).astype(bool)
 
-        metadata = self.metadatas[index]
+        data.set_raw_image(raw_image)
+        data.set_mask(mask)
+
         illuminants = []
         for illuminant in metadata["illuminants"]:
             illuminant_rgb = np.array(illuminant, dtype=np.float32)

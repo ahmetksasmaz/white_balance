@@ -29,7 +29,7 @@
   //   svwb_unet:default
   //   panoptic_sgbm_wb:default
   "algorithms": [
-    "svwb_unet:default"
+    "panoptic_sgbm_wb:default"
   ],
 
   // Output JSON results file path.
