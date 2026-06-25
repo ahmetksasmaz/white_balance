@@ -324,7 +324,9 @@ def _apply_von_kries_map(raw_image, illuminant_map):
 def _get_corrected_raw_image_from_estimations(raw_image, estimations):
     if estimations is None:
         return None
-    corrected_raw = estimations.get("multi_illuminant_corrected_raw_image") or estimations.get("single_illuminant_corrected_raw_image")
+    corrected_raw = estimations.get("multi_illuminant_corrected_raw_image")
+    if corrected_raw is None:
+        corrected_raw = estimations.get("single_illuminant_corrected_raw_image")
     if corrected_raw is not None:
         return corrected_raw
     illuminant_map = estimations.get("illuminant_map")
@@ -658,6 +660,8 @@ class Evaluator:
                 checkpoint_f.flush()
             if result.get("errors") is None and "error_message" in result:
                 print(f"\n    ERROR: {result['error_message']}")
+                if result.get("traceback"):
+                    print(result["traceback"])
 
         checkpoint_f = open(checkpoint_path, "a") if tasks_to_run else None
         try:

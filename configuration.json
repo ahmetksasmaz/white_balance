@@ -29,12 +29,11 @@
   //   svwb_unet:default
   //   panoptic_sgbm_wb:default
   "algorithms": [
-    "panoptic_sgbm_wb:default",
     "svwb_unet:default"
   ],
 
   // Output JSON results file path.
-  "output": "results_lsmi.json",
+  "output": "results_panoptic.json",
 
   // Optional camera filter. Use null to process all cameras.
   "camera": null,
@@ -67,7 +66,7 @@
   "export_resize_factor": null,
 
   // Optional per-dataset image limit for quick test runs. Set to 5 for the default test mode behavior.
-  "max_images": 3,
+  "max_images": 20,
 
   // Optional test mode alias. If true and max_images is unspecified, the runner will limit each dataset to 5 images.
   "test_mode": false
