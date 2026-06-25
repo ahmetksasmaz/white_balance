@@ -113,36 +113,96 @@ class Data:
     def is_multi_illuminant(self):
         return self.multi_illuminant
     
+    def _valid_illuminants(self):
+        if self.illuminants is None:
+            return []
+        if isinstance(self.illuminants, dict):
+            return [v for v in self.illuminants.values() if v is not None]
+        if isinstance(self.illuminants, (list, tuple)):
+            return [v for v in self.illuminants if v is not None]
+        return [self.illuminants]
+
+    def _build_flat_illuminant_map(self, single_illuminant, reference_map=None, target_shape=None):
+        if single_illuminant is None:
+            return None
+        r_g, b_g = single_illuminant
+        if reference_map is not None:
+            if reference_map.ndim == 3 and reference_map.shape[2] == 2:
+                flat_map = np.zeros_like(reference_map, dtype=np.float32)
+                flat_map[..., 0] = r_g
+                flat_map[..., 1] = b_g
+                return flat_map
+            if reference_map.ndim == 3 and reference_map.shape[2] == 3:
+                r = np.full(reference_map.shape[:2], r_g, dtype=np.float32)
+                g = np.full(reference_map.shape[:2], 1.0, dtype=np.float32)
+                b = np.full(reference_map.shape[:2], b_g, dtype=np.float32)
+                return np.stack([r, g, b], axis=-1)
+            raise ValueError(f"Unsupported reference illuminant map shape for flat map: {reference_map.shape}")
+        if target_shape is not None:
+            if len(target_shape) == 3 and target_shape[2] == 2:
+                flat_map = np.zeros(target_shape, dtype=np.float32)
+                flat_map[..., 0] = r_g
+                flat_map[..., 1] = b_g
+                return flat_map
+            if len(target_shape) == 3 and target_shape[2] == 3:
+                r = np.full(target_shape[:2], r_g, dtype=np.float32)
+                g = np.full(target_shape[:2], 1.0, dtype=np.float32)
+                b = np.full(target_shape[:2], b_g, dtype=np.float32)
+                return np.stack([r, g, b], axis=-1)
+            raise ValueError(f"Unsupported target shape for flat map: {target_shape}")
+        if self.raw_image is not None:
+            shape = self.raw_image.shape[:2]
+            flat_map = np.zeros((shape[0], shape[1], 2), dtype=np.float32)
+            flat_map[..., 0] = r_g
+            flat_map[..., 1] = b_g
+            return flat_map
+        return None
+
     def compute_error_metrics(self, estimations):
         errors_metrics = {
             "single_illuminant_errors": None,
             "multi_illuminant_errors": None,
             "image_errors": None
         }
-        if estimations["single_illuminant"] is not None:
-            if self.multi_illuminant == True:
-                print("Warning: Single illuminant estimation provided for multi-illuminant data. Taking first illuminant for error computation.")
-            first_gt_illuminant = None
-            if self.illuminants is not None:
-                for key in self.illuminants.keys():
-                    if self.illuminants[key] is not None:
-                        first_gt_illuminant = self.illuminants[key]
-                        break
-            if first_gt_illuminant is None:
-                print("Warning: Ground truth illuminants not available for error computation.")
+
+        gt_illuminants = self._valid_illuminants()
+        gt_map = self.illuminant_map
+        est_single = estimations.get("single_illuminant")
+        est_map = estimations.get("illuminant_map")
+
+        # single-algorithm on single-illuminant data
+        if est_single is not None and len(gt_illuminants) == 1 and not self.multi_illuminant:
+            single_illuminant_metrics = SingleIlluminantErrorMetrics(gt_illuminants[0])
+            errors_metrics["single_illuminant_errors"] = single_illuminant_metrics.errors(est_single)
+
+        # single-algorithm on multi-illuminant data -> evaluate as flat estimated map
+        if est_single is not None and self.multi_illuminant:
+            if gt_map is None:
+                print("Warning: Multi-illuminant ground truth map unavailable; cannot compute multi-illuminant errors from single illuminant estimation.")
             else:
-                single_illuminant_metrics = SingleIlluminantErrorMetrics(first_gt_illuminant)
-                errors_metrics["single_illuminant_errors"] = single_illuminant_metrics.errors(estimations["single_illuminant"])
-        if estimations["multi_illuminants"] is not None:
-            if self.multi_illuminant == False:
-                print("Warning: Multi-illuminant estimation provided for single-illuminant data. Cannot compute multi-illuminant error metrics due to lack of illuminant map.")
+                flat_est_map = self._build_flat_illuminant_map(est_single, reference_map=gt_map)
+                multi_illuminant_metrics = MultiIlluminantErrorMetrics(gt_illuminants, gt_map)
+                errors_metrics["multi_illuminant_errors"] = multi_illuminant_metrics.errors(None, flat_est_map)
+
+        # multi-algorithm on multi-illuminant data
+        if est_map is not None and self.multi_illuminant:
+            if gt_map is None:
+                print("Warning: Ground truth illuminant map unavailable; cannot compute multi-illuminant errors.")
             else:
-                multi_illuminant_metrics = MultiIlluminantErrorMetrics(self.illuminant_map)
-                errors_metrics["multi_illuminant_errors"] = multi_illuminant_metrics.errors(estimations["multi_illuminants"])
-        if estimations["estimated_srgb_image"] is not None:
-            if self.sensor_linear == True:
+                multi_illuminant_metrics = MultiIlluminantErrorMetrics(gt_illuminants, gt_map)
+                errors_metrics["multi_illuminant_errors"] = multi_illuminant_metrics.errors(None, est_map)
+
+        # multi-algorithm on single-illuminant data -> compare estimated map to flat GT map
+        if est_map is not None and not self.multi_illuminant and len(gt_illuminants) == 1:
+            flat_gt_map = self._build_flat_illuminant_map(gt_illuminants[0], reference_map=est_map)
+            multi_illuminant_metrics = MultiIlluminantErrorMetrics(gt_illuminants, flat_gt_map)
+            errors_metrics["multi_illuminant_errors"] = multi_illuminant_metrics.errors(None, est_map)
+
+        if estimations.get("estimated_srgb_image") is not None:
+            if self.sensor_linear:
                 print("Warning: Estimated sRGB image provided for sensor-linear data. Cannot compute image error metrics due to lack of ground truth sRGB image.")
             else:
                 image_metrics = ImageErrorMetrics(self.srgb_image)
                 errors_metrics["image_errors"] = image_metrics.errors(estimations["estimated_srgb_image"])
+
         return errors_metrics

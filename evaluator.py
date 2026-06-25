@@ -181,6 +181,8 @@ def _worker_fn(task_info):
                 data,
                 corrected_raw,
                 estimations.get("single_illuminant"),
+                estimated_illuminant_map=estimations.get("illuminant_map"),
+                gt_illuminant_map=data.get_illuminant_map(),
                 image_size=900,
                 apply_mask=process_masked,
             )
@@ -189,16 +191,6 @@ def _worker_fn(task_info):
                 path = os.path.join(export_dir, filename)
                 if _export_image_array(masked_grid, path, export_resize_factor):
                     exported_paths["masked_grid_path"] = path
-            illuminant_map = estimations.get("illuminant_map")
-            if illuminant_map is not None and export_dir is not None:
-                filename = f"{dataset_name}_{image_name}_{algo_name}_{variant_name}_illuminant_map.png"
-                path = os.path.join(export_dir, filename)
-                if _export_illuminant_map_as_image(illuminant_map, path, data.get_mask() if process_masked else None):
-                    exported_paths["illuminant_map_path"] = path
-
-        single_illuminant_value = estimations.get("single_illuminant")
-        if single_illuminant_value is not None:
-            single_illuminant_value = [str(single_illuminant_value[0]), str(single_illuminant_value[1])]
 
         return {
             "dataset": dataset_name,
@@ -207,9 +199,8 @@ def _worker_fn(task_info):
             "algorithm": algo_name,
             "variant": variant_name,
             "estimations": {
-                "single_illuminant": single_illuminant_value,
+                "single_illuminant": [str(estimations["single_illuminant"][0]), str(estimations["single_illuminant"][1])] if estimations.get("single_illuminant") is not None else None,
                 "masked_grid_path": exported_paths["masked_grid_path"],
-                "illuminant_map_path": exported_paths["illuminant_map_path"],
             },
             "ground_truths": {
                 "illuminants": _serialize_error_metrics(all_data["illuminants"]),
@@ -234,23 +225,33 @@ def _worker_fn(task_info):
 
 
 def _serialize_error_metrics(error_metrics):
-    """Convert error metrics dict to a JSON-safe dict."""
-    result = {}
-    for key, value in error_metrics.items():
-        if value is None:
-            result[key] = None
-        elif isinstance(value, dict):
-            result[key] = {}
-            for k, v in value.items():
-                if hasattr(v, 'item'):  # numpy scalar
-                    result[key][k] = v.item()
-                elif isinstance(v, float):
-                    result[key][k] = v
-                else:
-                    result[key][k] = v
-        else:
-            result[key] = value
-    return result
+    """Convert error metrics, ground truth illuminants, or lists to JSON-safe types."""
+    if error_metrics is None:
+        return None
+    if isinstance(error_metrics, dict):
+        result = {}
+        for key, value in error_metrics.items():
+            if value is None:
+                result[key] = None
+            elif isinstance(value, dict):
+                result[key] = {}
+                for k, v in value.items():
+                    if hasattr(v, 'item'):
+                        result[key][k] = v.item()
+                    elif isinstance(v, float):
+                        result[key][k] = v
+                    else:
+                        result[key][k] = v
+            elif isinstance(value, (list, tuple)):
+                result[key] = [_serialize_error_metrics(v) if isinstance(v, (dict, list, tuple)) else (v.item() if hasattr(v, 'item') else v) for v in value]
+            else:
+                result[key] = value
+        return result
+    if isinstance(error_metrics, (list, tuple)):
+        return [_serialize_error_metrics(v) if isinstance(v, (dict, list, tuple)) else (v.item() if hasattr(v, 'item') else v) for v in error_metrics]
+    if hasattr(error_metrics, 'item'):
+        return error_metrics.item()
+    return error_metrics
 
 
 def _prepare_display_image(image):
@@ -344,9 +345,16 @@ def _get_first_ground_truth_illuminant(data):
     illuminants = data.get_illuminants()
     if illuminants is None:
         return None
-    for value in illuminants.values():
-        if value is not None:
-            return value
+    valid_illuminants = []
+    if hasattr(illuminants, "values"):
+        valid_illuminants = [value for value in illuminants.values() if value is not None]
+    elif isinstance(illuminants, (list, tuple)):
+        valid_illuminants = [value for value in illuminants if value is not None]
+    else:
+        valid_illuminants = [illuminants]
+
+    if len(valid_illuminants) == 1:
+        return valid_illuminants[0]
     return None
 
 
@@ -360,6 +368,40 @@ def _draw_labeled_text(image, text, position, font_scale=0.65, font_thickness=2,
     return labeled
 
 
+def _prepare_illumination_map_display(illuminant_map, mask=None, size=200):
+    if illuminant_map is None:
+        return None
+    illuminant_map = np.asarray(illuminant_map, dtype=np.float32)
+    if illuminant_map.ndim != 3 or illuminant_map.shape[2] not in (2, 3):
+        return None
+
+    if illuminant_map.shape[2] == 2:
+        rg = illuminant_map[..., 0]
+        bg = illuminant_map[..., 1]
+        rgb = np.zeros((rg.shape[0], rg.shape[1], 3), dtype=np.float32)
+        rgb[..., 0] = (rg - 1.0) * 0.5 + 0.5
+        rgb[..., 1] = 1.0
+        rgb[..., 2] = (bg - 1.0) * 0.5 + 0.5
+    else:
+        rgb = illuminant_map.astype(np.float32)
+        norm = np.linalg.norm(rgb, axis=-1, keepdims=True)
+        norm = np.where(norm == 0, 1.0, norm)
+        rgb = rgb / norm
+
+    rgb = np.clip(rgb, 0.0, 1.0)
+
+    if mask is not None:
+        mask_arr = mask.astype(bool) if isinstance(mask, np.ndarray) else np.asarray(mask, dtype=bool)
+        if mask_arr.ndim == 3 and mask_arr.shape[2] == 1:
+            mask_arr = mask_arr[..., 0]
+        if mask_arr.shape == rgb.shape[:2]:
+            rgb[~mask_arr] = 0.0
+
+    thumb = (rgb * 255.0).astype(np.uint8)
+    thumb = cv.resize(thumb, (size, size), interpolation=cv.INTER_AREA)
+    return thumb
+
+
 def _draw_illuminant_label(image, illuminant, label="GT"):
     if image is None or illuminant is None:
         return image
@@ -367,7 +409,7 @@ def _draw_illuminant_label(image, illuminant, label="GT"):
     return _draw_labeled_text(image, text, (10, 25), font_scale=0.7, font_thickness=2)
 
 
-def _get_masked_grid_image(data, corrected_raw, estimated_illuminant, image_size=900, apply_mask=True):
+def _get_masked_grid_image(data, corrected_raw, estimated_illuminant, estimated_illuminant_map=None, gt_illuminant_map=None, image_size=900, apply_mask=True):
     raw_img = data.get_raw_image()
     if raw_img is None:
         return None
@@ -396,14 +438,17 @@ def _get_masked_grid_image(data, corrected_raw, estimated_illuminant, image_size
         if mask_arr is not None:
             corrected_raw[~mask_arr] = 0
 
-    gt_illuminant = _get_first_ground_truth_illuminant(data)
     gt_corrected_raw = None
+    gt_illuminant = _get_first_ground_truth_illuminant(data)
+    gt_illuminant_map = data.get_illuminant_map()
     if gt_illuminant is not None:
         gt_corrected_raw = _apply_von_kries_single(masked_raw, gt_illuminant)
-        if gt_corrected_raw is not None:
-            gt_corrected_raw = gt_corrected_raw.copy()
-            if mask_arr is not None:
-                gt_corrected_raw[~mask_arr] = 0
+    elif gt_illuminant_map is not None:
+        gt_corrected_raw = _apply_von_kries_map(masked_raw, gt_illuminant_map)
+    if gt_corrected_raw is not None:
+        gt_corrected_raw = gt_corrected_raw.copy()
+        if mask_arr is not None:
+            gt_corrected_raw[~mask_arr] = 0
 
     input_data = Data()
     input_data.set_image_name(data.get_image_name())
@@ -461,13 +506,17 @@ def _get_masked_grid_image(data, corrected_raw, estimated_illuminant, image_size
     if gt_corrected_raw is not None:
         gt_display = _draw_labeled_text(gt_display, "Corrected with GT", (10, 25), font_scale=0.7, font_thickness=2)
 
-    if estimated_illuminant is not None:
-        estimated_text = f"({estimated_illuminant[0]:0.2f},{estimated_illuminant[1]:0.2f})"
-        corrected_display = _draw_labeled_text(corrected_display, estimated_text, (10, image_size - 12), font_scale=0.6, font_thickness=2)
+    est_map_cell = _prepare_illumination_map_display(estimated_illuminant_map, mask_arr, size=image_size)
+    if est_map_cell is None:
+        est_map_cell = _blank_cell()
+    else:
+        est_map_cell = _draw_labeled_text(est_map_cell, "Estimated Map", (10, 25), font_scale=0.7, font_thickness=2)
 
-    if gt_illuminant is not None and gt_corrected_raw is not None:
-        gt_text = f"({gt_illuminant[0]:0.2f},{gt_illuminant[1]:0.2f})"
-        gt_display = _draw_labeled_text(gt_display, gt_text, (10, image_size - 12), font_scale=0.6, font_thickness=2)
+    gt_map_cell = _prepare_illumination_map_display(gt_illuminant_map, mask_arr, size=image_size)
+    if gt_map_cell is None:
+        gt_map_cell = _blank_cell()
+    else:
+        gt_map_cell = _draw_labeled_text(gt_map_cell, "GT Map", (10, 25), font_scale=0.7, font_thickness=2)
 
     if input_log.shape[:2] != (image_size, image_size):
         input_log = cv.resize(input_log, (image_size, image_size), interpolation=cv.INTER_AREA)
@@ -488,9 +537,10 @@ def _get_masked_grid_image(data, corrected_raw, estimated_illuminant, image_size
     row1 = np.concatenate([input_display, spacer, corrected_display, spacer, gt_display], axis=1)
     row2 = np.concatenate([input_log, spacer, corrected_log, spacer, gt_log], axis=1)
     row3 = np.concatenate([input_rgb, spacer, corrected_rgb, spacer, gt_rgb], axis=1)
+    row4 = np.concatenate([_blank_cell(), spacer, est_map_cell, spacer, gt_map_cell], axis=1)
 
     row_spacer = np.full((10, row1.shape[1], 3), separator_color, dtype=np.uint8)
-    return np.concatenate([row1, row_spacer, row2, row_spacer, row3], axis=0)
+    return np.concatenate([row1, row_spacer, row2, row_spacer, row3, row_spacer, row4], axis=0)
 
 
 def _export_image_array(image, image_path, resize_factor=None):
@@ -620,10 +670,10 @@ class Evaluator:
                 raise ValueError("saturation_mask and color_checker parameters are only valid when process_masked is enabled")
 
         if saturation_mask != "none" and not (has_nus_datasets or has_gehler_dataset):
-            raise ValueError("saturation_mask is only valid for nus8, nus8extended, and gehler datasets")
+            print("Warning: saturation_mask ignored because no nus8, nus8extended, or gehler datasets are present")
 
         if color_checker != "all" and not (has_nus_datasets or has_gehler_dataset):
-            raise ValueError("color_checker is only valid for nus8, nus8extended, and gehler datasets")
+            print("Warning: color_checker ignored because no nus8, nus8extended, or gehler datasets are present")
         
         saturation_masks = {
             'none': None,

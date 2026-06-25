@@ -115,18 +115,29 @@ class LSMIDataProvider(DataProvider):
         if metadata["illuminant_map_path"] is not None:
             coeff_map = np.load(metadata["illuminant_map_path"])
             coeff_map = coeff_map.astype(np.float32)
+            # Each channel is a coefficient for illuminant with that index
+            # If the image has 2 illuminants, the coeff_map will have 2 channels
+            # If the image has 3 illuminants, the coeff_map will have 3 channels
+            # Illuminant map is a linear combination of the illuminants, weighted by the coefficients in the coeff_map
+            if coeff_map.ndim == 2:
+                coeff_map = coeff_map[..., np.newaxis]
+            illuminant_map = np.zeros((coeff_map.shape[0], coeff_map.shape[1], 2), dtype=np.float32)
+            for i, illuminant in enumerate(illuminants):
+                illuminant_map[..., 0] += coeff_map[..., i] * illuminant[0]
+                illuminant_map[..., 1] += coeff_map[..., i] * illuminant[1]
+
             if self.override_dimensions[0] > 0 and self.override_dimensions[1] > 0:
-                coeff_map = cv.resize(coeff_map, self.override_dimensions)
+                illuminant_map = cv.resize(illuminant_map, self.override_dimensions)
             elif self.override_dimensions[0] > 0:
-                aspect_ratio = coeff_map.shape[1] / coeff_map.shape[0]
+                aspect_ratio = illuminant_map.shape[1] / illuminant_map.shape[0]
                 new_width = self.override_dimensions[0]
                 new_height = int(new_width / aspect_ratio)
-                coeff_map = cv.resize(coeff_map, (new_width, new_height))
+                illuminant_map = cv.resize(illuminant_map, (new_width, new_height))
             elif self.override_dimensions[1] > 0:
-                aspect_ratio = coeff_map.shape[1] / coeff_map.shape[0]
+                aspect_ratio = illuminant_map.shape[1] / illuminant_map.shape[0]
                 new_height = self.override_dimensions[1]
                 new_width = int(new_height * aspect_ratio)
-                coeff_map = cv.resize(coeff_map, (new_width, new_height))
-            data.set_illuminant_map(coeff_map)
+                illuminant_map = cv.resize(illuminant_map, (new_width, new_height))
+            data.set_illuminant_map(illuminant_map)
 
         return data

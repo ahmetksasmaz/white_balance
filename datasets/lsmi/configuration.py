@@ -1,4 +1,5 @@
-ROOT_DIRECTORY = "/arf/scratch/asasmaz/Datasets/LSMI/data"
+# ROOT_DIRECTORY = "/arf/scratch/asasmaz/Datasets/LSMI/data"
+ROOT_DIRECTORY = "/Users/ahmetksasmaz/Library/CloudStorage/GoogleDrive-ahmetksasmaz@gmail.com/My Drive/ceng/MS Thesis/Datasets/LSMI/data"
 IMAGE_EXTENSION = "tiff"
 COEFF_EXTENSION = "npy"
 METADATA_FILENAME = "meta.json"

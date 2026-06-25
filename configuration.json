@@ -1,7 +1,7 @@
 {
   // Dataset names to evaluate. Valid dataset names:
   //   cubepp, lsmi, gehler, nus8, nus8extended, miniature, reallife
-  "datasets": ["reallife", "miniature"],
+  "datasets": ["lsmi"],
 
   // Algorithm and variant pairs in the form algorithm:variant.
   // Valid algorithm variants:
@@ -27,24 +27,23 @@
   //   cheng:prc_0_5
   //   cheng:prc_3
   //   svwb_unet:default
+  //   panoptic_sgbm_wb:default
   "algorithms": [
-    "gray_world:naive",
-    "max_rgb:naive",
-    "shades_of_gray:p3",
+    "panoptic_sgbm_wb:default",
     "svwb_unet:default"
   ],
 
   // Output JSON results file path.
-  "output": "results_miniature_reallife.json",
+  "output": "results_lsmi.json",
 
   // Optional camera filter. Use null to process all cameras.
   "camera": null,
 
   // Number of worker processes, or "max" to use (cpu_count - 2) workers.
-  "workers": "1",
+  "workers": 1,
 
   // Whether to process only masked pixels for algorithms that support masking.
-  "process_masked": false,
+  "process_masked": true,
 
   // Saturation mask option. Valid values:
   //   none
@@ -56,7 +55,7 @@
   //   normalized_all_100
   //   normalized_any_98
   //   normalized_any_100
-  "saturation_mask": "none",
+  "saturation_mask": "raw_any_98",
 
   // Color checker mask type. Valid values: all, patch
   "color_checker": "all",
@@ -68,7 +67,7 @@
   "export_resize_factor": null,
 
   // Optional per-dataset image limit for quick test runs. Set to 5 for the default test mode behavior.
-  "max_images": null,
+  "max_images": 3,
 
   // Optional test mode alias. If true and max_images is unspecified, the runner will limit each dataset to 5 images.
   "test_mode": false
