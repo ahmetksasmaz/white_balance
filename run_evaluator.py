@@ -7,7 +7,7 @@ import re
 from datasets.path_resolver import load_dotenv_if_present, validate_dataset_paths
 load_dotenv_if_present()
 
-from evaluator import Evaluator, DATASET_PROVIDERS, ALGORITHM_REGISTRY
+from evaluator import Evaluator, DATASET_PROVIDERS, ALGORITHM_REGISTRY, VALID_RESIZE_FACTORS
 from reporter import Reporter
 
 
@@ -95,6 +95,10 @@ Command-line arguments override values from configuration.json.
         help='Export corrected raw images and estimated sRGB images to disk during evaluation. If omitted, loaded from configuration file.'
     )
     parser.add_argument(
+        '--input-resize-factor', type=int, default=None, choices=VALID_RESIZE_FACTORS,
+        help='Optional downsample factor for input images before evaluation. If omitted, loaded from configuration file.'
+    )
+    parser.add_argument(
         '--export-resize-factor', type=int, default=None, choices=[2, 4, 8, 16, 32, 64],
         help='Optional downsample factor for exported corrected images and input visualization images (powers of two). If omitted, loaded from configuration file.'
     )
@@ -125,6 +129,7 @@ Command-line arguments override values from configuration.json.
     process_masked = normalize_bool(get_config_value(args, config, 'process_masked', False))
     saturation_mask = get_config_value(args, config, 'saturation_mask', 'none')
     color_checker = get_config_value(args, config, 'color_checker', 'all')
+    input_resize_factor = get_config_value(args, config, 'input_resize_factor', None)
     export_corrected_images = normalize_bool(get_config_value(args, config, 'export_corrected_images', False))
     export_input_images = normalize_bool(get_config_value(args, config, 'export_input_images', False))
     export_resize_factor = get_config_value(args, config, 'export_resize_factor', None)
@@ -168,6 +173,7 @@ Command-line arguments override values from configuration.json.
     print(f"Process masked: {process_masked}")
     print(f"Saturation mask: {saturation_mask}")
     print(f"Color checker: {color_checker}")
+    print(f"Input resize factor: {input_resize_factor}")
     print(f"Export corrected images: {export_corrected_images}")
     print(f"Export input images: {export_input_images}")
     print(f"Export resize factor: {export_resize_factor}")
@@ -184,6 +190,7 @@ Command-line arguments override values from configuration.json.
         num_workers=num_workers,
         saturation_mask=saturation_mask,
         color_checker=color_checker,
+        input_resize_factor=input_resize_factor,
         export_corrected_images=export_corrected_images,
         export_input_images=export_input_images,
         export_resize_factor=export_resize_factor,

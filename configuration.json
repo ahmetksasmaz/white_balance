@@ -29,11 +29,11 @@
   //   svwb_unet:default
   //   panoptic_sgbm_wb:default
   "algorithms": [
-    "panoptic_sgbm_wb:default"
+    "svwb_unet:default"
   ],
 
   // Output JSON results file path.
-  "output": "results_panoptic.json",
+  "output": "results_svwb.json",
 
   // Optional camera filter. Use null to process all cameras.
   "camera": null,
@@ -58,6 +58,9 @@
 
   // Color checker mask type. Valid values: all, patch
   "color_checker": "all",
+
+  // Optional downsample factor applied to input images before evaluation. Valid values: null, 2, 4, 8, 16, 32, 64
+  "input_resize_factor": 2,
 
   // Export corrected images to disk when true.
   "export_corrected_images": true,

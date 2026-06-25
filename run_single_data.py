@@ -33,7 +33,7 @@ from white_balance_algorithms.fast_awb.fast_awb_p6 import FastAWBP6
 from white_balance_algorithms.cheng.cheng_prc_0_5 import ChengPrc05
 from white_balance_algorithms.cheng.cheng_prc_3 import ChengPrc3
 
-def run_single_data(dataset_name, index, algorithm_name, variant_name, process_masked=False, saturation_mask_str='none', color_checker_str='all'):
+def run_single_data(dataset_name, index, algorithm_name, variant_name, process_masked=False, saturation_mask_str='none', color_checker_str='all', input_resize_factor=None):
     saturation_masks = {
         'none': None,
         'raw_all_98': ('raw', 'all', 0.98),
@@ -59,6 +59,7 @@ def run_single_data(dataset_name, index, algorithm_name, variant_name, process_m
         raise ValueError(f"Invalid dataset name: {dataset_name}")
 
     data = data_provider[index]
+    data.resize(input_resize_factor)
 
     if algorithm_name == "gray_world":
         if variant_name == "naive":
@@ -132,6 +133,7 @@ def main():
     parser.add_argument('--algorithm', type=str, required=True, help='Algorithm name')
     parser.add_argument('--variant', type=str, required=True, help='Algorithm variant')
     parser.add_argument('--process-masked', action='store_true', default=False, help='Exclude masked pixels')
+    parser.add_argument('--input-resize-factor', type=int, default=None, choices=[2, 4, 8, 16, 32, 64], help='Downsample factor applied to the loaded input before evaluation')
     parser.add_argument('--saturation-mask', type=str, default='none', choices=[
         'none', 'raw_all_98', 'raw_all_100', 'raw_any_98', 'raw_any_100',
         'normalized_all_98', 'normalized_all_100', 'normalized_any_98', 'normalized_any_100'
@@ -168,7 +170,7 @@ def main():
 
     print(f"Dataset: {args.dataset}", f"Index: {args.index}", f"Algorithm: {args.algorithm}", f"Variant: {args.variant}")
 
-    run_single_data(args.dataset, args.index, args.algorithm, args.variant, args.process_masked, args.saturation_mask, args.color_checker)
+    run_single_data(args.dataset, args.index, args.algorithm, args.variant, args.process_masked, args.saturation_mask, args.color_checker, args.input_resize_factor)
 
 if __name__ == "__main__":
     main()

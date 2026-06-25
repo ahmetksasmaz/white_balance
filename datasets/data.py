@@ -42,6 +42,25 @@ class Data:
         self.exposure_values["aperture"] = aperture
     def set_mask(self, mask): self.mask = mask
     def get_mask(self): return self.mask
+    def resize(self, resize_factor):
+        if resize_factor is None or resize_factor <= 1 or self.raw_image is None:
+            return
+
+        target_width = max(1, self.raw_image.shape[1] // resize_factor)
+        target_height = max(1, self.raw_image.shape[0] // resize_factor)
+        target_size = (target_width, target_height)
+
+        self.raw_image = cv.resize(self.raw_image, target_size, interpolation=cv.INTER_AREA)
+
+        if self.mask is not None:
+            self.mask = cv.resize(self.mask.astype(np.uint8), target_size, interpolation=cv.INTER_NEAREST).astype(bool)
+
+        if self.illuminant_map is not None:
+            self.illuminant_map = cv.resize(self.illuminant_map.astype(np.float32), target_size, interpolation=cv.INTER_LINEAR)
+
+        if self.srgb_image is not None:
+            self.srgb_image = cv.resize(self.srgb_image, target_size, interpolation=cv.INTER_AREA)
+
     def get_data(self):
         return {
             "image_name": self.image_name,

@@ -100,6 +100,8 @@ _SATURATION_MASKS = {
     'normalized_any_100': ('normalized', 'any', 1.0),
 }
 
+VALID_RESIZE_FACTORS = [2, 4, 8, 16, 32, 64]
+
 
 def _get_data_provider(dataset_name, saturation_mask_str, color_checker_str):
     key = (dataset_name, saturation_mask_str, color_checker_str)
@@ -155,7 +157,7 @@ def _extract_camera(dataset_name, data_provider, index):
 
 
 def _worker_fn(task_info):
-    dataset_name, algo_name, variant_name, idx, process_masked, camera_filter, saturation_mask_str, color_checker_str, export_corrected_images, export_input_images, export_resize_factor, output_path = task_info
+    dataset_name, algo_name, variant_name, idx, process_masked, camera_filter, saturation_mask_str, color_checker_str, input_resize_factor, export_corrected_images, export_input_images, export_resize_factor, output_path = task_info
     checkpoint_key = [dataset_name, algo_name, variant_name, idx]
     try:
         data_provider = _get_data_provider(dataset_name, saturation_mask_str, color_checker_str)
@@ -165,6 +167,7 @@ def _worker_fn(task_info):
 
         data = data_provider[idx]
         data.set_camera(camera)
+        data.resize(input_resize_factor)
         image_name = data.get_image_name()
 
         exported_paths = {
@@ -548,7 +551,7 @@ def _prepare_export_paths(output_path, dataset_name, algo_name, variant_name, im
 
 
 class Evaluator:
-    def __init__(self, datasets, algorithms, camera=None, output_path="results.json", process_masked=False, num_workers=1, saturation_mask="none", color_checker="all", export_corrected_images=False, export_input_images=False, export_resize_factor=None, max_images=None, resume=False):
+    def __init__(self, datasets, algorithms, camera=None, output_path="results.json", process_masked=False, num_workers=1, saturation_mask="none", color_checker="all", input_resize_factor=None, export_corrected_images=False, export_input_images=False, export_resize_factor=None, max_images=None, resume=False):
         self.datasets = datasets
         self.algorithms = algorithms
         self.camera = camera
@@ -557,11 +560,15 @@ class Evaluator:
         self.num_workers = num_workers
         self.saturation_mask_str = saturation_mask
         self.color_checker_str = color_checker
+        self.input_resize_factor = input_resize_factor
         self.export_corrected_images = export_corrected_images
         self.export_input_images = export_input_images
         self.export_resize_factor = export_resize_factor
         self.max_images = max_images
         self.resume = resume
+
+        if self.input_resize_factor is not None and self.input_resize_factor not in VALID_RESIZE_FACTORS:
+            raise ValueError("input_resize_factor must be a power of two, e.g. 2, 4, 8, 16, 32, 64")
 
         if self.export_resize_factor is not None and self.export_resize_factor not in [2, 4, 8, 16, 32, 64]:
             raise ValueError("export_resize_factor must be a power of two, e.g. 2, 4, 8, 16, 32, 64")
@@ -619,6 +626,7 @@ class Evaluator:
         print(f"\nConfiguration:")
         print(f"  Workers: {self.num_workers}")
         print(f"  Process Masked: {self.process_masked}")
+        print(f"  Input Resize Factor: {self.input_resize_factor}")
         print(f"  Export Corrected Images: {self.export_corrected_images}")
         print(f"  Export Input Images: {self.export_input_images}")
         if self.export_corrected_images or self.export_input_images:
@@ -645,7 +653,7 @@ class Evaluator:
 
             for algo_name, variant_name in self.algorithms:
                 for idx in matching_indices:
-                    tasks.append((dataset_name, algo_name, variant_name, idx, self.process_masked, self.camera, self.saturation_mask_str, self.color_checker_str, self.export_corrected_images, self.export_input_images, self.export_resize_factor, self.output_path))
+                    tasks.append((dataset_name, algo_name, variant_name, idx, self.process_masked, self.camera, self.saturation_mask_str, self.color_checker_str, self.input_resize_factor, self.export_corrected_images, self.export_input_images, self.export_resize_factor, self.output_path))
 
         if done_set:
             tasks_to_run = [t for t in tasks if (t[0], t[1], t[2], t[3]) not in done_set]
@@ -693,6 +701,7 @@ class Evaluator:
                 "process_masked": self.process_masked,
                 "saturation_mask": self.saturation_mask_str,
                 "color_checker": self.color_checker_str,
+                "input_resize_factor": self.input_resize_factor,
                 "export_corrected_images": self.export_corrected_images,
                 "export_input_images": self.export_input_images,
                 "export_resize_factor": self.export_resize_factor,
