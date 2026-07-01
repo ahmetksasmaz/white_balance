@@ -7,26 +7,27 @@ try:
     import torch
     import torch.nn.functional as F
     from white_balance_algorithms.svwb_unet.external.model import U_Net
-    from white_balance_algorithms.svwb_unet.external.utils import rgb2uvl
+    from white_balance_algorithms.svwb_unet.external.utils import rgb2uvl, apply_wb
     TORCH_AVAILABLE = True
 except ImportError:
     torch = None
     F = None
     U_Net = None
     rgb2uvl = None
+    apply_wb = None
     TORCH_AVAILABLE = False
 
 from white_balance_algorithms.white_balance_algorithm import WhiteBalanceAlgorithm
 
 
 class SVWBUnet(WhiteBalanceAlgorithm):
-    def __init__(self, weights_dir=None, default_camera='galaxy'):
+    def __init__(self, weights_dir=None, default_camera='galaxy', device=None):
         if not TORCH_AVAILABLE:
             raise ImportError(
                 'SVWBUnet requires torch. Install it with `pip install torch` '
                 'or remove svwb_unet:default from your configuration.'
             )
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.device = torch.device(device if device is not None else 'cpu')
         self.model = U_Net(img_ch=3, output_ch=2)
         self.model.to(self.device)
         self.model.eval()
@@ -66,14 +67,13 @@ class SVWBUnet(WhiteBalanceAlgorithm):
         self.model.load_state_dict(checkpoint)
         self.current_camera = camera_name
 
-    def _prepare_input(self, raw_image):
-        image = np.asarray(raw_image, dtype=np.float32)
+    def _prepare_input(self, raw_bgr):
+        image = np.asarray(raw_bgr, dtype=np.float32)
         if image.max() > 1.1:
             image = image / 255.0
-        image = np.clip(image, 1e-8, None)
-        image = image[..., ::-1]
-        uvl = rgb2uvl(image)
-        uvl = np.transpose(uvl, (2, 0, 1))
+        image_rgb = np.clip(image[..., ::-1], 1e-8, None)
+        uvl = rgb2uvl(image_rgb)
+        uvl = np.ascontiguousarray(np.transpose(uvl, (2, 0, 1)))
         return torch.from_numpy(uvl).unsqueeze(0).to(self.device)
 
     def _pad_to_multiple(self, tensor, multiple=256):
@@ -108,32 +108,42 @@ class SVWBUnet(WhiteBalanceAlgorithm):
             raw_image[~mask] = 0.0
 
         original_shape = raw_image.shape[:2]
-        resized_raw = cv.resize(raw_image, (512, 512), interpolation=cv.INTER_AREA)
+        resized_raw = cv.resize(raw_image, (256, 256), interpolation=cv.INTER_AREA)
         if process_masked and data.get_mask() is not None:
             mask = data.get_mask()
-            resized_mask = cv.resize(mask.astype(np.uint8), (512, 512), interpolation=cv.INTER_NEAREST).astype(bool)
+            resized_mask = cv.resize(mask.astype(np.uint8), (256, 256), interpolation=cv.INTER_NEAREST).astype(bool)
             resized_raw = resized_raw.copy()
             resized_raw[~resized_mask] = 0.0
 
-        input_tensor = self._prepare_input(resized_raw)
-        padded_input, pad_shape = self._pad_to_multiple(input_tensor, multiple=256)
+        # Prepare UVL input tensor (BGR → RGB → UVL)
+        input_uvl = self._prepare_input(resized_raw)
+        padded_input, pad_shape = self._pad_to_multiple(input_uvl, multiple=256)
         with torch.no_grad():
             prediction = self.model(padded_input)
         prediction = self._unpad(prediction, pad_shape)
 
-        prediction = np.transpose(prediction.squeeze(0).cpu().numpy(), (1, 2, 0))
-        pred_rb = np.exp(prediction)
-
-        raw_rgb = np.clip(resized_raw[..., ::-1].astype(np.float32), 1e-8, None)
+        # Prepare input_rgb tensor (BGR → RGB, same scale) for apply_wb
+        raw_rgb = np.ascontiguousarray(resized_raw[..., ::-1].astype(np.float32))
         if raw_rgb.max() > 1.1:
             raw_rgb = raw_rgb / 255.0
+        raw_rgb = np.clip(raw_rgb, 1e-8, None)
+        input_rgb_tensor = torch.from_numpy(
+            np.ascontiguousarray(np.transpose(raw_rgb, (2, 0, 1)))
+        ).unsqueeze(0).to(self.device)
 
-        if pred_rb.shape[:2] != raw_rgb.shape[:2]:
-            raise ValueError(f'SVWBUnet prediction/raw shape mismatch: pred_rb={pred_rb.shape[:2]}, raw_rgb={raw_rgb.shape[:2]}')
 
-        illuminant_map = np.zeros((raw_rgb.shape[0], raw_rgb.shape[1], 2), dtype=np.float32)
-        illuminant_map[..., 0] = raw_rgb[..., 0] / (raw_rgb[..., 1] * pred_rb[..., 0] + 1e-8)
-        illuminant_map[..., 1] = raw_rgb[..., 2] / (raw_rgb[..., 1] * pred_rb[..., 1] + 1e-8)
+        pred_r = torch.exp(padded_input[0,0,:] - prediction[:, 0]).squeeze(0).cpu().numpy()
+        pred_b = torch.exp(padded_input[0,1,:] - prediction[:, 1]).squeeze(0).cpu().numpy()
+        pred_g = np.ones_like(pred_r)
+
+        pred_illum = np.stack([pred_b, pred_g, pred_r], axis=-1) * 255  # (H, W, 3)
+
+        # # Apply white balance: R_wb = G * exp(pred[:,0]), B_wb = G * exp(pred[:,1])
+        # b_channel = torch.exp(-prediction[:,0]).squeeze(0).cpu().numpy()
+        # r_channel = torch.exp(-prediction[:,1]).squeeze(0).cpu().numpy()
+
+        # illuminant_map (H, W, 2): [R_illuminant, B_illuminant]
+        illuminant_map = np.stack([pred_b, pred_r], axis=-1)  # (H, W, 2)
         illuminant_map = cv.resize(illuminant_map, (original_shape[1], original_shape[0]), interpolation=cv.INTER_LINEAR)
 
         return {'single_illuminant': None, 'multi_illuminants': None, 'illuminant_map': illuminant_map, 'estimated_srgb_image': None}

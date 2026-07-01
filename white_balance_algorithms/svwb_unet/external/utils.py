@@ -1,4 +1,4 @@
-import torch,rawpy
+import torch,rawpy,os
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -139,7 +139,10 @@ def visualize(input_patch, pred_patch, gt_patch, templete, concat=True):
     gt_patch = gt_patch.permute((1,2,0))
 
     height, width, _ = input_patch.shape
-    raw = rawpy.imread("../" + templete + ".dng")
+    _dng_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), templete+".dng")
+    if not os.path.exists(_dng_path):
+        _dng_path = "/Users/ahmetksasmaz/Library/CloudStorage/GoogleDrive-ahmetksasmaz@gmail.com/My Drive/ceng/MS Thesis/Datasets/LSMI/LSMI-dataset/"+templete+".dng"
+    raw = rawpy.imread(_dng_path)
 
     white_level = raw.white_level
 

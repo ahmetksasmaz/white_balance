@@ -118,6 +118,10 @@ Command-line arguments override values from configuration.json.
         '--resume', action='store_true', default=False,
         help='Resume a previously interrupted evaluation by loading the checkpoint file and skipping completed tasks.'
     )
+    parser.add_argument(
+        '--use-gpu', action='store_true', default=None,
+        help='If set, use GPU for inference (CUDA or MPS on Apple Silicon) when available. Falls back to CPU if no GPU is found. If omitted, loaded from configuration file.'
+    )
     args = parser.parse_args()
     config = load_configuration(args.config)
 
@@ -135,6 +139,7 @@ Command-line arguments override values from configuration.json.
     export_resize_factor = get_config_value(args, config, 'export_resize_factor', None)
     max_images = get_config_value(args, config, 'max_images', None)
     test_mode = normalize_bool(get_config_value(args, config, 'test_mode', False))
+    use_gpu = normalize_bool(get_config_value(args, config, 'use_gpu', False))
 
     if test_mode and max_images is None:
         max_images = 5
@@ -178,6 +183,7 @@ Command-line arguments override values from configuration.json.
     print(f"Export input images: {export_input_images}")
     print(f"Export resize factor: {export_resize_factor}")
     print(f"Max images per dataset: {max_images}")
+    print(f"Use GPU: {use_gpu}")
 
     validate_dataset_paths(datasets)
 
@@ -196,6 +202,7 @@ Command-line arguments override values from configuration.json.
         export_resize_factor=export_resize_factor,
         max_images=max_images,
         resume=args.resume,
+        use_gpu=use_gpu,
     )
     evaluator.run()
 

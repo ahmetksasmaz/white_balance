@@ -14,7 +14,10 @@ class Solver():
     def __init__(self, config, train_loader, valid_loader, test_loader):
         # RAW args
         self.camera = config.camera
-        self.raw = rawpy.imread("../"+self.camera+".dng")
+        _dng_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), self.camera+".dng")
+        if not os.path.exists(_dng_path):
+            _dng_path = "/Users/ahmetksasmaz/Library/CloudStorage/GoogleDrive-ahmetksasmaz@gmail.com/My Drive/ceng/MS Thesis/Datasets/LSMI/LSMI-dataset/"+self.camera+".dng"
+        self.raw = rawpy.imread(_dng_path)
         self.white_level = self.raw.white_level
         if self.camera == 'sony':
             self.white_level = self.white_level/4
@@ -85,7 +88,7 @@ class Solver():
             ckpt_file = 'best.pt' if '/' not in self.checkpoint else os.path.split(self.checkpoint)[1]
             ckpt = os.path.join(self.model_path,ckpt_file)
             print("[Model]\tLoad model from checkpoint :", ckpt)
-            self.net.load_state_dict(torch.load(ckpt))
+            self.net.load_state_dict(torch.load(ckpt, map_location=self.device))
 
         # multi-GPU
         if torch.cuda.device_count() > 1:
@@ -330,6 +333,7 @@ class Solver():
             input_rgb = batch["input_rgb"].to(self.device)
             gt_illum = batch["gt_illum"].to(self.device)
             gt_rgb = batch["gt_rgb"].to(self.device)
+
             if self.output_type == "illumination":
                 ones = torch.ones_like(pred_detach[:,:1,:,:])
                 pred_illum = torch.cat([pred_detach[:,:1,:,:],ones,pred_detach[:,1:,:,:]],dim=1)
@@ -369,6 +373,12 @@ class Solver():
                 input_srgb, output_srgb, gt_srgb = visualize(batch['input_rgb'][0],pred_rgb[0],batch['gt_rgb'][0],self.camera,concat=False)
 
                 fname_base = batch["place"][0]+'_'+batch["illum_count"][0]
+
+                pred_r_np = torch.exp(inputs[0,0,:] - pred[:, 0]).squeeze(0).detach().cpu().numpy()
+                pred_b_np = torch.exp(inputs[0,1,:] - pred[:, 1]).squeeze(0).detach().cpu().numpy()
+                pred_g_np = np.ones_like(pred_r_np)
+                pred_illum_np = np.stack([pred_r_np, pred_g_np, pred_b_np], axis=-1) * 255
+                Image.fromarray(pred_illum_np.astype(np.uint8)).save(os.path.join(self.result_path,fname_base+'_pred_illum_same.png'))
 
                 Image.fromarray(plot_fig).save(os.path.join(self.result_path,fname_base+'_illum_map.png'))
                 Image.fromarray(plot_fig_rev).save(os.path.join(self.result_path,fname_base+'_illum_map_rev.png'))

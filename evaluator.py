@@ -48,6 +48,7 @@ from white_balance_algorithms.cheng.cheng_prc_3 import ChengPrc3
 
 from visuals.log_chrominance_histogram import LogChrominanceHistogram
 from visuals.normalized_rgb_histogram import NormalizedRGBHistogram
+from white_balance_algorithms.torch_device import get_torch_device
 
 
 DATASET_PROVIDERS = {
@@ -88,6 +89,7 @@ ALGORITHM_REGISTRY = {
 
 _PROVIDER_CACHE = {}
 _ALGO_CACHE = {}
+_TORCH_DEVICE_ALGORITHMS = {("svwb_unet", "default"), ("panoptic_sgbm_wb", "default")}
 _SATURATION_MASKS = {
     'none': None,
     'raw_all_98': ('raw', 'all', 0.98),
@@ -116,10 +118,15 @@ def _get_data_provider(dataset_name, saturation_mask_str, color_checker_str):
     return _PROVIDER_CACHE[key]
 
 
-def _get_algorithm(algo_name, variant_name):
-    key = (algo_name, variant_name)
+def _get_algorithm(algo_name, variant_name, use_gpu=False):
+    key = (algo_name, variant_name, use_gpu)
     if key not in _ALGO_CACHE:
-        _ALGO_CACHE[key] = ALGORITHM_REGISTRY[(algo_name, variant_name)]()
+        cls = ALGORITHM_REGISTRY[(algo_name, variant_name)]
+        if (algo_name, variant_name) in _TORCH_DEVICE_ALGORITHMS:
+            device = get_torch_device(use_gpu)
+            _ALGO_CACHE[key] = cls(device=device)
+        else:
+            _ALGO_CACHE[key] = cls()
     return _ALGO_CACHE[key]
 
 
@@ -157,11 +164,11 @@ def _extract_camera(dataset_name, data_provider, index):
 
 
 def _worker_fn(task_info):
-    dataset_name, algo_name, variant_name, idx, process_masked, camera_filter, saturation_mask_str, color_checker_str, input_resize_factor, export_corrected_images, export_input_images, export_resize_factor, output_path = task_info
+    dataset_name, algo_name, variant_name, idx, process_masked, camera_filter, saturation_mask_str, color_checker_str, input_resize_factor, export_corrected_images, export_input_images, export_resize_factor, output_path, use_gpu = task_info
     checkpoint_key = [dataset_name, algo_name, variant_name, idx]
     try:
         data_provider = _get_data_provider(dataset_name, saturation_mask_str, color_checker_str)
-        algorithm = _get_algorithm(algo_name, variant_name)
+        algorithm = _get_algorithm(algo_name, variant_name, use_gpu)
 
         camera = _extract_camera(dataset_name, data_provider, idx)
 
@@ -376,9 +383,11 @@ def _prepare_illumination_map_display(illuminant_map, mask=None, size=200):
         rg = illuminant_map[..., 0]
         bg = illuminant_map[..., 1]
         rgb = np.zeros((rg.shape[0], rg.shape[1], 3), dtype=np.float32)
-        rgb[..., 0] = (rg - 1.0) * 0.5 + 0.5
-        rgb[..., 1] = 0.5
-        rgb[..., 2] = (bg - 1.0) * 0.5 + 0.5
+        norm = rg + 1.0 + bg
+        norm = np.where(norm == 0, 1.0, norm)
+        rgb[..., 0] = rg / norm
+        rgb[..., 1] = 1.0 / norm
+        rgb[..., 2] = bg / norm
     else:
         rgb = illuminant_map.astype(np.float32)
         norm = np.where(np.linalg.norm(rgb, axis=-1, keepdims=True) == 0, 1.0, np.linalg.norm(rgb, axis=-1, keepdims=True))
@@ -551,7 +560,7 @@ def _prepare_export_paths(output_path, dataset_name, algo_name, variant_name, im
 
 
 class Evaluator:
-    def __init__(self, datasets, algorithms, camera=None, output_path="results.json", process_masked=False, num_workers=1, saturation_mask="none", color_checker="all", input_resize_factor=None, export_corrected_images=False, export_input_images=False, export_resize_factor=None, max_images=None, resume=False):
+    def __init__(self, datasets, algorithms, camera=None, output_path="results.json", process_masked=False, num_workers=1, saturation_mask="none", color_checker="all", input_resize_factor=None, export_corrected_images=False, export_input_images=False, export_resize_factor=None, max_images=None, resume=False, use_gpu=False):
         self.datasets = datasets
         self.algorithms = algorithms
         self.camera = camera
@@ -566,6 +575,7 @@ class Evaluator:
         self.export_resize_factor = export_resize_factor
         self.max_images = max_images
         self.resume = resume
+        self.use_gpu = use_gpu
 
         if self.input_resize_factor is not None and self.input_resize_factor not in VALID_RESIZE_FACTORS:
             raise ValueError("input_resize_factor must be a power of two, e.g. 2, 4, 8, 16, 32, 64")
@@ -653,7 +663,7 @@ class Evaluator:
 
             for algo_name, variant_name in self.algorithms:
                 for idx in matching_indices:
-                    tasks.append((dataset_name, algo_name, variant_name, idx, self.process_masked, self.camera, self.saturation_mask_str, self.color_checker_str, self.input_resize_factor, self.export_corrected_images, self.export_input_images, self.export_resize_factor, self.output_path))
+                    tasks.append((dataset_name, algo_name, variant_name, idx, self.process_masked, self.camera, self.saturation_mask_str, self.color_checker_str, self.input_resize_factor, self.export_corrected_images, self.export_input_images, self.export_resize_factor, self.output_path, self.use_gpu))
 
         if done_set:
             tasks_to_run = [t for t in tasks if (t[0], t[1], t[2], t[3]) not in done_set]

@@ -29,11 +29,12 @@
   //   svwb_unet:default
   //   panoptic_sgbm_wb:default
   "algorithms": [
-    "svwb_unet:default"
+    "svwb_unet:default",
+    "panoptic_sgbm_wb:default"
   ],
 
   // Output JSON results file path.
-  "output": "results_svwb.json",
+  "output": "test.json",
 
   // Optional camera filter. Use null to process all cameras.
   "camera": null,
@@ -69,8 +70,11 @@
   "export_resize_factor": null,
 
   // Optional per-dataset image limit for quick test runs. Set to 5 for the default test mode behavior.
-  "max_images": 20,
+  "max_images": 2,
 
   // Optional test mode alias. If true and max_images is unspecified, the runner will limit each dataset to 5 images.
-  "test_mode": false
+  "test_mode": false,
+
+  // If true, use GPU for neural network inference (CUDA or MPS on Apple Silicon) when available. Falls back to CPU if no GPU is found.
+  "use_gpu": true
 }

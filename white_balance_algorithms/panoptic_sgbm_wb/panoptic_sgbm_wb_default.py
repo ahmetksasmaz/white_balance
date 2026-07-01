@@ -269,7 +269,7 @@ class PanopticSGBMWB(WhiteBalanceAlgorithm):
 
         self.model_type = model_type or DEFAULT_MODEL_TYPE
         self.checkpoint = checkpoint or DEFAULT_CHECKPOINT
-        self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = device or "cpu"
         self.max_side = max_side
         self.points_per_side = points_per_side
         self.pred_iou_thresh = pred_iou_thresh
@@ -307,6 +307,13 @@ class PanopticSGBMWB(WhiteBalanceAlgorithm):
             crop_n_layers=self.crop_n_layers,
             min_mask_region_area=self.min_mask_region_area,
         )
+        if self.device == "mps":
+            # MPS doesn't support float64; SAM's apply_coords returns float64 by default,
+            # causing torch.as_tensor(..., device='mps') to fail inside _process_batch.
+            _orig_apply_coords = self.generator.predictor.transform.apply_coords
+            self.generator.predictor.transform.apply_coords = (
+                lambda coords, original_size: _orig_apply_coords(coords, original_size).astype(np.float32)
+            )
 
     def _prepare_image(self, raw_image: np.ndarray) -> np.ndarray:
         image = np.asarray(raw_image, dtype=np.float32)
