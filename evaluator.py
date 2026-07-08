@@ -1,6 +1,7 @@
 import json
 import datetime
 import os
+import time
 import traceback
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import multiprocessing
@@ -560,7 +561,28 @@ def _prepare_export_paths(output_path, dataset_name, algo_name, variant_name, im
 
 
 class Evaluator:
-    def __init__(self, datasets, algorithms, camera=None, output_path="results.json", process_masked=False, num_workers=1, saturation_mask="none", color_checker="all", input_resize_factor=None, export_corrected_images=False, export_input_images=False, export_resize_factor=None, max_images=None, resume=False, use_gpu=False):
+    def __init__(self, datasets, algorithms, camera=None, output_path="results.json", process_masked=False, num_workers=1, saturation_mask="none", color_checker="all", input_resize_factor=None, export_corrected_images=False, export_input_images=False, export_resize_factor=None, max_images=None, resume=False, use_gpu=False, checkpoint_interval_seconds=30, checkpoint_interval_tasks=100):
+        """
+        Args:
+            datasets: list of dataset name strings, e.g. ["gehler", "nus8"]
+            algorithms: list of (algorithm_name, variant_name) tuples,
+                        e.g. [("gray_world", "naive"), ("max_rgb", "99_percentile")]
+            camera: if specified, only process images from this specific camera (optional)
+            output_path: path for the output JSON file
+            process_masked: if True, algorithms will exclude masked pixels (e.g. checkerboard)
+            num_workers: number of processes to use (default: 1)
+            saturation_mask: saturation mask string configuration for dataset providers
+            color_checker: color checker configuration ("all" or "patch")
+            input_resize_factor: optional integer downsample factor applied to input images (powers of two)
+            export_corrected_images: if True, save corrected raw images to disk during evaluation
+            export_input_images: if True, save the input display image to disk for visualization
+            export_resize_factor: optional integer downsample factor for exported images (powers of two)
+            max_images: optional integer limit for the number of images to process per dataset
+            resume: if True, resume a previously interrupted evaluation using the checkpoint file
+            use_gpu: if True, run GPU-capable algorithms on GPU (falls back to CPU if unavailable)
+            checkpoint_interval_seconds: max seconds between full results.json snapshots
+            checkpoint_interval_tasks: max completed tasks between full results.json snapshots
+        """
         self.datasets = datasets
         self.algorithms = algorithms
         self.camera = camera
@@ -576,6 +598,17 @@ class Evaluator:
         self.max_images = max_images
         self.resume = resume
         self.use_gpu = use_gpu
+        self.checkpoint_interval_seconds = checkpoint_interval_seconds
+        self.checkpoint_interval_tasks = checkpoint_interval_tasks
+        # Cheap append-only log of completed results, used so per-task
+        # durability doesn't require rewriting the full (potentially huge)
+        # results.json on every single task; see _append_checkpoint/_maybe_finalize.
+        self.checkpoint_path = os.path.splitext(self.output_path)[0] + "_checkpoint.jsonl"
+        self._last_finalize_time = 0.0
+        self._results_since_finalize = 0
+
+        if checkpoint_interval_seconds <= 0 or checkpoint_interval_tasks <= 0:
+            raise ValueError("checkpoint_interval_seconds and checkpoint_interval_tasks must be positive")
 
         if self.input_resize_factor is not None and self.input_resize_factor not in VALID_RESIZE_FACTORS:
             raise ValueError("input_resize_factor must be a power of two, e.g. 2, 4, 8, 16, 32, 64")
@@ -612,23 +645,61 @@ class Evaluator:
             if (algo, variant) not in ALGORITHM_REGISTRY:
                 raise ValueError(f"Unknown algorithm variant: ({algo}, {variant}). Valid: {list(ALGORITHM_REGISTRY.keys())}")
 
-    def _make_task_key(self, dataset_name, image_name, algo_name, variant_name):
-        return (dataset_name, image_name, algo_name, variant_name)
+    def _existing_entry_key(self, entry):
+        key = entry.get('_checkpoint_key')
+        if key is None:
+            return None
+        return tuple(key)
+
+    def _load_checkpoint_results(self):
+        """Read results appended (but not yet folded into results.json) by a
+        previous, possibly interrupted, run."""
+        if not os.path.exists(self.checkpoint_path):
+            return []
+        results = []
+        with open(self.checkpoint_path, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    results.append(json.loads(line))
+                except Exception:
+                    continue
+        return results
 
     def _load_existing_results(self):
-        if not self.skip_if_processed or not os.path.exists(self.output_path):
+        if not self.resume:
             return []
-        try:
-            with open(self.output_path, 'r') as f:
-                existing = json.load(f)
-            if isinstance(existing, dict) and isinstance(existing.get('results'), list):
-                return existing['results']
-            return []
-        except Exception:
-            return []
+        # Merge the last full snapshot with any checkpoint entries appended
+        # after it (e.g. from a run that crashed between periodic finalizes),
+        # so resume never silently loses completed work.
+        merged = {}
+        if os.path.exists(self.output_path):
+            try:
+                with open(self.output_path, 'r') as f:
+                    existing = json.load(f)
+                if isinstance(existing, dict) and isinstance(existing.get('results'), list):
+                    for entry in existing['results']:
+                        key = self._existing_entry_key(entry)
+                        if key is not None:
+                            merged[key] = entry
+            except Exception:
+                pass
+        for entry in self._load_checkpoint_results():
+            key = self._existing_entry_key(entry)
+            if key is not None:
+                merged[key] = entry
+        return list(merged.values())
 
-    def _save_output(self, results):
-        output = {
+    def _append_checkpoint(self, result):
+        """O(1) durability per task: append one line instead of rewriting the
+        whole results file."""
+        with open(self.checkpoint_path, 'a') as f:
+            f.write(json.dumps(result) + "\n")
+
+    def _build_output(self, results):
+        return {
             "metadata": {
                 "timestamp": datetime.datetime.now().isoformat(),
                 "datasets": self.datasets,
@@ -638,35 +709,49 @@ class Evaluator:
                 "color_checker": self.color_checker_str,
                 "export_corrected_images": self.export_corrected_images,
                 "export_input_images": self.export_input_images,
+                "input_resize_factor": self.input_resize_factor,
                 "export_resize_factor": self.export_resize_factor,
                 "max_images": self.max_images,
-                "skip_if_processed": self.skip_if_processed,
             },
             "results": results,
         }
+
+    def _save_output(self, results):
+        output = self._build_output(results)
         with open(self.output_path, 'w') as f:
             json.dump(output, f, indent=2)
+        return output
+
+    def _maybe_finalize(self, all_results, force=False):
+        """Rewrite the full results.json, but only every
+        checkpoint_interval_seconds/checkpoint_interval_tasks (or when
+        force=True), since a full rewrite costs O(len(all_results))."""
+        now = time.monotonic()
+        should_finalize = force or (
+            (now - self._last_finalize_time) >= self.checkpoint_interval_seconds
+            or self._results_since_finalize >= self.checkpoint_interval_tasks
+        )
+        if not should_finalize:
+            return None
+        output = self._save_output(all_results)
+        self._last_finalize_time = now
+        self._results_since_finalize = 0
+        return output
 
     def run(self):
-        checkpoint_path = os.path.splitext(self.output_path)[0] + "_checkpoint.jsonl"
-
         all_results = []
         done_set = set()
-        if self.resume and os.path.exists(checkpoint_path):
-            with open(checkpoint_path) as _f:
-                for _line in _f:
-                    _line = _line.strip()
-                    if not _line:
-                        continue
-                    try:
-                        _entry = json.loads(_line)
-                        _key = _entry.get("_checkpoint_key")
-                        if _key:
-                            done_set.add(tuple(_key))
-                        all_results.append(_entry)
-                    except json.JSONDecodeError:
-                        pass
-            print(f"Resuming: loaded {len(all_results)} completed results from {checkpoint_path}")
+        if self.resume:
+            for entry in self._load_existing_results():
+                key = self._existing_entry_key(entry)
+                if key is not None:
+                    done_set.add(key)
+                all_results.append(entry)
+            print(f"Resuming: loaded {len(all_results)} completed results")
+        elif os.path.exists(self.checkpoint_path):
+            # Fresh (non-resumed) run: drop any stale checkpoint from a
+            # previous run so it can't leak into this run's results.
+            os.remove(self.checkpoint_path)
 
         print(f"\nConfiguration:")
         print(f"  Workers: {self.num_workers}")
@@ -710,53 +795,30 @@ class Evaluator:
 
         print(f"Total tasks to run: {len(tasks_to_run)}")
 
-        def _record(result, checkpoint_f):
+        def _record(result):
             all_results.append(result)
-            if checkpoint_f is not None:
-                checkpoint_f.write(json.dumps(result) + "\n")
-                checkpoint_f.flush()
+            self._append_checkpoint(result)
+            self._results_since_finalize += 1
+            self._maybe_finalize(all_results)
             if result.get("errors") is None and "error_message" in result:
                 print(f"\n    ERROR: {result['error_message']}")
                 if result.get("traceback"):
                     print(result["traceback"])
 
-        checkpoint_f = open(checkpoint_path, "a") if tasks_to_run else None
-        try:
-            if self.num_workers > 1:
-                with ProcessPoolExecutor(max_workers=self.num_workers) as executor:
-                    futures = {executor.submit(_worker_fn, task): task for task in tasks_to_run}
-                    for future in tqdm(as_completed(futures), total=len(tasks_to_run), desc="Evaluating", unit="task"):
-                        result = future.result()
-                        if result:
-                            _record(result, checkpoint_f)
-            else:
-                for task in tqdm(tasks_to_run, desc="Evaluating", unit="task"):
-                    result = _worker_fn(task)
+        if self.num_workers > 1:
+            with ProcessPoolExecutor(max_workers=self.num_workers) as executor:
+                futures = {executor.submit(_worker_fn, task): task for task in tasks_to_run}
+                for future in tqdm(as_completed(futures), total=len(tasks_to_run), desc="Evaluating", unit="task"):
+                    result = future.result()
                     if result:
-                        _record(result, checkpoint_f)
-        finally:
-            if checkpoint_f is not None:
-                checkpoint_f.close()
+                        _record(result)
+        else:
+            for task in tqdm(tasks_to_run, desc="Evaluating", unit="task"):
+                result = _worker_fn(task)
+                if result:
+                    _record(result)
 
-        output = {
-            "metadata": {
-                "timestamp": datetime.datetime.now().isoformat(),
-                "datasets": self.datasets,
-                "algorithms": [[a, v] for a, v in self.algorithms],
-                "process_masked": self.process_masked,
-                "saturation_mask": self.saturation_mask_str,
-                "color_checker": self.color_checker_str,
-                "input_resize_factor": self.input_resize_factor,
-                "export_corrected_images": self.export_corrected_images,
-                "export_input_images": self.export_input_images,
-                "export_resize_factor": self.export_resize_factor,
-                "max_images": self.max_images,
-            },
-            "results": all_results,
-        }
-
-        with open(self.output_path, "w") as f:
-            json.dump(output, f, indent=2)
+        output = self._maybe_finalize(all_results, force=True)
 
         print(f"\nResults saved to {self.output_path} ({len(all_results)} entries)")
         return output

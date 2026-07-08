@@ -46,13 +46,19 @@ class LSMIDataProvider(DataProvider):
                     self.metadatas.append({"illuminants": [placeInfo["Light1"], placeInfo["Light3"]], "illuminant_map_path": image_directory + "/" + place + "/" + place + "_13." + COEFF_EXTENSION, "placeInfo": placeInfo})
                     self.metadatas.append({"illuminants": [placeInfo["Light1"], placeInfo["Light2"], placeInfo["Light3"]], "illuminant_map_path": image_directory + "/" + place + "/" + place + "_123." + COEFF_EXTENSION, "placeInfo": placeInfo})
 
+    def get_image_name(self, index):
+        image_path = self.data_names[index]
+        image_path_splitted = image_path.split("/")
+        place_with_illuminations = image_path_splitted[-1].split(".")[0]
+        camera_model = image_path_splitted[-3]
+        return camera_model+"_"+place_with_illuminations
+
     def _construct_data(self, index):
         data = Data()
         image_path = self.data_names[index]
-        parts = image_path.split("/")
-        place_with_illuminations = parts[-1].split(".")[0]
-        camera_model = parts[-3]
-        data.set_image_name(camera_model + "_" + place_with_illuminations)
+        image_path_splitted = image_path.split("/")
+        camera_model = image_path_splitted[-3]
+        data.set_image_name(self.get_image_name(index))
 
         raw_image = cv.imread(image_path, cv.IMREAD_UNCHANGED).astype(np.float32)
 

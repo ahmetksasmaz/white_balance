@@ -61,10 +61,15 @@ class NUS8DataProvider(DataProvider):
                             self.gt_illuminants.append(groundtruth_illuminants[i])
                             self.cc_coords.append(load_mask_coords(txt_path))
 
+    def get_image_name(self, index):
+        image_path = self.data_names[index]
+        return os.path.basename(image_path).split('.')[0]
+
     def _construct_data(self, index):
         data = Data()
         image_path = self.data_names[index]
-        data.set_image_name(os.path.basename(image_path).split('.')[0])
+        image_name = self.get_image_name(index)
+        data.set_image_name(image_name)
 
         raw_image = cv.imread(image_path, cv.IMREAD_UNCHANGED)
         if raw_image is None:

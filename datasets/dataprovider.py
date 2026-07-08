@@ -6,6 +6,14 @@ class DataProvider:
     def __len__(self):
         return len(self.data_names)
 
+    def get_image_name(self, index):
+        """Lightweight accessor for the image name that avoids decoding pixel data.
+
+        Default assumes data_names[index] already is the image name; providers
+        that derive the name differently (e.g. from a file path) override this.
+        """
+        return self.data_names[index]
+
     def _construct_data(self, index):
         raise NotImplementedError
 

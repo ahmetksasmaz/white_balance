@@ -11,18 +11,21 @@ class CubePPDataProvider(DataProvider):
         self.data_names = IMAGE_LIST
         self.gt_lines = [""] * len(self.data_names)
         self.properties_lines = [""] * len(self.data_names)
+        name_to_idx = {name: i for i, name in enumerate(self.data_names)}
 
         with open(ROOT_DIRECTORY+"/gt.csv", "r") as f:
             for line in f.readlines()[1:]:
                 line = line.strip()
-                i = line.index(",")
-                self.gt_lines[self.data_names.index(line[:i])] = line[i+1:]
+                first_comma_index = line.index(",")
+                image_name = line[:first_comma_index]
+                self.gt_lines[name_to_idx[image_name]] = line[first_comma_index+1:]
 
         with open(ROOT_DIRECTORY+"/properties.csv", "r") as f:
             for line in f.readlines()[1:]:
                 line = line.strip()
-                i = line.index(",")
-                self.properties_lines[self.data_names.index(line[:i])] = line[i+1:]
+                first_comma_index = line.index(",")
+                image_name = line[:first_comma_index]
+                self.properties_lines[name_to_idx[image_name]] = line[first_comma_index+1:]
 
     def _construct_data(self, index):
         data = Data()
