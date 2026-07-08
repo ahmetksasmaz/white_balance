@@ -1,3 +1,5 @@
+import json
+import os
 import cv2 as cv
 import numpy as np
 from ..dataprovider import DataProvider
@@ -27,24 +29,56 @@ class CubePPDataProvider(DataProvider):
                 image_name = line[:first_comma_index]
                 self.properties_lines[name_to_idx[image_name]] = line[first_comma_index+1:]
 
+    def _load_mask_bbox(self, image_name):
+        json_path = MASK_COORDINATE_DIRECTORY + "/" + image_name + ".jpg.json"
+        if not os.path.exists(json_path):
+            return None
+        with open(json_path, "r") as f:
+            mask_data = json.load(f)
+        # Union bounding box over every annotated object (cube faces, and a
+        # calibration sphere too, if the metadata ever provides one for an image).
+        points = [pt for obj in mask_data.get("objects", []) for pt in obj.get("data", [])]
+        if not points:
+            return None
+        xs = [p[0] for p in points]
+        ys = [p[1] for p in points]
+        return (int(min(xs)), int(min(ys)), int(max(xs)), int(max(ys)))
+
     def _construct_data(self, index):
         data = Data()
-        data.set_image_name(self.data_names[index])
+        image_name = self.data_names[index]
+        data.set_image_name(image_name)
 
-        image_path = INPUT_IMAGE_DIRECTORY + "/" + self.data_names[index] + "." + IMAGE_EXTENSION
+        image_path = INPUT_IMAGE_DIRECTORY + "/" + image_name + "." + IMAGE_EXTENSION
         raw_image = cv.imread(image_path, cv.IMREAD_UNCHANGED).astype(np.float32)
         raw_image = np.clip((raw_image - BLACK_LEVEL) / (SATURATION_LEVEL - BLACK_LEVEL), 0, 1)
         data.set_quantization(SATURATION_LEVEL - BLACK_LEVEL)
 
+        h_orig, w_orig = raw_image.shape[:2]
+        mask_orig = None
+        bbox = self._load_mask_bbox(image_name)
+        if bbox is not None:
+            x_min, y_min, x_max, y_max = bbox
+            mask_orig = np.ones((h_orig, w_orig), dtype=np.uint8)
+            mask_orig[y_min:y_max, x_min:x_max] = 0
+
+        new_width, new_height = -1, -1
         if self.override_dimensions[0] > 0 and self.override_dimensions[1] > 0:
-            raw_image = cv.resize(raw_image, self.override_dimensions)
+            new_width, new_height = self.override_dimensions
+            raw_image = cv.resize(raw_image, (new_width, new_height))
         elif self.override_dimensions[0] > 0:
             new_width = self.override_dimensions[0]
-            raw_image = cv.resize(raw_image, (new_width, int(new_width / (raw_image.shape[1] / raw_image.shape[0]))))
+            new_height = int(new_width / (w_orig / h_orig))
+            raw_image = cv.resize(raw_image, (new_width, new_height))
         elif self.override_dimensions[1] > 0:
             new_height = self.override_dimensions[1]
-            raw_image = cv.resize(raw_image, (int(new_height * (raw_image.shape[1] / raw_image.shape[0])), new_height))
+            new_width = int(new_height * (w_orig / h_orig))
+            raw_image = cv.resize(raw_image, (new_width, new_height))
         data.set_raw_image(raw_image)
+
+        if mask_orig is not None:
+            mask = cv.resize(mask_orig, (new_width, new_height), interpolation=cv.INTER_NEAREST) if (new_width > 0 or new_height > 0) else mask_orig
+            data.set_mask(mask.astype(bool))
 
         gt_infos = [float(x) if x else None for x in self.gt_lines[index].split(",")]
         mean_rgb = gt_infos[0:3][::-1]
@@ -58,13 +92,14 @@ class CubePPDataProvider(DataProvider):
             c = np.array(rgb) / np.linalg.norm(rgb)
             return (c[2] / c[1], c[0] / c[1])
 
-        data.set_illuminants({
-            "mean": to_chroma(mean_rgb),
-            "left": to_chroma(left_rgb),
-            "right": to_chroma(right_rgb),
-            "left_white": to_chroma(left_white_rgb),
-            "right_white": to_chroma(right_white_rgb),
-        })
+        illuminant = to_chroma(mean_rgb)
+        if illuminant is None:
+            for fallback_rgb in (left_rgb, right_rgb, left_white_rgb, right_white_rgb):
+                illuminant = to_chroma(fallback_rgb)
+                if illuminant is not None:
+                    break
+
+        data.set_illuminants({"Illuminant1": illuminant})
 
         props = self.properties_lines[index].split(",")
         iso = float(props[18]) if props[18] else None

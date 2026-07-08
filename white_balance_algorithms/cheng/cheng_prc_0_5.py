@@ -15,7 +15,9 @@ class ChengPrc05(WhiteBalanceAlgorithm):
         norm_l = np.linalg.norm(l)
         l = l / norm_l if norm_l > 0 else np.array([1, 1, 1]) / np.sqrt(3)
 
-        data_p = pixels @ l
+        # np.einsum (not pixels @ l) to avoid spurious FP warnings from macOS
+        # Accelerate BLAS on large-array matmuls (see panoptic_sgbm_wb_default._NumpyPCA1).
+        data_p = np.einsum('ij,j->i', pixels, l)
         idx = np.argsort(data_p)
         n = pixels.shape[0]
         n_sel = int(np.ceil(n * self.prc))
