@@ -612,6 +612,41 @@ class Evaluator:
             if (algo, variant) not in ALGORITHM_REGISTRY:
                 raise ValueError(f"Unknown algorithm variant: ({algo}, {variant}). Valid: {list(ALGORITHM_REGISTRY.keys())}")
 
+    def _make_task_key(self, dataset_name, image_name, algo_name, variant_name):
+        return (dataset_name, image_name, algo_name, variant_name)
+
+    def _load_existing_results(self):
+        if not self.skip_if_processed or not os.path.exists(self.output_path):
+            return []
+        try:
+            with open(self.output_path, 'r') as f:
+                existing = json.load(f)
+            if isinstance(existing, dict) and isinstance(existing.get('results'), list):
+                return existing['results']
+            return []
+        except Exception:
+            return []
+
+    def _save_output(self, results):
+        output = {
+            "metadata": {
+                "timestamp": datetime.datetime.now().isoformat(),
+                "datasets": self.datasets,
+                "algorithms": [[a, v] for a, v in self.algorithms],
+                "process_masked": self.process_masked,
+                "saturation_mask": self.saturation_mask_str,
+                "color_checker": self.color_checker_str,
+                "export_corrected_images": self.export_corrected_images,
+                "export_input_images": self.export_input_images,
+                "export_resize_factor": self.export_resize_factor,
+                "max_images": self.max_images,
+                "skip_if_processed": self.skip_if_processed,
+            },
+            "results": results,
+        }
+        with open(self.output_path, 'w') as f:
+            json.dump(output, f, indent=2)
+
     def run(self):
         checkpoint_path = os.path.splitext(self.output_path)[0] + "_checkpoint.jsonl"
 
@@ -639,6 +674,7 @@ class Evaluator:
         print(f"  Input Resize Factor: {self.input_resize_factor}")
         print(f"  Export Corrected Images: {self.export_corrected_images}")
         print(f"  Export Input Images: {self.export_input_images}")
+        print(f"  Skip if processed: {self.skip_if_processed}")
         if self.export_corrected_images or self.export_input_images:
             print(f"  Export Resize Factor: {self.export_resize_factor}")
         if self.camera:

@@ -22,6 +22,9 @@ from white_balance_algorithms.white_balance_algorithm import WhiteBalanceAlgorit
 
 class SVWBUnet(WhiteBalanceAlgorithm):
     def __init__(self, weights_dir=None, default_camera='galaxy', device=None):
+    requires_network = True
+
+    def __init__(self, weights_dir=None, default_camera='galaxy'):
         if not TORCH_AVAILABLE:
             raise ImportError(
                 'SVWBUnet requires torch. Install it with `pip install torch` '

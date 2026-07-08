@@ -1,5 +1,4 @@
 import argparse
-import cv2 as cv
 import numpy as np
 from datasets.cubepp.cubepp_dataprovider import CubePPDataProvider
 from datasets.lsmi.lsmi_dataprovider import LSMIDataProvider
@@ -7,9 +6,7 @@ from datasets.gehler.gehler_dataprovider import GehlerDataProvider
 from datasets.nus8.nus8_dataprovider import NUS8DataProvider
 from datasets.nus8.nus8_extended_dataprovider import NUS8ExtendedDataProvider
 
-from white_balance_algorithms.gray_world.gray_world_naive import GrayWorldNaive
-from white_balance_algorithms.gray_world.gray_world_95_boundaries_all_channels import GrayWorld95BoundariesAllChannels
-from white_balance_algorithms.gray_world.gray_world_95_boundaries_any_channel import GrayWorld95BoundariesAnyChannel
+from evaluator import DATASET_PROVIDERS, ALGORITHM_REGISTRY
 
 from white_balance_algorithms.max_rgb.max_rgb_naive import MaxRGBNaive
 from white_balance_algorithms.max_rgb.max_rgb_99_percentile import MaxRGB99Percentile
@@ -43,20 +40,17 @@ def run_single_data(dataset_name, index, algorithm_name, variant_name, process_m
         'normalized_all_98': ('normalized', 'all', 0.98),
         'normalized_all_100': ('normalized', 'all', 1.0),
         'normalized_any_98': ('normalized', 'any', 0.98),
-        'normalized_any_100': ('normalized', 'any', 1.0)
+        'normalized_any_100': ('normalized', 'any', 1.0),
     }
     saturation_mask_tuple = saturation_masks[saturation_mask_str]
-    if dataset_name == "cubepp":
-        data_provider = CubePPDataProvider()
-    elif dataset_name == "lsmi":
-        data_provider = LSMIDataProvider()
-    elif dataset_name == "gehler":
-        data_provider = GehlerDataProvider(color_checker=color_checker_str)
-    elif dataset_name in ["nus8", "nus8extended"]:
-        ProviderClass = NUS8DataProvider if dataset_name == "nus8" else NUS8ExtendedDataProvider
-        data_provider = ProviderClass(saturation_mask=saturation_mask_tuple, color_checker=color_checker_str)
-    else:
+
+    if dataset_name not in DATASET_PROVIDERS:
         raise ValueError(f"Invalid dataset name: {dataset_name}")
+
+    if dataset_name in ("nus8", "nus8extended", "gehler"):
+        data_provider = DATASET_PROVIDERS[dataset_name](saturation_mask=saturation_mask_tuple, color_checker=color_checker_str)
+    else:
+        data_provider = DATASET_PROVIDERS[dataset_name]()
 
     data = data_provider[index]
     data.resize(input_resize_factor)
@@ -126,6 +120,7 @@ def run_single_data(dataset_name, index, algorithm_name, variant_name, process_m
     error_metrics = data.compute_error_metrics(estimations)
     print(f"Error metrics: {error_metrics}")
 
+
 def main():
     parser = argparse.ArgumentParser(description="Run single data white balance experiment.")
     parser.add_argument('--dataset', type=str, required=True, help='Dataset name')
@@ -142,35 +137,19 @@ def main():
     args = parser.parse_args()
 
     if not args.process_masked:
-        if args.saturation_mask != "none" or args.color_checker != "all":
+        if args.saturation_mask != 'none' or args.color_checker != 'all':
             raise ValueError("saturation-mask and color-checker parameters are only valid when process-masked is enabled")
 
-    if args.saturation_mask != "none" and args.dataset not in ["nus8", "nus8extended", "gehler"]:
+    if args.saturation_mask != 'none' and args.dataset not in ['nus8', 'nus8extended', 'gehler']:
         raise ValueError("saturation-mask parameter is only valid for nus8, nus8extended, and gehler datasets")
 
-    if args.color_checker != "all" and args.dataset not in ["nus8", "nus8extended", "gehler"]:
+    if args.color_checker != 'all' and args.dataset not in ['nus8', 'nus8extended', 'gehler']:
         raise ValueError("color-checker parameter is only valid for nus8, nus8extended, or gehler datasets")
-
-    valid_datasets = ["cubepp", "lsmi", "gehler", "nus8", "nus8extended"]
-    valid_algorithms = ["gray_world", "max_rgb", "shades_of_gray", "fast_awb", "cheng"]
-    valid_variants = {
-        "gray_world": ["naive", "95_boundaries_all_channels", "95_boundaries_any_channel"],
-        "max_rgb": ["naive", "99_percentile", "95_percentile", "gaussian", "gaussian_95_percentile", "gaussian_99_percentile", "median", "median_95_percentile", "median_99_percentile"],
-        "shades_of_gray": ["default", "p3", "p4"],
-        "fast_awb": ["default", "p6"],
-        "cheng": ["prc_0_5", "prc_3"]
-    }
-
-    if args.dataset not in valid_datasets:
-        raise ValueError(f"Invalid dataset: {args.dataset}. Valid options: {valid_datasets}")
-    if args.algorithm not in valid_algorithms:
-        raise ValueError(f"Invalid algorithm: {args.algorithm}. Valid options: {valid_algorithms}")
-    if args.variant not in valid_variants[args.algorithm]:
-        raise ValueError(f"Invalid variant: {args.variant} for algorithm {args.algorithm}. Valid options: {valid_variants[args.algorithm]}")
 
     print(f"Dataset: {args.dataset}", f"Index: {args.index}", f"Algorithm: {args.algorithm}", f"Variant: {args.variant}")
 
     run_single_data(args.dataset, args.index, args.algorithm, args.variant, args.process_masked, args.saturation_mask, args.color_checker, args.input_resize_factor)
+
 
 if __name__ == "__main__":
     main()

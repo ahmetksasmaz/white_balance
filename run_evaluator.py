@@ -107,6 +107,10 @@ Command-line arguments override values from configuration.json.
         help='If set, export a gamma-corrected visual representation of the input image to disk. If omitted, loaded from configuration file.'
     )
     parser.add_argument(
+        '--skip-if-processed', action='store_true', default=None,
+        help='If set, skip evaluation tasks already present in the output JSON file.'
+    )
+    parser.add_argument(
         '--max-images', type=int, default=None,
         help='Optional limit for the number of images to process per dataset. If omitted, full dataset is processed.'
     )
@@ -136,6 +140,7 @@ Command-line arguments override values from configuration.json.
     input_resize_factor = get_config_value(args, config, 'input_resize_factor', None)
     export_corrected_images = normalize_bool(get_config_value(args, config, 'export_corrected_images', False))
     export_input_images = normalize_bool(get_config_value(args, config, 'export_input_images', False))
+    skip_if_processed = normalize_bool(get_config_value(args, config, 'skip_if_processed', False))
     export_resize_factor = get_config_value(args, config, 'export_resize_factor', None)
     max_images = get_config_value(args, config, 'max_images', None)
     test_mode = normalize_bool(get_config_value(args, config, 'test_mode', False))
@@ -181,6 +186,7 @@ Command-line arguments override values from configuration.json.
     print(f"Input resize factor: {input_resize_factor}")
     print(f"Export corrected images: {export_corrected_images}")
     print(f"Export input images: {export_input_images}")
+    print(f"Skip if processed: {skip_if_processed}")
     print(f"Export resize factor: {export_resize_factor}")
     print(f"Max images per dataset: {max_images}")
     print(f"Use GPU: {use_gpu}")

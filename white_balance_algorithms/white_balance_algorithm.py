@@ -4,6 +4,12 @@ from datasets.data import Data
 class WhiteBalanceAlgorithm:
     def estimate(self, data, process_masked=False, intermediate_exporter=None):
         self._intermediate_exporter = intermediate_exporter
+    requires_network = False
+
+    def __init__(self):
+        super().__init__()
+    
+    def estimate(self, data, process_masked=False):
         estimations = self._estimate(data, process_masked)
         raw_image = data.get_raw_image()
 
