@@ -86,10 +86,14 @@ class GehlerDataProvider(DataProvider):
             
             self.cc_coords.append(load_gehler_coords(txt_path))
 
+    def get_image_name(self, index):
+        image_path = self.data_names[index]
+        return os.path.basename(image_path).replace("." + IMAGE_EXTENSION, "")
+
     def _construct_data(self, index):
         data = Data()
         image_path = self.data_names[index]
-        image_name = os.path.basename(image_path).replace("." + IMAGE_EXTENSION, "")
+        image_name = self.get_image_name(index)
         data.set_image_name(image_name)
 
         # Load Raw Image

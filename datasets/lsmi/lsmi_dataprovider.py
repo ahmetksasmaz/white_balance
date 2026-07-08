@@ -59,13 +59,19 @@ class LSMIDataProvider(DataProvider):
                         "placeInfo": placeInfo
                     })
 
-    def _construct_data(self, index):
-        data = Data()
+    def get_image_name(self, index):
         image_path = self.data_names[index]
         image_path_splitted = image_path.split("/")
         place_with_illuminations = image_path_splitted[-1].split(".")[0]
         camera_model = image_path_splitted[-3]
-        data.set_image_name(camera_model+"_"+place_with_illuminations)
+        return camera_model+"_"+place_with_illuminations
+
+    def _construct_data(self, index):
+        data = Data()
+        image_path = self.data_names[index]
+        image_path_splitted = image_path.split("/")
+        camera_model = image_path_splitted[-3]
+        data.set_image_name(self.get_image_name(index))
 
         # Load Raw Image
         raw_image = cv.imread(image_path, cv.IMREAD_UNCHANGED)
