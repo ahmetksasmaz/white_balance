@@ -207,7 +207,7 @@ Command-line arguments override values from configuration.json.
         export_input_images=export_input_images,
         export_resize_factor=export_resize_factor,
         max_images=max_images,
-        resume=args.resume,
+        resume=(args.resume or skip_if_processed),
         use_gpu=use_gpu,
     )
     evaluator.run()
