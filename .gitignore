@@ -207,3 +207,8 @@ marimo/_lsp/
 __marimo__/
 .aider*
 .DS_Store
+
+*.pth
+*.json
+*.jsonl
+*.png

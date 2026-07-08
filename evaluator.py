@@ -674,7 +674,6 @@ class Evaluator:
         print(f"  Input Resize Factor: {self.input_resize_factor}")
         print(f"  Export Corrected Images: {self.export_corrected_images}")
         print(f"  Export Input Images: {self.export_input_images}")
-        print(f"  Skip if processed: {self.skip_if_processed}")
         if self.export_corrected_images or self.export_input_images:
             print(f"  Export Resize Factor: {self.export_resize_factor}")
         if self.camera:
