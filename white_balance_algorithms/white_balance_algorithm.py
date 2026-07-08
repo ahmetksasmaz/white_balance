@@ -3,6 +3,8 @@ import numpy as np
 from datasets.data import Data
 
 class WhiteBalanceAlgorithm:
+    requires_network = False
+
     def __init__(self):
         super().__init__()
     

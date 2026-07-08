@@ -571,7 +571,7 @@ def _prepare_export_paths(output_path, dataset_name, algo_name, variant_name, im
 
 
 class Evaluator:
-    def __init__(self, datasets, algorithms, camera=None, output_path="results.json", process_masked=False, num_workers=1, saturation_mask="none", color_checker="all", export_corrected_images=False, export_input_images=False, export_resize_factor=None, max_images=None):
+    def __init__(self, datasets, algorithms, camera=None, output_path="results.json", process_masked=False, num_workers=1, saturation_mask="none", color_checker="all", export_corrected_images=False, export_input_images=False, export_resize_factor=None, max_images=None, skip_if_processed=False):
         """
         Args:
             datasets: list of dataset name strings, e.g. ["gehler", "nus8"]
@@ -587,6 +587,7 @@ class Evaluator:
             export_input_images: if True, save the input display image to disk for visualization
             export_resize_factor: optional integer downsample factor for exported images (powers of two)
             max_images: optional integer limit for the number of images to process per dataset
+            skip_if_processed: if True, skip tasks already recorded in the existing output file
         """
         self.datasets = datasets
         self.algorithms = algorithms
@@ -600,6 +601,7 @@ class Evaluator:
         self.export_input_images = export_input_images
         self.export_resize_factor = export_resize_factor
         self.max_images = max_images
+        self.skip_if_processed = skip_if_processed
 
         if self.export_resize_factor is not None:
             if self.export_resize_factor not in [2, 4, 8, 16, 32, 64]:
@@ -611,6 +613,9 @@ class Evaluator:
 
         if not isinstance(self.export_input_images, bool):
             raise ValueError("export_input_images must be a boolean value")
+
+        if not isinstance(self.skip_if_processed, bool):
+            raise ValueError("skip_if_processed must be a boolean value")
         
         has_nus_datasets = any(ds in ("nus8", "nus8extended") for ds in datasets)
         has_gehler_dataset = any(ds == "gehler" for ds in datasets)
@@ -648,16 +653,64 @@ class Evaluator:
             if (algo, variant) not in ALGORITHM_REGISTRY:
                 raise ValueError(f"Unknown algorithm variant: ({algo}, {variant}). Valid: {list(ALGORITHM_REGISTRY.keys())}")
 
+    def _make_task_key(self, dataset_name, image_name, algo_name, variant_name):
+        return (dataset_name, image_name, algo_name, variant_name)
+
+    def _load_existing_results(self):
+        if not self.skip_if_processed or not os.path.exists(self.output_path):
+            return []
+        try:
+            with open(self.output_path, 'r') as f:
+                existing = json.load(f)
+            if isinstance(existing, dict) and isinstance(existing.get('results'), list):
+                return existing['results']
+            return []
+        except Exception:
+            return []
+
+    def _save_output(self, results):
+        output = {
+            "metadata": {
+                "timestamp": datetime.datetime.now().isoformat(),
+                "datasets": self.datasets,
+                "algorithms": [[a, v] for a, v in self.algorithms],
+                "process_masked": self.process_masked,
+                "saturation_mask": self.saturation_mask_str,
+                "color_checker": self.color_checker_str,
+                "export_corrected_images": self.export_corrected_images,
+                "export_input_images": self.export_input_images,
+                "export_resize_factor": self.export_resize_factor,
+                "max_images": self.max_images,
+                "skip_if_processed": self.skip_if_processed,
+            },
+            "results": results,
+        }
+        with open(self.output_path, 'w') as f:
+            json.dump(output, f, indent=2)
+
     def run(self):
         """Run all evaluations and save results to JSON."""
         all_results = []
         tasks = []
+        already_processed = set()
+
+        if self.skip_if_processed:
+            existing_results = self._load_existing_results()
+            for entry in existing_results:
+                image_name = entry.get('image_name')
+                algo = entry.get('algorithm')
+                variant = entry.get('variant')
+                dataset = entry.get('dataset')
+                if image_name is not None and algo is not None and variant is not None and dataset is not None:
+                    already_processed.add(self._make_task_key(dataset, image_name, algo, variant))
+            all_results.extend(existing_results)
 
         print(f"\nConfiguration:")
         print(f"  Workers: {self.num_workers}")
         print(f"  Process Masked: {self.process_masked}")
         print(f"  Export Corrected Images: {self.export_corrected_images}")
         print(f"  Export Input Images: {self.export_input_images}")
+        print(f"  Skip if processed: {self.skip_if_processed}")
         if self.export_corrected_images or self.export_input_images:
             print(f"  Export Resize Factor: {self.export_resize_factor}")
         if self.camera:
@@ -682,31 +735,61 @@ class Evaluator:
             num_matching = len(matching_indices)
             print(f"Queuing Dataset: {dataset_name} ({num_matching}/{num_dataset_images} images selected for evaluation)")
 
-            for algo_name, variant_name in self.algorithms:
-                for idx in matching_indices:
+            for idx in matching_indices:
+                image_name = None
+                if self.skip_if_processed:
+                    data = data_provider[idx]
+                    image_name = data.get_image_name()
+                for algo_name, variant_name in self.algorithms:
+                    if image_name is not None:
+                        task_key = self._make_task_key(dataset_name, image_name, algo_name, variant_name)
+                        if task_key in already_processed:
+                            continue
                     tasks.append((dataset_name, algo_name, variant_name, idx, self.process_masked, self.camera, self.saturation_mask_str, self.color_checker_str, self.export_corrected_images, self.export_input_images, self.export_resize_factor, self.output_path))
         total_tasks = len(tasks)
         processed_count = 0
 
         print(f"Total tasks in queue: {total_tasks}")
 
-        if self.num_workers > 1:
-            with ProcessPoolExecutor(max_workers=self.num_workers) as executor:
-                futures = {executor.submit(_worker_fn, task): task for task in tasks}
-                for future in tqdm(as_completed(futures), total=total_tasks, desc="Evaluating", unit="task"):
-                    result = future.result()
-                    if result:
-                        all_results.append(result)
-                        if result.get("errors") is None and "error_message" in result:
-                             print(f"\n    ERROR: {result['error_message']}")
-        else:
-            # Sequential execution
-            for task in tqdm(tasks, desc="Evaluating", unit="task"):
-                result = _worker_fn(task)
-                if result:
-                    all_results.append(result)
-                    if result.get("errors") is None and "error_message" in result:
-                         print(f"\n    ERROR: {result['error_message']}")
+        cpu_tasks = []
+        network_tasks = []
+        for task in tasks:
+            _, algo_name, variant_name, _, _, _, _, _, _, _, _, _ = task
+            algorithm_cls = ALGORITHM_REGISTRY[(algo_name, variant_name)]
+            if getattr(algorithm_cls, 'requires_network', False):
+                network_tasks.append(task)
+            else:
+                cpu_tasks.append(task)
+
+        def execute_task(task):
+            result = _worker_fn(task)
+            if result:
+                all_results.append(result)
+                self._save_output(all_results)
+                if result.get("errors") is None and "error_message" in result:
+                    print(f"\n    ERROR: {result['error_message']}")
+
+        if cpu_tasks:
+            print(f"Executing {len(cpu_tasks)} CPU-only tasks with {self.num_workers} workers")
+            if self.num_workers > 1:
+                with ProcessPoolExecutor(max_workers=self.num_workers) as executor:
+                    futures = {executor.submit(_worker_fn, task): task for task in cpu_tasks}
+                    for future in tqdm(as_completed(futures), total=len(cpu_tasks), desc="CPU Evaluating", unit="task"):
+                        result = future.result()
+                        if result:
+                            all_results.append(result)
+                            self._save_output(all_results)
+                            if result.get("errors") is None and "error_message" in result:
+                                print(f"\n    ERROR: {result['error_message']}")
+            else:
+                for task in tqdm(cpu_tasks, desc="CPU Evaluating", unit="task"):
+                    execute_task(task)
+
+        if network_tasks:
+            if self.num_workers > 1:
+                print("Network-backed algorithms detected: running those tasks sequentially with a single worker")
+            for task in tqdm(network_tasks, desc="Network Evaluating", unit="task"):
+                execute_task(task)
 
         output = {
             "metadata": {
@@ -715,11 +798,12 @@ class Evaluator:
                 "algorithms": [[a, v] for a, v in self.algorithms],
                 "process_masked": self.process_masked,
                 "saturation_mask": self.saturation_mask_str,
-            "color_checker": self.color_checker_str,
-            "export_corrected_images": self.export_corrected_images,
-            "export_input_images": self.export_input_images,
-            "export_resize_factor": self.export_resize_factor,
-            "max_images": self.max_images,
+                "color_checker": self.color_checker_str,
+                "export_corrected_images": self.export_corrected_images,
+                "export_input_images": self.export_input_images,
+                "export_resize_factor": self.export_resize_factor,
+                "max_images": self.max_images,
+                "skip_if_processed": self.skip_if_processed,
             },
             "results": all_results,
         }

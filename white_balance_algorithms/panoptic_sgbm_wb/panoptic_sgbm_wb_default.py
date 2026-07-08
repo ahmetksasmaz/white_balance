@@ -254,6 +254,8 @@ def apply_sgbm_white_balance(raw_bgr: np.ndarray, illuminant_map_log: np.ndarray
 
 
 class PanopticSGBMWB(WhiteBalanceAlgorithm):
+    requires_network = True
+
     def __init__(
         self,
         checkpoint: Optional[str] = None,
