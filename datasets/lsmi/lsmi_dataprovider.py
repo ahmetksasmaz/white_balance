@@ -98,6 +98,8 @@ class LSMIDataProvider(DataProvider):
 
         illuminants = []
         for illuminant in metadata["illuminants"]:
+            if camera_model == "nikon" or camera_model == "sony":
+                illuminant = illuminant[::-1]  # Reverse the order of RGB for Nikon and Sony cameras
             illuminant_rgb = np.array(illuminant, dtype=np.float32)
             illuminant_chroma = illuminant_rgb / np.linalg.norm(illuminant_rgb)
             illuminants.append((illuminant_chroma[2] / illuminant_chroma[1], illuminant_chroma[0] / illuminant_chroma[1]))
