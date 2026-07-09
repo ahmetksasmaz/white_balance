@@ -1,9 +1,9 @@
 import json
 import datetime
 import os
+import queue
 import time
 import traceback
-from concurrent.futures import ProcessPoolExecutor, as_completed
 import multiprocessing
 import cv2 as cv
 import numpy as np
@@ -165,17 +165,16 @@ def _extract_camera(dataset_name, data_provider, index):
 
 
 def _worker_fn(task_info):
-    dataset_name, algo_name, variant_name, idx, process_masked, camera_filter, saturation_mask_str, color_checker_str, input_resize_factor, export_corrected_images, export_input_images, export_resize_factor, output_path, use_gpu = task_info
+    dataset_name, algo_name, variant_name, idx, process_masked, camera_filter, saturation_mask_str, color_checker_str, input_resize_factor, export_corrected_images, export_input_images, export_resize_factor, output_path, use_gpu, image_algorithm_keys = task_info
     checkpoint_key = [dataset_name, algo_name, variant_name, idx]
+    data_provider = None
     try:
         data_provider = _get_data_provider(dataset_name, saturation_mask_str, color_checker_str)
         algorithm = _get_algorithm(algo_name, variant_name, use_gpu)
 
         camera = _extract_camera(dataset_name, data_provider, idx)
 
-        data = data_provider[idx]
-        data.set_camera(camera)
-        data.resize(input_resize_factor)
+        data = data_provider.get_cached(idx, camera=camera, resize_factor=input_resize_factor)
         image_name = data.get_image_name()
 
         exported_paths = {
@@ -249,6 +248,21 @@ def _worker_fn(task_info):
             "error_message": str(e),
             "traceback": traceback.format_exc()
         }
+    finally:
+        if data_provider is not None:
+            data_provider.mark_algorithm_done(idx, (algo_name, variant_name), image_algorithm_keys)
+
+
+def _worker_process_loop(task_queue, result_queue):
+    """Persistent worker body: pulls tasks from its own queue one at a time
+    until it sees the None sentinel. Living for the process's whole lifetime
+    (rather than being re-spawned per task) is what makes _get_data_provider /
+    _get_algorithm's module-level caches behave as per-worker singletons."""
+    while True:
+        task = task_queue.get()
+        if task is None:
+            break
+        result_queue.put(_worker_fn(task))
 
 
 def _serialize_error_metrics(error_metrics):
@@ -764,7 +778,8 @@ class Evaluator:
         if self.camera:
             print(f"  Camera Filter: {self.camera}")
 
-        tasks = []
+        tasks_to_run = []
+        skipped = 0
         for dataset_name in self.datasets:
             if dataset_name in ("nus8", "nus8extended", "gehler"):
                 data_provider = DATASET_PROVIDERS[dataset_name](saturation_mask=self.saturation_mask_tuple, color_checker=self.color_checker_str)
@@ -781,17 +796,21 @@ class Evaluator:
 
             print(f"Queuing Dataset: {dataset_name} ({len(matching_indices)}/{num_dataset_images} images selected for evaluation)")
 
-            for algo_name, variant_name in self.algorithms:
-                for idx in matching_indices:
-                    tasks.append((dataset_name, algo_name, variant_name, idx, self.process_masked, self.camera, self.saturation_mask_str, self.color_checker_str, self.input_resize_factor, self.export_corrected_images, self.export_input_images, self.export_resize_factor, self.output_path, self.use_gpu))
+            # Image-major order: every algorithm task for a given image is
+            # queued consecutively (and, below, routed to the same worker),
+            # so a worker only ever needs one image resident in its cache at
+            # a time instead of one per algorithm pass.
+            for idx in matching_indices:
+                image_algorithm_keys = tuple(
+                    (algo_name, variant_name) for algo_name, variant_name in self.algorithms
+                    if (dataset_name, algo_name, variant_name, idx) not in done_set
+                )
+                skipped += len(self.algorithms) - len(image_algorithm_keys)
+                for algo_name, variant_name in image_algorithm_keys:
+                    tasks_to_run.append((dataset_name, algo_name, variant_name, idx, self.process_masked, self.camera, self.saturation_mask_str, self.color_checker_str, self.input_resize_factor, self.export_corrected_images, self.export_input_images, self.export_resize_factor, self.output_path, self.use_gpu, image_algorithm_keys))
 
-        if done_set:
-            tasks_to_run = [t for t in tasks if (t[0], t[1], t[2], t[3]) not in done_set]
-            skipped = len(tasks) - len(tasks_to_run)
-            if skipped:
-                print(f"Skipping {skipped} already-completed tasks (resume mode)")
-        else:
-            tasks_to_run = tasks
+        if skipped:
+            print(f"Skipping {skipped} already-completed tasks (resume mode)")
 
         print(f"Total tasks to run: {len(tasks_to_run)}")
 
@@ -805,18 +824,58 @@ class Evaluator:
                 if result.get("traceback"):
                     print(result["traceback"])
 
-        if self.num_workers > 1:
-            with ProcessPoolExecutor(max_workers=self.num_workers) as executor:
-                futures = {executor.submit(_worker_fn, task): task for task in tasks_to_run}
-                for future in tqdm(as_completed(futures), total=len(tasks_to_run), desc="Evaluating", unit="task"):
-                    result = future.result()
+        if tasks_to_run:
+            if self.num_workers > 1:
+                # Each worker owns a dedicated task queue (rather than pulling
+                # from one shared pool), and every task for a given image is
+                # routed to the same worker via idx % num_workers. That's what
+                # lets each worker's singleton data provider (see
+                # _get_data_provider's _PROVIDER_CACHE) cache an image once
+                # and evict it as soon as every algorithm queued for it has
+                # run, instead of every worker touching every image.
+                task_queues = [multiprocessing.Queue() for _ in range(self.num_workers)]
+                result_queue = multiprocessing.Queue()
+                workers = [
+                    multiprocessing.Process(target=_worker_process_loop, args=(task_queues[i], result_queue))
+                    for i in range(self.num_workers)
+                ]
+                for w in workers:
+                    w.start()
+
+                for task in tasks_to_run:
+                    idx = task[3]
+                    task_queues[idx % self.num_workers].put(task)
+                for q in task_queues:
+                    q.put(None)
+
+                try:
+                    received = 0
+                    with tqdm(total=len(tasks_to_run), desc="Evaluating", unit="task") as pbar:
+                        while received < len(tasks_to_run):
+                            try:
+                                result = result_queue.get(timeout=5)
+                            except queue.Empty:
+                                dead = [w for w in workers if not w.is_alive() and w.exitcode != 0]
+                                if dead:
+                                    raise RuntimeError(
+                                        f"{len(dead)} worker process(es) died unexpectedly "
+                                        f"(exit codes: {[w.exitcode for w in dead]}); aborting."
+                                    )
+                                continue
+                            received += 1
+                            pbar.update(1)
+                            if result:
+                                _record(result)
+                finally:
+                    for w in workers:
+                        w.join(timeout=10)
+                        if w.is_alive():
+                            w.terminate()
+            else:
+                for task in tqdm(tasks_to_run, desc="Evaluating", unit="task"):
+                    result = _worker_fn(task)
                     if result:
                         _record(result)
-        else:
-            for task in tqdm(tasks_to_run, desc="Evaluating", unit="task"):
-                result = _worker_fn(task)
-                if result:
-                    _record(result)
 
         output = self._maybe_finalize(all_results, force=True)
 
